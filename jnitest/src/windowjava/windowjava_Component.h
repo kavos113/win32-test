@@ -9,19 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     windowjava_Component
- * Method:    CreateWindowClass
- * Signature: (Ljava/lang/String;)V
+ * Method:    reshape
+ * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_windowjava_Component_CreateWindowClass
-  (JNIEnv *, jclass, jstring);
-
-/*
- * Class:     windowjava_Component
- * Method:    CreateComponent
- * Signature: (Ljava/lang/String;Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_windowjava_Component_CreateComponent
-  (JNIEnv *, jclass, jstring, jstring);
+JNIEXPORT void JNICALL Java_windowjava_Component_reshape
+  (JNIEnv *, jobject, jint, jint, jint, jint);
 
 #ifdef __cplusplus
 }
