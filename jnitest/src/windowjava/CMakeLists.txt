@@ -3,7 +3,7 @@ project(window_java CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../../bin/window_java)
 
-add_library(window_java SHARED window_test.cpp
+add_library(window_java SHARED
         java_component.cpp
         java_component.h
         java_button.cpp

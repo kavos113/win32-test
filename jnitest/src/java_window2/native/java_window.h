@@ -8,7 +8,7 @@
 #include <windows.h>
 
 #include "java_component.h"
-#include "windowjava_Window.h"
+#include "java_window2_java_Window.h"
 
 class JavaWindow : public JavaComponent<JavaWindow>
 {
@@ -17,7 +17,7 @@ public:
     {
         return L"JavaWindow";
     }
-    
+
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 

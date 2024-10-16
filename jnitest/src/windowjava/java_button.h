@@ -1,10 +1,25 @@
 #ifndef WIN32_TEST_JAVA_BUTTON_H
 #define WIN32_TEST_JAVA_BUTTON_H
 
+#ifndef UNICODE
+#define UNICODE
+#endif
 
-class java_button
+#include <windows.h>
+
+#include "java_component.h"
+#include "windowjava_Button.h"
+
+
+class JavaButton : public JavaComponent<JavaButton>
 {
-
+public:
+    PCWSTR class_name() const
+    {
+        return L"Button";
+    }
+    
+    LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
 

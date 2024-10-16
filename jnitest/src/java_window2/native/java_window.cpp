@@ -35,8 +35,8 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-JNIEXPORT void JNICALL Java_windowjava_Window_createWindow
-    (JNIEnv *env, jobject thisObj, jstring windowName)
+JNIEXPORT void JNICALL Java_java_1window2_java_Window_create
+    (JNIEnv *env, jobject thisObj, jobject parent, jstring windowName)
 {
     JavaWindow window;
     
@@ -49,6 +49,20 @@ JNIEXPORT void JNICALL Java_windowjava_Window_createWindow
     
     ShowWindow(window.Window(), SW_SHOW);
     UpdateWindow(window.Window());
+    
+    MSG msg = {};
+    while (GetMessage(&msg, nullptr, 0, 0) > 0)
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+JNIEXPORT void JNICALL Java_java_1window2_java_Window_show
+    (JNIEnv *env, jobject thisObj)
+{
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
     
     MSG msg = {};
     while (GetMessage(&msg, nullptr, 0, 0) > 0)
