@@ -5,10 +5,12 @@
 #include <windows.h>
 #include <d2d1.h>
 #include <dwrite.h>
+#include <iostream>
+
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-#include "hello_text.h"
+#include "multi_style_text.h"
 
 template <class T> void SafeRelease(T **ppT)
 {
@@ -19,7 +21,7 @@ template <class T> void SafeRelease(T **ppT)
     }
 }
 
-HelloText::~HelloText()
+MultiStyleText::~MultiStyleText()
 {
     SafeRelease(&pD2DFactory);
     SafeRelease(&pDWriteFactory);
@@ -28,7 +30,7 @@ HelloText::~HelloText()
     SafeRelease(&pBlackBrush);
 }
 
-HRESULT HelloText::Initialize()
+HRESULT MultiStyleText::Initialize()
 {
     HDC screen = GetDC(0);
     dpiScaleX = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
@@ -42,7 +44,7 @@ HRESULT HelloText::Initialize()
     hr = atom ? S_OK : E_FAIL;
     
     Create(
-        L"HelloText",
+        L"MultiStyleText",
         WS_OVERLAPPEDWINDOW,
         0,
         CW_USEDEFAULT,
@@ -77,7 +79,7 @@ HRESULT HelloText::Initialize()
     return hr;
 }
 
-HRESULT HelloText::CreateDeviceIndependentResources()
+HRESULT MultiStyleText::CreateDeviceIndependentResources()
 {
     HRESULT hr;
     
@@ -101,7 +103,7 @@ HRESULT HelloText::CreateDeviceIndependentResources()
     if (SUCCEEDED(hr))
     {
         hr = pDWriteFactory->CreateTextFormat(
-            L"Consolas",
+            L"Gabriola",
             nullptr,
             DWRITE_FONT_WEIGHT_REGULAR,
             DWRITE_FONT_STYLE_NORMAL,
@@ -124,10 +126,64 @@ HRESULT HelloText::CreateDeviceIndependentResources()
         hr = pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     }
     
+    // +
+    if (SUCCEEDED(hr))
+    {
+        RECT rc;
+        GetClientRect(m_hwnd, &rc);
+        
+        float width = (rc.right - rc.left) / dpiScaleX;
+        float height = (rc.bottom - rc.top) / dpiScaleY;
+        
+        hr = pDWriteFactory->CreateTextLayout(
+            text,
+            cTextLength,
+            pTextFormat,
+            width,
+            height,
+            &pTextLayout
+        );
+    }
+    
+    if (SUCCEEDED(hr))
+    {
+        DWRITE_TEXT_RANGE textRange = {13, 6};
+        hr = pTextLayout->SetFontSize(100.0f, textRange);
+    }
+    
+    if (SUCCEEDED(hr))
+    {
+        DWRITE_TEXT_RANGE textRange = {13, 11};
+        hr = pTextLayout->SetFontWeight(DWRITE_FONT_WEIGHT_BOLD, textRange);
+    }
+    
+    IDWriteTypography* pTypography = nullptr;
+    
+    if (SUCCEEDED(hr))
+    {
+        hr = pDWriteFactory->CreateTypography(&pTypography);
+    }
+    
+    DWRITE_FONT_FEATURE fontFeature = {DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7, 1};
+    
+    if (SUCCEEDED(hr))
+    {
+        hr = pTypography->AddFontFeature(fontFeature);
+    }
+    
+    if (SUCCEEDED(hr))
+    {
+        DWRITE_TEXT_RANGE textRange = {0, cTextLength};
+        hr = pTextLayout->SetTypography(pTypography, textRange);
+    }
+    
+    SafeRelease(&pTypography);
+    // +
+    
     return hr;
 }
 
-HRESULT HelloText::CreateDeviceResources()
+HRESULT MultiStyleText::CreateDeviceResources()
 {
     HRESULT hr = S_OK;
     
@@ -157,37 +213,50 @@ HRESULT HelloText::CreateDeviceResources()
     return hr;
 }
 
-void HelloText::DiscardDeviceResources()
+void MultiStyleText::DiscardDeviceResources()
 {
     SafeRelease(&pRenderTarget);
     SafeRelease(&pBlackBrush);
 }
 
-HRESULT HelloText::DrawTextHello()
+HRESULT MultiStyleText::DrawTextHello()
 {
     RECT rc;
     
     GetClientRect(m_hwnd, &rc);
     
-    D2D1_RECT_F layoutRect = D2D1::RectF(
-        static_cast<FLOAT>(rc.left) / dpiScaleX,
-        static_cast<FLOAT>(rc.top) / dpiScaleY,
-        static_cast<FLOAT>(rc.right) / dpiScaleX,
-        static_cast<FLOAT>(rc.bottom) / dpiScaleY
+    // -
+//    D2D1_RECT_F layoutRect = D2D1::RectF(
+//        static_cast<FLOAT>(rc.left) / dpiScaleX,
+//        static_cast<FLOAT>(rc.top) / dpiScaleY,
+//        static_cast<FLOAT>(rc.right) / dpiScaleX,
+//        static_cast<FLOAT>(rc.bottom) / dpiScaleY
+//    );
+//
+//    pRenderTarget->DrawText(
+//        text,
+//        cTextLength,
+//        pTextFormat,
+//        layoutRect,
+//        pBlackBrush
+//    );
+
+    // +
+    D2D1_POINT_2F origin = D2D1::Point2F(
+        static_cast<FLOAT>(rc.left / dpiScaleX),
+        static_cast<FLOAT>(rc.top / dpiScaleY)
     );
     
-    pRenderTarget->DrawText(
-        text,
-        cTextLength,
-        pTextFormat,
-        layoutRect,
+    pRenderTarget->DrawTextLayout(
+        origin,
+        pTextLayout,
         pBlackBrush
     );
     
     return S_OK;
 }
 
-HRESULT HelloText::DrawD2DContent()
+HRESULT MultiStyleText::DrawD2DContent()
 {
     HRESULT hr = CreateDeviceResources();
     
@@ -215,8 +284,16 @@ HRESULT HelloText::DrawD2DContent()
     return hr;
 }
 
-void HelloText::OnResize(UINT width, UINT height)
+void MultiStyleText::OnResize(UINT width, UINT height)
 {
+    // +
+    if (pTextLayout)
+    {
+        pTextLayout->SetMaxWidth(static_cast<FLOAT>(width / dpiScaleX));
+        pTextLayout->SetMaxHeight(static_cast<FLOAT>(height / dpiScaleY));
+    }
+    // +
+    
     if (pRenderTarget)
     {
         D2D1_SIZE_U size;
@@ -226,7 +303,7 @@ void HelloText::OnResize(UINT width, UINT height)
     }
 }
 
-LRESULT HelloText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT MultiStyleText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -257,3 +334,4 @@ LRESULT HelloText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
 }
+
