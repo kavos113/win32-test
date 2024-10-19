@@ -59,6 +59,18 @@ JNIEXPORT void JNICALL Java_java_1window3_java_Window_create
     
     std::wstring windowNameW = jstringToWstring(env, windowName);
     
+    ATOM res = window.RegisterNewClass();
+    if (res == 0)
+    {
+        MessageBox(
+            nullptr,
+            L"RegisterClass failed",
+            L"Error",
+            MB_ICONEXCLAMATION | MB_OK);
+        
+        return;
+    }
+    
     if (!window.Create(
         windowNameW.c_str(),
         WS_OVERLAPPEDWINDOW,
@@ -80,6 +92,8 @@ JNIEXPORT void JNICALL Java_java_1window3_java_Window_create
     env->SetLongField(thisObj, hwndFieldID2, static_cast<jlong>(
         reinterpret_cast<LONG_PTR>(window.Window())
         ));
+    
+    std::cout << "[Native] Window hwnd: " << window.Window() << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_java_1window3_java_Window_showWindow

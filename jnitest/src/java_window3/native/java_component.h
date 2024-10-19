@@ -42,6 +42,19 @@ public:
     
     JavaComponent() : m_hwnd(nullptr) {}
     
+    ATOM RegisterNewClass()
+    {
+        WNDCLASS wc = {};
+        
+        wc.lpfnWndProc = WindowProc;
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = 0;
+        wc.hInstance = GetModuleHandle(nullptr);
+        wc.lpszClassName = class_name();
+        
+        return RegisterClass(&wc);
+    }
+    
     BOOL Create(
         PCWSTR lpWindowName,
         DWORD dwStyle,
@@ -54,16 +67,6 @@ public:
         HMENU hMenu = nullptr
     )
     {
-        WNDCLASS wc = {};
-        
-        wc.lpfnWndProc = WindowProc;
-        wc.cbClsExtra = 0;
-        wc.cbWndExtra = 0;
-        wc.hInstance = GetModuleHandle(nullptr);
-        wc.lpszClassName = class_name();
-        
-        RegisterClass(&wc);
-        
         m_hwnd = CreateWindowEx(
             dwExStyle,
             class_name(),
