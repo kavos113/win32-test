@@ -5,4 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(direct2d_1 WIN32 main.cpp
         base_window.h
+        ../direct_write_3/hello_text.cpp
+        ../direct_write_3/hello_text.h
 )
