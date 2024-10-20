@@ -6,8 +6,12 @@
 #endif
 
 #include <windows.h>
+#include <d2d1.h>
+#include <iostream>
+#pragma comment(lib, "d2d1")
 
 #include "java_window4_java_Component.h"
+#include "util.h"
 
 template <class DERIVED_TYPE>
 class JavaComponent

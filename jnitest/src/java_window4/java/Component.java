@@ -13,7 +13,7 @@ public abstract class Component {
     private static final int SET_POSITION_AND_SIZE = 3;
 
     public void setRectangle(int x, int y, int width, int height) {
-        reshape(x, y, width, height, SET_POSITION | SET_SIZE);
+        reshape(x, y, width, height, SET_POSITION_AND_SIZE);
     }
 
     public void setPosition(int x, int y) {

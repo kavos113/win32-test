@@ -11,10 +11,6 @@ public class Window extends Component {
         create(null, title);
     }
 
-    public Window(Window parent, String title) {
-        create(parent, title);
-    }
-
     public void show() {
         showWindow();
     }

@@ -6,30 +6,99 @@
 #include <jni.h>
 #include <string>
 #include <iostream>
+#include <d2d1.h>
+#pragma comment(lib, "d2d1")
 
 #include "java_window.h"
+#include "dx_factory.h"
 #include "util.h"
+#include "jniutil.h"
 
-JavaWindow window;
+HRESULT JavaWindow::CreateGraphicsResources()
+{
+    HRESULT hr = S_OK;
+    
+    if (pRenderTarget == nullptr)
+    {
+        RECT rect;
+        GetClientRect(m_hwnd, &rect);
+        
+        D2D1_SIZE_U size = D2D1::SizeU(
+            rect.right - rect.left,
+            rect.bottom - rect.top
+        );
+        
+        hr = DXFactory::GetFactory()->CreateHwndRenderTarget(
+            D2D1::RenderTargetProperties(),
+            D2D1::HwndRenderTargetProperties(m_hwnd, size),
+            &pRenderTarget
+        );
+    }
+    
+    return hr;
+}
+
+void JavaWindow::DiscardGraphicsResources()
+{
+    SafeRelease(&pRenderTarget);
+}
+
+void JavaWindow::OnPaint()
+{
+    HRESULT hr = CreateGraphicsResources();
+    
+    if (SUCCEEDED(hr))
+    {
+        PAINTSTRUCT ps;
+        BeginPaint(m_hwnd, &ps);
+        
+        pRenderTarget->BeginDraw();
+        pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
+        
+        hr = pRenderTarget->EndDraw();
+        
+        if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
+        {
+            DiscardGraphicsResources();
+        }
+        EndPaint(m_hwnd, &ps);
+    }
+}
+
+void JavaWindow::Resize()
+{
+    if (pRenderTarget != nullptr)
+    {
+        RECT rect;
+        GetClientRect(m_hwnd, &rect);
+        
+        D2D1_SIZE_U size = D2D1::SizeU(
+            rect.right - rect.left,
+            rect.bottom - rect.top
+        );
+        
+        pRenderTarget->Resize(size);
+    }
+}
+
 
 LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
     case WM_DESTROY:
+        DiscardGraphicsResources();
+        DXFactory::ReleaseFactory();
         PostQuitMessage(0);
         std::cout << "[Native] WM_DESTROY" << std::endl;
         return 0;
     
     case WM_PAINT:
-    {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(m_hwnd, &ps);
+        OnPaint();
+        return 0;
         
-        FillRect(hdc, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW + 1));
-        
-        EndPaint(m_hwnd, &ps);
-    }
+    case WM_SIZE:
+        Resize();
         return 0;
     
     default:
@@ -39,10 +108,12 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
+JavaWindow window;
+
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring windowName)
 {
-    std::cout << "[Native] Java_java_1window3_java_Window_create" << std::endl;
+    std::cout << "[Native] Java_java_1window4_java_Window_create" << std::endl;
     
     HWND parentHwnd = nullptr;
     
@@ -92,8 +163,6 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     env->SetLongField(thisObj, hwndFieldID2, static_cast<jlong>(
         reinterpret_cast<LONG_PTR>(window.Window())
     ));
-    
-    std::cout << "[Native] Window hwnd: " << window.Window() << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
@@ -111,7 +180,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
     UpdateWindow(hwnd);
     
     MSG msg = {};
-    while (GetMessage(&msg, nullptr, 0, 0) > 0)
+    while (GetMessage(&msg, nullptr, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
