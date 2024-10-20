@@ -26,5 +26,7 @@ public class ChangeSize {
         }, 2000);
 
         window.show();
+
+        System.out.println("owattayo");
     }
 }
