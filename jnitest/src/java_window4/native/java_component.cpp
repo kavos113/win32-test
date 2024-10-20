@@ -1,17 +1,36 @@
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+#include <windows.h>
 #include <jni.h>
+#include <d2d1.h>
+#pragma comment(lib, "d2d1")
 
 #include "java_component.h"
+
+LRESULT JavaComponent::ComponentHandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return TRUE;
+}
+
+void JavaComponent::SetBackgroundColor(int color)
+{
+    m_backgroundColor = color;
+}
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
     (JNIEnv *env, jobject thisObj, jint x, jint y, jint width, jint height, jint operation)
 {
     jclass thisClass = env->GetObjectClass(thisObj);
-    jfieldID hwndFieldID = env->GetFieldID(thisClass, "hwnd", "J");
-    HWND hwnd = reinterpret_cast<HWND>(
+    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
+    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
         static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, hwndFieldID)
+            env->GetLongField(thisObj, nativeWindowFieldID)
             )
         );
+    
+    HWND hwnd = pThis->Window();
     
     switch (operation)
     {
@@ -51,4 +70,19 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
             );
         break;
     }
+}
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Component_setBackgroundColor
+    (JNIEnv *env, jobject thisObj, jint color)
+{
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
+    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+            )
+        );
+    
+    pThis->SetBackgroundColor(color);
+    SendMessage(pThis->Window(), WM_PAINT, 0, 0);
 }

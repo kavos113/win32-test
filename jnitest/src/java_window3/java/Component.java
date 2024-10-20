@@ -10,4 +10,5 @@ public abstract class Component {
     public void setPosition(int x, int y, int width, int height) {
         reshape(hwnd, x, y, width, height);
     }
+
 }

@@ -13,38 +13,41 @@
 #include "java_window4_java_Component.h"
 #include "util.h"
 
-template <class DERIVED_TYPE>
 class JavaComponent
 {
 public:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        DERIVED_TYPE *pThis = NULL;
+        JavaComponent *pThis = nullptr;
         
         if (uMsg == WM_CREATE)
         {
             CREATESTRUCT *pCreate = (CREATESTRUCT *)lParam;
-            pThis = (DERIVED_TYPE *)pCreate->lpCreateParams;
+            pThis = (JavaComponent *)pCreate->lpCreateParams;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
             
             pThis->m_hwnd = hwnd;
         }
         else
         {
-            pThis = (DERIVED_TYPE *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+            pThis = (JavaComponent *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         }
         
         if (pThis)
         {
-            return pThis->HandleMessage(uMsg, wParam, lParam);
+            pThis->HandleMessage(uMsg, wParam, lParam);
+            
         }
-        else
-        {
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
-        }
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
     
-    JavaComponent() : m_hwnd(nullptr) {}
+    JavaComponent() :
+        m_hwnd(nullptr),
+        pRenderTarget(nullptr),
+        m_backgroundColor(D2D1::ColorF::SkyBlue)
+    {
+    
+    }
     
     ATOM RegisterNewClass()
     {
@@ -54,7 +57,7 @@ public:
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = GetModuleHandle(nullptr);
-        wc.lpszClassName = class_name();
+        wc.lpszClassName = ClassName();
         
         return RegisterClass(&wc);
     }
@@ -73,7 +76,7 @@ public:
     {
         m_hwnd = CreateWindowEx(
             dwExStyle,
-            class_name(),
+            ClassName(),
             lpWindowName,
             dwStyle,
             x, y,
@@ -92,12 +95,26 @@ public:
         return m_hwnd;
     }
     
+    void SetBackgroundColor(int color);
+
 protected:
     
-    virtual PCWSTR class_name() const = 0;
+    LRESULT ComponentHandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    
+    virtual PCWSTR ClassName() const = 0;
     virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
     
+    virtual HRESULT CreateGraphicsResources() = 0;
+    virtual void DiscardGraphicsResources() = 0;
+    virtual void OnPaint() = 0;
+    virtual void Resize() = 0;
+    
     HWND m_hwnd;
+    int m_backgroundColor;
+    
+    ID2D1HwndRenderTarget  *pRenderTarget;
+    
+    
 };
 
 

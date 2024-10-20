@@ -14,7 +14,7 @@
 class JavaButton : public JavaComponent<JavaButton>
 {
 public:
-    PCWSTR class_name() const
+    PCWSTR ClassName() const
     {
         return L"Button";
     }

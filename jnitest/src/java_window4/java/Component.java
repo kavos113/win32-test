@@ -2,11 +2,12 @@ package java_window4.java;
 
 public abstract class Component {
 
-    protected volatile long hwnd = 0;
+    protected volatile long nativeWindow = 0;
 
     protected abstract void create(Component parent, String title);
 
     private native void reshape(int x, int y, int width, int height, int operation);
+    private native void setBackgroundColor(int color);
 
     private static final int SET_POSITION = 1;
     private static final int SET_SIZE = 2;
@@ -22,5 +23,13 @@ public abstract class Component {
 
     public void setSize(int width, int height) {
         reshape(0, 0, width, height, SET_SIZE);
+    }
+
+    public void setBackgroundColor(Color color) {
+        setBackgroundColor(color.getColorValue());
+    }
+
+    public long getNativeWindow() {
+        return nativeWindow;
     }
 }

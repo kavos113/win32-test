@@ -53,7 +53,7 @@ void JavaWindow::OnPaint()
         BeginPaint(m_hwnd, &ps);
         
         pRenderTarget->BeginDraw();
-        pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::SkyBlue));
+        pRenderTarget->Clear(D2D1::ColorF(m_backgroundColor));
         
         hr = pRenderTarget->EndDraw();
         
@@ -84,6 +84,8 @@ void JavaWindow::Resize()
 
 LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    LRESULT lr = JavaComponent::ComponentHandleMessage(uMsg, wParam, lParam);
+    
     switch (uMsg)
     {
     case WM_DESTROY:
@@ -100,12 +102,9 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         Resize();
         return 0;
-    
-    default:
-        return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
     }
     
-    return TRUE;
+    return lr;
 }
 
 JavaWindow window;
@@ -113,17 +112,17 @@ JavaWindow window;
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring windowName)
 {
-    std::cout << "[Native] Java_java_1window4_java_Window_create" << std::endl;
+    // std::cout << "[Native] Java_java_1window4_java_Window_create" << std::endl;
     
-    HWND parentHwnd = nullptr;
+    JavaWindow *parentHwnd = nullptr;
     
     if (parent != nullptr)
     {
         jclass clazz = env->GetObjectClass(parent);
-        jfieldID hwndFieldID = env->GetFieldID(clazz, "hwnd", "J");
-        parentHwnd = reinterpret_cast<HWND>(
+        jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+        parentHwnd = reinterpret_cast<JavaWindow*>(
             static_cast<LONG_PTR>(
-                env->GetLongField(parent, hwndFieldID)
+                env->GetLongField(parent, nativeWindowFieldID)
             )
         );
     }
@@ -150,8 +149,10 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
-        parentHwnd,
-        nullptr))
+        parentHwnd ? parentHwnd->Window() : nullptr,
+        nullptr
+        )
+        )
     {
         return;
     }
@@ -159,22 +160,26 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     std::cout << "[Native] Window Created" << std::endl;
     
     jclass thisClazz = env->GetObjectClass(thisObj);
-    jfieldID hwndFieldID2 = env->GetFieldID(thisClazz, "hwnd", "J");
-    env->SetLongField(thisObj, hwndFieldID2, static_cast<jlong>(
-        reinterpret_cast<LONG_PTR>(window.Window())
+    jfieldID nativeWindowFieldID2 = env->GetFieldID(thisClazz, "nativeWindow", "J");
+    env->SetLongField(thisObj, nativeWindowFieldID2, static_cast<jlong>(
+        reinterpret_cast<LONG_PTR>(&window)
     ));
+    
+    // std::cout << "[Native] Window Handle Set window: " << &window << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
     (JNIEnv *env, jobject thisObj)
 {
     jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID hwndFieldID = env->GetFieldID(clazz, "hwnd", "J");
-    HWND hwnd = reinterpret_cast<HWND>(
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    JavaWindow *pThis = reinterpret_cast<JavaWindow*>(
         static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, hwndFieldID)
+            env->GetLongField(thisObj, nativeWindowFieldID)
         )
     );
+    
+    HWND hwnd = pThis->Window();
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

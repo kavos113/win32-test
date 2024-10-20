@@ -6,7 +6,7 @@
 #include "base_window.h"
 
 
-class MainWindow : public BaseWindow<MainWindow>
+class MainWindow : public BaseWindow
 {
 public:
     PCWSTR ClassName() const
@@ -40,6 +40,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    OutputDebugString(L"HandleMessage\n");
+    
     switch (uMsg)
     {
     case WM_DESTROY:

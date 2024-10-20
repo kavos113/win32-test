@@ -21,6 +21,14 @@ extern "C" {
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
   (JNIEnv *, jobject, jint, jint, jint, jint, jint);
 
+/*
+ * Class:     java_window4_java_Component
+ * Method:    setBackgroundColor
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Component_setBackgroundColor
+  (JNIEnv *, jobject, jint);
+
 #ifdef __cplusplus
 }
 #endif

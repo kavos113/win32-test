@@ -3,25 +3,24 @@
 
 #include <windows.h>
 
-template <class DERIVED_TYPE>
 class BaseWindow
 {
 public:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        DERIVED_TYPE *pThis = NULL;
+        BaseWindow *pThis = NULL;
         
         if (uMsg == WM_CREATE)
         {
             CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-            pThis = (DERIVED_TYPE*)pCreate->lpCreateParams;
+            pThis = (BaseWindow *)pCreate->lpCreateParams;
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pThis);
             
             pThis->m_hwnd = hwnd;
         }
         else
         {
-            pThis = (DERIVED_TYPE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+            pThis = (BaseWindow *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
         }
         
         if (pThis)
@@ -50,7 +49,7 @@ public:
     {
         WNDCLASS wc = {0};
         
-        wc.lpfnWndProc = DERIVED_TYPE::WindowProc;
+        wc.lpfnWndProc = WindowProc;
         wc.hInstance = GetModuleHandle(NULL);
         wc.lpszClassName = ClassName();
         

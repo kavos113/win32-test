@@ -13,7 +13,7 @@
 class JavaWindow : public JavaComponent<JavaWindow>
 {
 public:
-    PCWSTR class_name() const
+    PCWSTR ClassName() const
     {
         return L"JavaWindow";
     }

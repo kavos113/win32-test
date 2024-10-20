@@ -60,13 +60,13 @@ public:
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = GetModuleHandle(nullptr);
-        wc.lpszClassName = class_name();
+        wc.lpszClassName = ClassName();
         
         RegisterClass(&wc);
         
         m_hwnd = CreateWindowEx(
             dwExStyle,
-            class_name(),
+            ClassName(),
             lpWindowName,
             dwStyle,
             x, y,
@@ -88,7 +88,7 @@ public:
 protected:
     
     virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
-    virtual PCWSTR class_name() const = 0;
+    virtual PCWSTR ClassName() const = 0;
     
     HWND m_hwnd;
 };

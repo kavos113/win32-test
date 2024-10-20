@@ -12,29 +12,22 @@
 #include "java_component.h"
 #include "java_window4_java_Window.h"
 
-class JavaWindow : public JavaComponent<JavaWindow>
+class JavaWindow : public JavaComponent
 {
-    ID2D1HwndRenderTarget  *pRenderTarget;
     
-    HRESULT CreateGraphicsResources();
-    void    DiscardGraphicsResources();
-    void    OnPaint();
-    void    Resize();
+    HRESULT CreateGraphicsResources() override;
+    void    DiscardGraphicsResources() override;
+    void    OnPaint() override;
+    void    Resize() override;
     
 public:
     
-    JavaWindow() :
-        pRenderTarget(nullptr)
-    {
-    
-    }
-    
-    PCWSTR class_name() const
+    PCWSTR ClassName() const override
     {
         return L"Window";
     }
 
-    LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 };
 
 
