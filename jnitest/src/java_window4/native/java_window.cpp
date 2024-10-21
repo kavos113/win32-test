@@ -114,13 +114,13 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
 {
     // std::cout << "[Native] Java_java_1window4_java_Window_create" << std::endl;
     
-    JavaWindow *parentHwnd = nullptr;
+    JavaComponent *parentHwnd = nullptr;
     
     if (parent != nullptr)
     {
         jclass clazz = env->GetObjectClass(parent);
         jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-        parentHwnd = reinterpret_cast<JavaWindow*>(
+        parentHwnd = reinterpret_cast<JavaComponent*>(
             static_cast<LONG_PTR>(
                 env->GetLongField(parent, nativeWindowFieldID)
             )
