@@ -32,54 +32,9 @@ HRESULT JavaText::Initialize()
     dpiScaleY = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
     ReleaseDC(nullptr, screen);
 
-    WNDCLASSEX wcex = {0};
-
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WindowProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = GetModuleHandle(nullptr);
-    wcex.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.lpszClassName = ClassName();
-
-    ATOM atom = RegisterClassEx(&wcex);
+    ATOM atom = RegisterNewClass();
 
     hr = atom ? S_OK : E_FAIL;
-
-    Create(
-        L"JavaText",
-        WS_OVERLAPPEDWINDOW,
-        0,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        static_cast<int>(640.0f / dpiScaleX),
-        static_cast<int>(480.0f / dpiScaleY),
-        nullptr,
-        nullptr
-    );
-
-    if (SUCCEEDED(hr))
-    {
-        hr = m_hwnd ? S_OK : E_FAIL;
-    }
-
-    if (SUCCEEDED(hr))
-    {
-        hr = CreateDeviceIndependentResources();
-    }
-
-    if (SUCCEEDED(hr))
-    {
-        ShowWindow(m_hwnd, SW_SHOWNORMAL);
-        UpdateWindow(m_hwnd);
-    }
-
-    if (SUCCEEDED(hr))
-    {
-        DrawD2DContent();
-    }
 
     return hr;
 }
@@ -228,15 +183,6 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-        case WM_SIZE:
-        {
-            UINT width = LOWORD(lParam);
-            UINT height = HIWORD(lParam);
-            OnResize(width, height);
-        }
-            return 0;
-
-        case WM_DISPLAYCHANGE:
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -245,13 +191,6 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             EndPaint(m_hwnd, &ps);
         }
             return 0;
-
-        case WM_DESTROY:
-        {
-            DiscardDeviceResources();
-            PostQuitMessage(0);
-        }
-            return 1;
 
         default:
             return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
@@ -296,5 +235,29 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
             )
         );
     }
+    
+    std::wstring textStr = jstringToWstring(env, text);
+    
+    HRESULT hr = javaText.Initialize();
+    
+    javaText.Create(
+        textStr.c_str(),
+        WS_CHILD | WS_VISIBLE,
+        0,
+        0,
+        0,
+        300,
+        100,
+        parentComponent != nullptr ? parentComponent->Window() : nullptr,
+        nullptr
+        );
+    
+    if (SUCCEEDED(hr))
+    {
+        hr = javaText.CreateDeviceIndependentResources();
+    }
+    
+    jclass clazz = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
 
 }
