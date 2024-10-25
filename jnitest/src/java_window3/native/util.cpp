@@ -3,7 +3,7 @@
 
 #include "util.h"
 
-std::wstring jstringToWstring(JNIEnv *env, jstring jstr) {
+std::wstring JstringToWstring(JNIEnv *env, jstring jstr) {
     std::wstring wstr;
     
     const jchar *jchars = env->GetStringChars(jstr, nullptr);

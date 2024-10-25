@@ -13,16 +13,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND hwnd;
 HWND hwndButton;
 
-std::wstring jstringToWstring(JNIEnv *env, jstring jStr)
+std::wstring JstringToWstring(JNIEnv *env, jstring jstr)
 {
     std::wstring wStr;
     
-    const jchar *jChars = env->GetStringChars(jStr, nullptr);
-    jsize length = env->GetStringLength(jStr);
+    const jchar *jChars = env->GetStringChars(jstr, nullptr);
+    jsize length = env->GetStringLength(jstr);
     
     wStr.assign(jChars, jChars + length);
     
-    env->ReleaseStringChars(jStr, jChars);
+    env->ReleaseStringChars(jstr, jChars);
     
     return wStr;
 }
@@ -30,7 +30,7 @@ std::wstring jstringToWstring(JNIEnv *env, jstring jStr)
 JNIEXPORT void JNICALL Java_window_WindowTest_CreateWindow
     (JNIEnv *env, jobject jObj, jstring jStr)
 {
-    const std::wstring TITLE = jstringToWstring(env, jStr);
+    const std::wstring TITLE = JstringToWstring(env, jStr);
     const wchar_t CLASS_NAME[] = L"sample window class from jni";
     
     HINSTANCE hInstance = GetModuleHandle(nullptr);

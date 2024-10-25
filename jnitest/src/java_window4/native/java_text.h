@@ -5,6 +5,7 @@
 #include <jni.h>
 #include <d2d1.h>
 #include <dwrite.h>
+#include <iostream>
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "dwrite")
 
@@ -15,11 +16,12 @@ class JavaText : public JavaComponent
 {
 public:
     JavaText() :
-        text(nullptr),
-        cTextLength(0),
         pDWriteFactory(nullptr),
         pTextFormat(nullptr),
-        pColorBrush(nullptr)
+        pColorBrush(nullptr),
+        pRenderTarget(nullptr),
+        dpiScaleX(1.0f),
+        dpiScaleY(1.0f)
     {
 
     }
@@ -34,13 +36,18 @@ public:
     }
 
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    
+    HRESULT CreateDeviceIndependentResources();
+    
+    HRESULT DrawD2DContent();
+
+    void SetText(std::wstring newText);
+    std::wstring GetText();
 
 private:
-    HRESULT CreateDeviceIndependentResources();
     HRESULT CreateDeviceResources();
     void DiscardDeviceResources();
 
-    HRESULT DrawD2DContent();
     HRESULT DrawTextHello();
 
     void OnResize(UINT width, UINT height);
@@ -55,16 +62,16 @@ protected:
     void Resize() override;
 
 private:
-    float dpiScaleX{};
-    float dpiScaleY{};
+    float dpiScaleX;
+    float dpiScaleY;
 
+    ID2D1HwndRenderTarget *pRenderTarget;
     ID2D1SolidColorBrush *pColorBrush;
 
     IDWriteFactory *pDWriteFactory;
     IDWriteTextFormat *pTextFormat;
 
-    const wchar_t *text;
-    UINT32 cTextLength;
+    std::wstring text;
 };
 
 

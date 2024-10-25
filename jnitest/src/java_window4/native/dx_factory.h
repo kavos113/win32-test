@@ -15,7 +15,7 @@ public:
         SafeRelease(&pFactory);
     }
     
-    static ID2D1Factory *GetFactory()
+    static ID2D1Factory* GetFactory()
     {
         if (pFactory == nullptr)
         {

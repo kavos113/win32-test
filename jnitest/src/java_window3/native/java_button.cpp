@@ -50,7 +50,7 @@ JNIEXPORT void JNICALL Java_java_1window3_java_Button_create
     
     std::cout << "[Native] Parent hwnd: " << parentHwnd << std::endl;
     
-    std::wstring textW = jstringToWstring(env, text);
+    std::wstring textW = JstringToWstring(env, text);
     
     if (!button.Create(
         textW.c_str(),

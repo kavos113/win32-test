@@ -40,7 +40,7 @@ JNIEXPORT void JNICALL Java_windowjava_Button_createButton
 {
     JavaButton button;
     
-    std::wstring buttonTextW = jstringToWstring(env, buttonText);
+    std::wstring buttonTextW = JstringToWstring(env, buttonText);
     
     if (!button.Create(
         buttonTextW.c_str(),

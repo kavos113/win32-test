@@ -127,7 +127,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
         );
     }
     
-    std::wstring windowNameW = jstringToWstring(env, windowName);
+    std::wstring windowNameW = JstringToWstring(env, windowName);
     
     ATOM res = window.RegisterNewClass();
     if (res == 0)

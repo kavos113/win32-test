@@ -40,7 +40,7 @@ JNIEXPORT void JNICALL Java_java_1window2_java_Window_create
 {
     JavaWindow window;
     
-    std::wstring windowNameW = jstringToWstring(env, windowName);
+    std::wstring windowNameW = JstringToWstring(env, windowName);
     
     if (!window.Create(windowNameW.c_str(), WS_OVERLAPPEDWINDOW))
     {

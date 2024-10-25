@@ -3,6 +3,6 @@
 
 #include <string>
 
-std::wstring jstringToWstring(JNIEnv *env, jstring jstr);
+std::wstring JstringToWstring(JNIEnv *env, jstring jstr);
 
 #endif //WIN32_TEST_UTIL_H

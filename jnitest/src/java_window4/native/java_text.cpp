@@ -21,6 +21,7 @@ JavaText::~JavaText()
     SafeRelease(&pDWriteFactory);
     SafeRelease(&pTextFormat);
     SafeRelease(&pColorBrush);
+    SafeRelease(&pRenderTarget);
 }
 
 HRESULT JavaText::Initialize()
@@ -50,7 +51,6 @@ HRESULT JavaText::CreateDeviceIndependentResources()
     );
 
     text = L"Hello, World!";
-    cTextLength = (UINT32) wcslen(text);
 
     if (SUCCEEDED(hr))
     {
@@ -95,7 +95,10 @@ HRESULT JavaText::CreateDeviceResources()
     {
         hr = DXFactory::GetFactory()->CreateHwndRenderTarget(
             D2D1::RenderTargetProperties(),
-            D2D1::HwndRenderTargetProperties(m_hwnd, size),
+            D2D1::HwndRenderTargetProperties(
+                m_hwnd,
+                size
+            ),
             &pRenderTarget
         );
 
@@ -143,6 +146,15 @@ HRESULT JavaText::DrawD2DContent()
     return hr;
 }
 
+void JavaText::OnPaint()
+{
+    PAINTSTRUCT ps;
+    printf("[Native] OnPaint in JavaText, text: %ls\n", text.c_str());
+    BeginPaint(m_hwnd, &ps);
+    DrawD2DContent();
+    EndPaint(m_hwnd, &ps);
+}
+
 HRESULT JavaText::DrawTextHello()
 {
     RECT rc;
@@ -156,9 +168,11 @@ HRESULT JavaText::DrawTextHello()
         static_cast<FLOAT>(rc.bottom) / dpiScaleY
     );
 
+    printf("[Native] Text in settext: %ls\n", text.c_str());
+
     pRenderTarget->DrawText(
-        text,
-        cTextLength,
+        text.c_str(),
+        text.size(),
         pTextFormat,
         layoutRect,
         pColorBrush
@@ -184,12 +198,8 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(m_hwnd, &ps);
-            DrawD2DContent();
-            EndPaint(m_hwnd, &ps);
-        }
+            std::cout << "[Native] WM_PAINT in JavaText: " << wParam << std::endl;
+            OnPaint();
             return 0;
 
         default:
@@ -208,14 +218,19 @@ void JavaText::DiscardGraphicsResources()
 
 }
 
-void JavaText::OnPaint()
+void JavaText::Resize()
 {
 
 }
 
-void JavaText::Resize()
+void JavaText::SetText(std::wstring newText)
 {
+    text = newText;
+}
 
+std::wstring JavaText::GetText()
+{
+    return text;
 }
 
 JavaText javaText;
@@ -236,8 +251,10 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
         );
     }
     
-    std::wstring textStr = jstringToWstring(env, text);
-    
+    std::wstring textStr = JstringToWstring(env, text);
+
+    printf("[Native] Text: %ls\n", textStr.c_str());
+
     HRESULT hr = javaText.Initialize();
     
     javaText.Create(
@@ -257,7 +274,37 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
         hr = javaText.CreateDeviceIndependentResources();
     }
     
+    if (SUCCEEDED(hr))
+    {
+        hr = javaText.DrawD2DContent();
+    }
+    
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    env->SetLongField(thisObj, nativeWindowFieldID, static_cast<jlong>(
+        reinterpret_cast<LONG_PTR>(&javaText)
+        )
+    );
+}
 
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
+    (JNIEnv *env, jobject thisObj, jstring text)
+{
+    jclass clazz = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    JavaText *pThis = reinterpret_cast<JavaText*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+        )
+    );
+
+    std::wstring textStr = JstringToWstring(env, text);
+    
+    pThis->SetText(textStr);
+    /*
+     * if (isVisible)
+     * {
+     *   SendMessage(pThis->Window(), WM_PAINT, 0, 0);
+     * }
+     */
 }

@@ -78,7 +78,7 @@ public:
             dwExStyle,
             ClassName(),
             lpWindowName,
-            dwStyle,
+            dwStyle | WS_CLIPCHILDREN,
             x, y,
             nWidth, nHeight,
             hWndParent,
