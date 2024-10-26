@@ -45,21 +45,14 @@ public:
     std::wstring GetText();
 
 private:
-    HRESULT CreateDeviceResources();
-    void DiscardDeviceResources();
+    HRESULT CreateDeviceResources() override;
+    void DiscardDeviceResources() override;
 
     HRESULT DrawTextHello();
 
-    void OnResize(UINT width, UINT height);
-
 protected:
-    HRESULT CreateGraphicsResources() override;
-
-    void DiscardGraphicsResources() override;
-
     void OnPaint() override;
-
-    void Resize() override;
+    void OnResize(UINT width, UINT height) override;
 
 private:
     float dpiScaleX;

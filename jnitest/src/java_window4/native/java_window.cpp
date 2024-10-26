@@ -14,7 +14,7 @@
 #include "util.h"
 #include "jniutil.h"
 
-HRESULT JavaWindow::CreateGraphicsResources()
+HRESULT JavaWindow::CreateDeviceResources()
 {
     HRESULT hr = S_OK;
     
@@ -38,14 +38,14 @@ HRESULT JavaWindow::CreateGraphicsResources()
     return hr;
 }
 
-void JavaWindow::DiscardGraphicsResources()
+void JavaWindow::DiscardDeviceResources()
 {
     SafeRelease(&pRenderTarget);
 }
 
 void JavaWindow::OnPaint()
 {
-    HRESULT hr = CreateGraphicsResources();
+    HRESULT hr = CreateDeviceResources();
     
     if (SUCCEEDED(hr))
     {
@@ -59,13 +59,13 @@ void JavaWindow::OnPaint()
         
         if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
         {
-            DiscardGraphicsResources();
+            DiscardDeviceResources();
         }
         EndPaint(m_hwnd, &ps);
     }
 }
 
-void JavaWindow::Resize()
+void JavaWindow::OnResize(UINT width, UINT height)
 {
     if (pRenderTarget != nullptr)
     {
@@ -89,7 +89,7 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_DESTROY:
-        DiscardGraphicsResources();
+        DiscardDeviceResources();
         DXFactory::ReleaseFactory();
         PostQuitMessage(0);
         std::cout << "[Native] WM_DESTROY" << std::endl;
@@ -100,7 +100,9 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
         
     case WM_SIZE:
-        Resize();
+        UINT width = LOWORD(lParam);
+        UINT height = HIWORD(lParam);
+        OnResize(width, height);
         return 0;
     }
     

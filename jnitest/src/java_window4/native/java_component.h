@@ -104,10 +104,10 @@ protected:
     virtual PCWSTR ClassName() const = 0;
     virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
     
-    virtual HRESULT CreateGraphicsResources() = 0;
-    virtual void DiscardGraphicsResources() = 0;
+    virtual HRESULT CreateDeviceResources() = 0;
+    virtual void DiscardDeviceResources() = 0;
     virtual void OnPaint() = 0;
-    virtual void Resize() = 0;
+    virtual void OnResize(UINT width, UINT height) = 0;
     
     HWND m_hwnd;
     int m_backgroundColor;

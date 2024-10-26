@@ -15,10 +15,10 @@
 class JavaWindow : public JavaComponent
 {
     
-    HRESULT CreateGraphicsResources() override;
-    void    DiscardGraphicsResources() override;
+    HRESULT CreateDeviceResources() override;
+    void    DiscardDeviceResources() override;
     void    OnPaint() override;
-    void    Resize() override;
+    void    OnResize(UINT width, UINT height) override;
     
 public:
     

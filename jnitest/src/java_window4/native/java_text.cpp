@@ -208,21 +208,6 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-HRESULT JavaText::CreateGraphicsResources()
-{
-    return 0;
-}
-
-void JavaText::DiscardGraphicsResources()
-{
-
-}
-
-void JavaText::Resize()
-{
-
-}
-
 void JavaText::SetText(std::wstring newText)
 {
     text = newText;
