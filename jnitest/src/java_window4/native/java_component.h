@@ -44,7 +44,7 @@ public:
     JavaComponent() :
         m_hwnd(nullptr),
         pRenderTarget(nullptr),
-        m_backgroundColor(D2D1::ColorF::SkyBlue)
+        m_backgroundColor(0)
     {
     
     }
@@ -112,7 +112,7 @@ protected:
     virtual void OnResize(UINT width, UINT height) = 0;
     
     HWND m_hwnd;
-    int m_backgroundColor;
+    D2D1::ColorF m_backgroundColor; // int more efficient?
     
     ID2D1HwndRenderTarget  *pRenderTarget;
     

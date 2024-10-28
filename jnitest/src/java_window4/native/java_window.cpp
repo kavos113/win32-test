@@ -23,6 +23,7 @@ HRESULT JavaWindow::Initialize()
 
     std::call_once(flag, [this]() {
         RegisterNewClass();
+        m_backgroundColor = D2D1::ColorF(D2D1::ColorF::White);
     });
     
     return hr;
@@ -67,7 +68,7 @@ void JavaWindow::OnPaint()
         BeginPaint(m_hwnd, &ps);
         
         pRenderTarget->BeginDraw();
-        pRenderTarget->Clear(D2D1::ColorF(m_backgroundColor));
+        pRenderTarget->Clear(m_backgroundColor);
         
         hr = pRenderTarget->EndDraw();
         

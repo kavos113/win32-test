@@ -108,32 +108,6 @@ void JavaText::DiscardDeviceResources()
     SafeRelease(&pColorBrush);
 }
 
-HRESULT JavaText::DrawD2DContent()
-{
-    HRESULT hr = CreateDeviceResources();
-
-    if (!(pRenderTarget->CheckWindowState() & D2D1_WINDOW_STATE_OCCLUDED))
-    {
-        pRenderTarget->BeginDraw();
-        pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-        pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
-
-        hr = DrawTextHello();
-
-        if (SUCCEEDED(hr))
-        {
-            hr = pRenderTarget->EndDraw();
-        }
-    }
-
-    if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
-    {
-        DiscardDeviceResources();
-    }
-
-    return hr;
-}
-
 void JavaText::OnPaint()
 {
     PAINTSTRUCT ps;
@@ -141,6 +115,32 @@ void JavaText::OnPaint()
     BeginPaint(m_hwnd, &ps);
     DrawD2DContent();
     EndPaint(m_hwnd, &ps);
+}
+
+HRESULT JavaText::DrawD2DContent()
+{
+    HRESULT hr = CreateDeviceResources();
+    
+    if (!(pRenderTarget->CheckWindowState() & D2D1_WINDOW_STATE_OCCLUDED))
+    {
+        pRenderTarget->BeginDraw();
+        pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+        pRenderTarget->Clear(m_backgroundColor);
+        
+        hr = DrawTextHello();
+        
+        if (SUCCEEDED(hr))
+        {
+            hr = pRenderTarget->EndDraw();
+        }
+    }
+    
+    if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
+    {
+        DiscardDeviceResources();
+    }
+    
+    return hr;
 }
 
 HRESULT JavaText::DrawTextHello()

@@ -14,9 +14,17 @@ LRESULT JavaComponent::ComponentHandleMessage(UINT uMsg, WPARAM wParam, LPARAM l
     return TRUE;
 }
 
+// color: 0xAARRGGBB
 void JavaComponent::SetBackgroundColor(int color)
 {
-    m_backgroundColor = color;
+    std::cout << "R, G, B, A: " << ((color >> 16) & 0xFF) << ", " << ((color >> 8) & 0xFF) << ", " << (color & 0xFF) << ", " << ((color >> 24) & 0xFF) << std::endl;
+    
+    m_backgroundColor = D2D1::ColorF(
+        ((color >> 16) & 0xFF) / 255.0f,
+        ((color >> 8) & 0xFF) / 255.0f,
+        (color & 0xFF) / 255.0f,
+        ((color >> 24) & 0xFF) / 255.0f
+        );
 }
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
