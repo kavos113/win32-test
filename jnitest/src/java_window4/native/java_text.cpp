@@ -44,7 +44,7 @@ HRESULT JavaText::Initialize()
 HRESULT JavaText::CreateDeviceIndependentResources()
 {
     HRESULT hr = DXFactory::GetDWriteFactory()->CreateTextFormat(
-        L"Verdana",
+        L"Consolas",
         nullptr,
         DWRITE_FONT_WEIGHT_NORMAL,
         DWRITE_FONT_STYLE_NORMAL,

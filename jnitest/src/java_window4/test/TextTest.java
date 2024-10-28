@@ -18,7 +18,7 @@ public class TextTest {
         Text text = new Text(window, "Hello, World!");
         text.setRectangle(10, 10, 200, 100);
         text.setText("Hello, Java!");
-        text.setBackgroundColor(Color.BLUE);
+        text.setBackgroundColor(Color.AZURE2);
 
         window.show();
         
