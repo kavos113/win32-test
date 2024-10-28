@@ -16,9 +16,10 @@
 #include "util.h"
 #include "jniutil.h"
 
+std::once_flag JavaText::flag;
+
 JavaText::~JavaText()
 {
-    SafeRelease(&pDWriteFactory);
     SafeRelease(&pTextFormat);
     SafeRelease(&pColorBrush);
     SafeRelease(&pRenderTarget);
@@ -27,44 +28,31 @@ JavaText::~JavaText()
 HRESULT JavaText::Initialize()
 {
     HRESULT hr = S_OK;
-
-    HDC screen = GetDC(nullptr);
-    dpiScaleX = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
-    dpiScaleY = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
-    ReleaseDC(nullptr, screen);
-
-    ATOM atom = RegisterNewClass();
-
-    hr = atom ? S_OK : E_FAIL;
+    
+    std::call_once(flag, [this]() {
+        HDC screen = GetDC(nullptr);
+        dpiScaleX = GetDeviceCaps(screen, LOGPIXELSX) / 96.0f;
+        dpiScaleY = GetDeviceCaps(screen, LOGPIXELSY) / 96.0f;
+        ReleaseDC(nullptr, screen);
+        
+        ATOM atom = RegisterNewClass();
+    });
 
     return hr;
 }
 
 HRESULT JavaText::CreateDeviceIndependentResources()
 {
-    HRESULT hr;
-
-    hr = DWriteCreateFactory(
-        DWRITE_FACTORY_TYPE_SHARED,
-        __uuidof(IDWriteFactory),
-        reinterpret_cast<IUnknown**>(&pDWriteFactory)
+    HRESULT hr = DXFactory::GetDWriteFactory()->CreateTextFormat(
+        L"Verdana",
+        nullptr,
+        DWRITE_FONT_WEIGHT_NORMAL,
+        DWRITE_FONT_STYLE_NORMAL,
+        DWRITE_FONT_STRETCH_NORMAL,
+        24.0f,
+        L"en-us",
+        &pTextFormat
     );
-
-    text = L"Hello, World!";
-
-    if (SUCCEEDED(hr))
-    {
-        hr = pDWriteFactory->CreateTextFormat(
-            L"Verdana",
-            nullptr,
-            DWRITE_FONT_WEIGHT_NORMAL,
-            DWRITE_FONT_STYLE_NORMAL,
-            DWRITE_FONT_STRETCH_NORMAL,
-            24.0f,
-            L"en-us",
-            &pTextFormat
-        );
-    }
 
     if (SUCCEEDED(hr))
     {
@@ -218,8 +206,6 @@ std::wstring JavaText::GetText()
     return text;
 }
 
-JavaText javaText;
-
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring text)
 {
@@ -239,10 +225,12 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
     std::wstring textStr = JstringToWstring(env, text);
 
     printf("[Native] Text: %ls\n", textStr.c_str());
-
-    HRESULT hr = javaText.Initialize();
     
-    javaText.Create(
+    auto *javaText = new JavaText();
+
+    HRESULT hr = javaText->Initialize();
+    
+    javaText->Create(
         textStr.c_str(),
         WS_CHILD | WS_VISIBLE,
         0,
@@ -256,18 +244,18 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
     
     if (SUCCEEDED(hr))
     {
-        hr = javaText.CreateDeviceIndependentResources();
+        hr = javaText->CreateDeviceIndependentResources();
     }
     
     if (SUCCEEDED(hr))
     {
-        hr = javaText.DrawD2DContent();
+        hr = javaText->DrawD2DContent();
     }
     
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
     env->SetLongField(thisObj, nativeWindowFieldID, static_cast<jlong>(
-        reinterpret_cast<LONG_PTR>(&javaText)
+        reinterpret_cast<LONG_PTR>(javaText)
         )
     );
 }

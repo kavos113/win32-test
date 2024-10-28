@@ -22,12 +22,18 @@ class JavaWindow : public JavaComponent
     
 public:
     
+    HRESULT Initialize() override;
+    
     PCWSTR ClassName() const override
     {
         return L"Window";
     }
 
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    
+private:
+    
+    static std::once_flag flag;
 };
 
 

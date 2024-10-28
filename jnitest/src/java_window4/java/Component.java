@@ -6,12 +6,17 @@ public abstract class Component {
 
     protected abstract void create(Component parent, String title);
 
+    private native void destroy();
     private native void reshape(int x, int y, int width, int height, int operation);
     private native void setBackgroundColor(int color);
 
     private static final int SET_POSITION = 1;
     private static final int SET_SIZE = 2;
     private static final int SET_POSITION_AND_SIZE = 3;
+
+    public void release() {
+        destroy();
+    }
 
     public void setRectangle(int x, int y, int width, int height) {
         reshape(x, y, width, height, SET_POSITION_AND_SIZE);

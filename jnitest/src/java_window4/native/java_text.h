@@ -16,7 +16,6 @@ class JavaText : public JavaComponent
 {
 public:
     JavaText() :
-        pDWriteFactory(nullptr),
         pTextFormat(nullptr),
         pColorBrush(nullptr),
         pRenderTarget(nullptr),
@@ -28,7 +27,7 @@ public:
 
     ~JavaText();
 
-    HRESULT Initialize();
+    HRESULT Initialize() override;
 
     PCWSTR ClassName() const override
     {
@@ -61,10 +60,11 @@ private:
     ID2D1HwndRenderTarget *pRenderTarget;
     ID2D1SolidColorBrush *pColorBrush;
 
-    IDWriteFactory *pDWriteFactory;
     IDWriteTextFormat *pTextFormat;
 
     std::wstring text;
+    
+    static std::once_flag flag;
 };
 
 

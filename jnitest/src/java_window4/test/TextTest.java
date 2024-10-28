@@ -17,6 +17,14 @@ public class TextTest {
         text.setRectangle(10, 10, 200, 100);
         text.setText("Hello, Java!");
 
+        Window window2 = new Window("Text Test 2");
+        window2.setRectangle(100, 100, 640, 480);
+
         window.show();
+        window2.show();
+
+        window.release();
+        window2.release();
+        text.release();
     }
 }

@@ -15,6 +15,14 @@ extern "C" {
 #define java_window4_java_Component_SET_POSITION_AND_SIZE 3L
 /*
  * Class:     java_window4_java_Component
+ * Method:    destroy
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Component_destroy
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     java_window4_java_Component
  * Method:    reshape
  * Signature: (IIIII)V
  */

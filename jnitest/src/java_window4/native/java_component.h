@@ -101,6 +101,8 @@ protected:
     
     LRESULT ComponentHandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
     
+    virtual HRESULT Initialize() = 0;
+    
     virtual PCWSTR ClassName() const = 0;
     virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) = 0;
     

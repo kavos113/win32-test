@@ -6,6 +6,7 @@
 #include <jni.h>
 #include <string>
 #include <iostream>
+#include <vector>
 #include <d2d1.h>
 #pragma comment(lib, "d2d1")
 
@@ -13,6 +14,19 @@
 #include "dx_factory.h"
 #include "util.h"
 #include "jniutil.h"
+
+std::once_flag JavaWindow::flag;
+
+HRESULT JavaWindow::Initialize()
+{
+    HRESULT hr = S_OK;
+
+    std::call_once(flag, [this]() {
+        RegisterNewClass();
+    });
+    
+    return hr;
+}
 
 HRESULT JavaWindow::CreateDeviceResources()
 {
@@ -91,8 +105,9 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         DiscardDeviceResources();
         DXFactory::ReleaseFactory();
+        DXFactory::GetDWriteFactory();
         PostQuitMessage(0);
-        std::cout << "[Native] WM_DESTROY" << std::endl;
+        std::cout << "[Native] WM_DESTROY: " << this << std::endl;
         return 0;
     
     case WM_PAINT:
@@ -108,8 +123,6 @@ LRESULT JavaWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     return lr;
 }
-
-JavaWindow window;
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring windowName)
@@ -129,10 +142,12 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
         );
     }
     
-    std::wstring windowNameW = JstringToWstring(env, windowName);
+    auto *window = new JavaWindow();
     
-    ATOM res = window.RegisterNewClass();
-    if (res == 0)
+    std::wstring windowNameW = JstringToWstring(env, windowName);
+
+    HRESULT res = window->Initialize();
+    if (FAILED(res))
     {
         MessageBox(
             nullptr,
@@ -143,7 +158,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
         return;
     }
     
-    if (!window.Create(
+    if (!window->Create(
         windowNameW.c_str(),
         WS_OVERLAPPEDWINDOW,
         0,
@@ -164,8 +179,9 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     jclass thisClazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID2 = env->GetFieldID(thisClazz, "nativeWindow", "J");
     env->SetLongField(thisObj, nativeWindowFieldID2, static_cast<jlong>(
-        reinterpret_cast<LONG_PTR>(&window)
+        reinterpret_cast<LONG_PTR>(window)
     ));
+    
     
     // std::cout << "[Native] Window Handle Set window: " << &window << std::endl;
 }
@@ -175,13 +191,15 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
 {
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    JavaWindow *pThis = reinterpret_cast<JavaWindow*>(
+    auto *pThis = reinterpret_cast<JavaWindow*>(
         static_cast<LONG_PTR>(
             env->GetLongField(thisObj, nativeWindowFieldID)
         )
     );
     
     HWND hwnd = pThis->Window();
+    
+    std::cout << "[Native] ShowWindow hwnd: " << hwnd << std::endl;
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

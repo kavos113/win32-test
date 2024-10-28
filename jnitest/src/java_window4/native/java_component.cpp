@@ -86,3 +86,20 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Component_setBackgroundColor
     pThis->SetBackgroundColor(color);
     SendMessage(pThis->Window(), WM_PAINT, 0, 0);
 }
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Component_destroy
+    (JNIEnv *env, jobject thisObj)
+{
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
+    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+            )
+        );
+    
+    if (pThis != nullptr)
+    {
+        delete pThis;
+    }
+}
