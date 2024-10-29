@@ -61,8 +61,8 @@ public:
         DWORD dwExStyle = 0,
         int x = CW_USEDEFAULT,
         int y = CW_USEDEFAULT,
-        int nWidth = 600,
-        int nHeight = 400,
+        int nWidth = 1000,
+        int nHeight = 800,
         HWND hWndParent = 0,
         HMENU hMenu = 0
     )

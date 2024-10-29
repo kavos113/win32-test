@@ -106,8 +106,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
         0,
         0,
         0,
-        300,
-        100,
+        1000,
+        370,
         window.Window(),
         nullptr
         );

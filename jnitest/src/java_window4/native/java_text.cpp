@@ -206,6 +206,26 @@ std::wstring JavaText::GetText()
     return text;
 }
 
+void JavaText::SetTextColor(int color)
+{
+    pColorBrush->SetColor(D2D1::ColorF(
+        (float) ((color >> 16) & 0xFF) / 255.0f,
+        (float) ((color >> 8) & 0xFF) / 255.0f,
+        (float) (color & 0xFF) / 255.0f,
+        (float) ((color >> 24) & 0xFF) / 255.0f
+    ));
+}
+
+void JavaText::SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT alignment)
+{
+    pTextFormat->SetTextAlignment(alignment);
+}
+
+void JavaText::SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment)
+{
+    pTextFormat->SetParagraphAlignment(alignment);
+}
+
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring text)
 {
@@ -242,6 +262,8 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
         nullptr
         );
     
+    javaText->SetText(textStr);
+    
     if (SUCCEEDED(hr))
     {
         hr = javaText->CreateDeviceIndependentResources();
@@ -274,6 +296,120 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
     std::wstring textStr = JstringToWstring(env, text);
     
     pThis->SetText(textStr);
+    /*
+     * if (isVisible)
+     * {
+     *   SendMessage(pThis->Window(), WM_PAINT, 0, 0);
+     * }
+     */
+}
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
+    (JNIEnv *env, jobject thisObj, jint color)
+{
+    jclass clazz = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    JavaText *pThis = reinterpret_cast<JavaText*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+        )
+    );
+
+    pThis->SetTextColor(color);
+    
+    /*
+     * if (isVisible)
+     * {
+     *   SendMessage(pThis->Window(), WM_PAINT, 0, 0);
+     * }
+     */
+}
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextHorizontalAlignment
+    (JNIEnv *env, jobject thisObj, jobject alignment)
+{
+    jclass clazz = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    JavaText *pThis = reinterpret_cast<JavaText*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+        )
+    );
+
+    jclass alignmentClazz = env->GetObjectClass(alignment);
+    
+    jfieldID alignmentCenterFieldID = env->GetStaticFieldID(alignmentClazz, "CENTER", "Ljava_window4/java/TextHorizontalAlignment;");
+    jobject center = env->GetStaticObjectField(alignmentClazz, alignmentCenterFieldID);
+    
+    jfieldID alignmentLeadingFieldID = env->GetStaticFieldID(alignmentClazz, "LEADING", "Ljava_window4/java/TextHorizontalAlignment;");
+    jobject leading = env->GetStaticObjectField(alignmentClazz, alignmentLeadingFieldID);
+    
+    jfieldID alignmentTrailingFieldID = env->GetStaticFieldID(alignmentClazz, "TRAILING", "Ljava_window4/java/TextHorizontalAlignment;");
+    jobject trailing = env->GetStaticObjectField(alignmentClazz, alignmentTrailingFieldID);
+    
+    jfieldID alignmentJustifyFieldID = env->GetStaticFieldID(alignmentClazz, "JUSTIFY", "Ljava_window4/java/TextHorizontalAlignment;");
+    jobject justify = env->GetStaticObjectField(alignmentClazz, alignmentJustifyFieldID);
+    
+    if (env->IsSameObject(alignment, center))
+    {
+        pThis->SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+    }
+    else if (env->IsSameObject(alignment, leading))
+    {
+        pThis->SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+    }
+    else if (env->IsSameObject(alignment, trailing))
+    {
+        pThis->SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING);
+    }
+    else if (env->IsSameObject(alignment, justify))
+    {
+        pThis->SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT_JUSTIFIED);
+    }
+    
+    /*
+     * if (isVisible)
+     * {
+     *   SendMessage(pThis->Window(), WM_PAINT, 0, 0);
+     * }
+     */
+}
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextVerticalAlignment
+    (JNIEnv *env, jobject thisObj, jobject alignment)
+{
+    jclass clazz = env->GetObjectClass(thisObj);
+    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
+    JavaText *pThis = reinterpret_cast<JavaText*>(
+        static_cast<LONG_PTR>(
+            env->GetLongField(thisObj, nativeWindowFieldID)
+        )
+    );
+
+    jclass alignmentClazz = env->GetObjectClass(alignment);
+    
+    jfieldID alignmentCenterFieldID = env->GetStaticFieldID(alignmentClazz, "CENTER", "Ljava_window4/java/TextVerticalAlignment;");
+    jobject center = env->GetStaticObjectField(alignmentClazz, alignmentCenterFieldID);
+    
+    jfieldID alignmentTopFieldID = env->GetStaticFieldID(alignmentClazz, "TOP", "Ljava_window4/java/TextVerticalAlignment;");
+    jobject top = env->GetStaticObjectField(alignmentClazz, alignmentTopFieldID);
+    
+    jfieldID alignmentBottomFieldID = env->GetStaticFieldID(alignmentClazz, "BOTTOM", "Ljava_window4/java/TextVerticalAlignment;");
+    jobject bottom = env->GetStaticObjectField(alignmentClazz, alignmentBottomFieldID);
+    
+    if (env->IsSameObject(alignment, center))
+    {
+        pThis->SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    }
+    else if (env->IsSameObject(alignment, top))
+    {
+        pThis->SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+    }
+    else if (env->IsSameObject(alignment, bottom))
+    {
+        pThis->SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT_FAR);
+    }
+    
     /*
      * if (isVisible)
      * {

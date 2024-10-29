@@ -42,6 +42,10 @@ public:
 
     void SetText(std::wstring newText);
     std::wstring GetText();
+    
+    void SetTextColor(int color);
+    void SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT alignment);
+    void SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment);
 
 private:
     HRESULT CreateDeviceResources() override;

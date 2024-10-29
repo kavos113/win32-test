@@ -2,6 +2,8 @@ package java_window4.test;
 
 import java_window4.java.Color;
 import java_window4.java.Text;
+import java_window4.java.TextHorizontalAlignment;
+import java_window4.java.TextVerticalAlignment;
 import java_window4.java.Window;
 
 public class TextTest {
@@ -16,9 +18,12 @@ public class TextTest {
         window.setBackgroundColor(Color.LIGHT_GRAY);
 
         Text text = new Text(window, "Hello, World!");
-        text.setRectangle(10, 10, 200, 100);
-        text.setText("Hello, Java!");
+        text.setRectangle(10, 10, 400, 200);
+        // text.setText("This is a text component. Who knows what will happen next?");
         text.setBackgroundColor(Color.AZURE2);
+        text.setTextColor(Color.RED);
+        //text.setTextHorizontalAlignment(TextHorizontalAlignment.CENTER);
+        //text.setTextVerticalAlignment(TextVerticalAlignment.BOTTOM);
 
         window.show();
         

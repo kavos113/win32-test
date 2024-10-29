@@ -10,9 +10,7 @@ package java_window4.java;
  * JUSTIFY: 両端揃え
  */
 public enum TextHorizontalAlignment {
-    LEFT,
     CENTER,
-    RIGHT,
     LEADING,
     TRAILING,
     JUSTIFY

@@ -64,7 +64,7 @@ HRESULT HelloText::CreateDeviceIndependentResources()
         );
     }
     
-    text = L"Hello, World DirectWrite!";
+    text = L"Hello, World!";
     cTextLength = (UINT32) wcslen(text);
     
     if (SUCCEEDED(hr))
@@ -84,7 +84,7 @@ HRESULT HelloText::CreateDeviceIndependentResources()
     // horizontal center
     if (SUCCEEDED(hr))
     {
-        hr = pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+        hr = pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_JUSTIFIED);
     }
     
     // vertical center

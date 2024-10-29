@@ -23,6 +23,30 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
 
 /*
  * Class:     java_window4_java_Text
+ * Method:    setTextColor
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     java_window4_java_Text
+ * Method:    setTextHorizontalAlignment
+ * Signature: (Ljava_window4/java/TextHorizontalAlignment;)V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextHorizontalAlignment
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     java_window4_java_Text
+ * Method:    setTextVerticalAlignment
+ * Signature: (Ljava_window4/java/TextVerticalAlignment;)V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextVerticalAlignment
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     java_window4_java_Text
  * Method:    create
  * Signature: (Ljava_window4/java/Component;Ljava/lang/String;)V
  */
