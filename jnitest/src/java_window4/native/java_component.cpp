@@ -8,6 +8,7 @@
 #pragma comment(lib, "d2d1")
 
 #include "java_component.h"
+#include "jniutil.h"
 
 LRESULT JavaComponent::ComponentHandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -28,13 +29,7 @@ void JavaComponent::SetBackgroundColor(int color)
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
     (JNIEnv *env, jobject thisObj, jint x, jint y, jint width, jint height, jint operation)
 {
-    jclass thisClass = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
-    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-            )
-        );
+    auto *pThis = reinterpret_cast<JavaComponent *>(GetJavaWindowPtr(env, thisObj));
     
     HWND hwnd = pThis->Window();
     
@@ -83,13 +78,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_setBackgroundColor
     (JNIEnv *env, jobject thisObj, jint color)
 {
-    jclass thisClass = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
-    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-            )
-        );
+    auto *pThis = reinterpret_cast<JavaComponent *>(GetJavaWindowPtr(env, thisObj));
     
     pThis->SetBackgroundColor(color);
     SendMessage(pThis->Window(), WM_PAINT, 0, 0);
@@ -98,13 +87,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Component_setBackgroundColor
 JNIEXPORT void JNICALL Java_java_1window4_java_Component_destroy
     (JNIEnv *env, jobject thisObj)
 {
-    jclass thisClass = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(thisClass, "nativeWindow", "J");
-    JavaComponent *pThis = reinterpret_cast<JavaComponent*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-            )
-        );
+    auto *pThis = reinterpret_cast<JavaComponent *>(GetJavaWindowPtr(env, thisObj));
     
     delete pThis;
     

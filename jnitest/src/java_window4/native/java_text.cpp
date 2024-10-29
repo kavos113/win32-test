@@ -258,6 +258,42 @@ void JavaText::SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment)
     pTextFormat->SetParagraphAlignment(alignment);
 }
 
+void JavaText::SetFontFamily(const std::wstring& fontFamily)
+{
+    pTextLayout->SetFontFamilyName(
+        fontFamily.c_str(),
+        DWRITE_TEXT_RANGE{0, static_cast<UINT32>(text.size())}
+        );
+}
+
+void JavaText::SetFontSize(float fontSize)
+{
+    pTextLayout->SetFontSize(
+        fontSize,
+        DWRITE_TEXT_RANGE{0, static_cast<UINT32>(text.size())}
+        );
+}
+
+void JavaText::SetFontStretch(float stretch)
+{
+
+}
+
+void JavaText::SetFontStyle(DWRITE_FONT_STYLE style)
+{
+
+}
+
+void JavaText::SetFontWeight(int weight)
+{
+
+}
+
+void JavaText::SetFontLineHeight(float lineHeight)
+{
+
+}
+
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
     (JNIEnv *env, jobject thisObj, jobject parent, jstring text)
 {
@@ -265,13 +301,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
 
     if (parent != nullptr)
     {
-        jclass clazz = env->GetObjectClass(parent);
-        jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-        parentComponent = reinterpret_cast<JavaComponent*>(
-            static_cast<LONG_PTR >(
-                env->GetLongField(parent, nativeWindowFieldID)
-            )
-        );
+        parentComponent = reinterpret_cast<JavaComponent*>(GetJavaWindowPtr(env, parent));
     }
     
     std::wstring textStr = JstringToWstring(env, text);
@@ -306,25 +336,14 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
         hr = javaText->DrawD2DContent();
     }
     
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    env->SetLongField(thisObj, nativeWindowFieldID, static_cast<jlong>(
-        reinterpret_cast<LONG_PTR>(javaText)
-        )
-    );
+    SetJavaWindowPtr(env, thisObj, reinterpret_cast<LONG_PTR>(javaText));
 }
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
     (JNIEnv *env, jobject thisObj, jstring text)
 {
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    auto *pThis = reinterpret_cast<JavaText*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-        )
-    );
-
+    auto *pThis = reinterpret_cast<JavaText*>(GetJavaWindowPtr(env, thisObj));
+    
     std::wstring textStr = JstringToWstring(env, text);
     
     pThis->SetText(textStr);
@@ -339,13 +358,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
     (JNIEnv *env, jobject thisObj, jint color)
 {
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    auto *pThis = reinterpret_cast<JavaText*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-        )
-    );
+    auto *pThis = reinterpret_cast<JavaText*>(GetJavaWindowPtr(env, thisObj));
 
     pThis->SetTextColor(color);
     
@@ -357,16 +370,11 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
      */
 }
 
+// TODO? private static field?
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextHorizontalAlignment
     (JNIEnv *env, jobject thisObj, jobject alignment)
 {
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    auto *pThis = reinterpret_cast<JavaText*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-        )
-    );
+    auto *pThis = reinterpret_cast<JavaText*>(GetJavaWindowPtr(env, thisObj));
 
     jclass alignmentClazz = env->GetObjectClass(alignment);
     
@@ -410,13 +418,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextHorizontalAlignment
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextVerticalAlignment
     (JNIEnv *env, jobject thisObj, jobject alignment)
 {
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    auto *pThis = reinterpret_cast<JavaText*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-        )
-    );
+    auto *pThis = reinterpret_cast<JavaText*>(GetJavaWindowPtr(env, thisObj));
 
     jclass alignmentClazz = env->GetObjectClass(alignment);
     

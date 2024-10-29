@@ -13,6 +13,18 @@ extern "C" {
 #define java_window4_java_Text_SET_SIZE 2L
 #undef java_window4_java_Text_SET_POSITION_AND_SIZE
 #define java_window4_java_Text_SET_POSITION_AND_SIZE 3L
+#undef java_window4_java_Text_SET_FONT_FAMILY
+#define java_window4_java_Text_SET_FONT_FAMILY 1L
+#undef java_window4_java_Text_SET_FONT_SIZE
+#define java_window4_java_Text_SET_FONT_SIZE 2L
+#undef java_window4_java_Text_SET_FONT_STRETCH
+#define java_window4_java_Text_SET_FONT_STRETCH 4L
+#undef java_window4_java_Text_SET_FONT_STYLE
+#define java_window4_java_Text_SET_FONT_STYLE 8L
+#undef java_window4_java_Text_SET_FONT_WEIGHT
+#define java_window4_java_Text_SET_FONT_WEIGHT 16L
+#undef java_window4_java_Text_SET_FONT_LINE_HEIGHT
+#define java_window4_java_Text_SET_FONT_LINE_HEIGHT 32L
 /*
  * Class:     java_window4_java_Text
  * Method:    setNativeText
@@ -28,6 +40,14 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
  */
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     java_window4_java_Text
+ * Method:    setFont
+ * Signature: (Ljava/lang/String;FFIIFI)V
+ */
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setFont
+  (JNIEnv *, jobject, jstring, jfloat, jfloat, jint, jint, jfloat, jint);
 
 /*
  * Class:     java_window4_java_Text

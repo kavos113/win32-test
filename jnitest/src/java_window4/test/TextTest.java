@@ -19,11 +19,11 @@ public class TextTest {
 
         Text text = new Text(window, "Hello, World!");
         text.setRectangle(0, 0, 640, 400);
-        // text.setText("This is a text component. Who knows what will happen next?");
+        text.setText("This is a text component. Who knows what will happen next?");
         text.setBackgroundColor(Color.AZURE2);
         text.setTextColor(Color.RED);
         text.setTextHorizontalAlignment(TextHorizontalAlignment.JUSTIFY);
-        text.setTextVerticalAlignment(TextVerticalAlignment.BOTTOM);
+        text.setTextVerticalAlignment(TextVerticalAlignment.CENTER);
 
         window.show();
         

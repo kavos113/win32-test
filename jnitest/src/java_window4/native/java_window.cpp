@@ -134,13 +134,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     
     if (parent != nullptr)
     {
-        jclass clazz = env->GetObjectClass(parent);
-        jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-        parentHwnd = reinterpret_cast<JavaComponent*>(
-            static_cast<LONG_PTR>(
-                env->GetLongField(parent, nativeWindowFieldID)
-            )
-        );
+        parentHwnd = reinterpret_cast<JavaComponent *>(GetJavaWindowPtr(env, parent));
     }
     
     auto *window = new JavaWindow();
@@ -177,12 +171,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     
     std::cout << "[Native] Window Created" << std::endl;
     
-    jclass thisClazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID2 = env->GetFieldID(thisClazz, "nativeWindow", "J");
-    env->SetLongField(thisObj, nativeWindowFieldID2, static_cast<jlong>(
-        reinterpret_cast<LONG_PTR>(window)
-    ));
-    
+    SetJavaWindowPtr(env, thisObj, reinterpret_cast<LONG_PTR>(window));
     
     // std::cout << "[Native] Window Handle Set window: " << &window << std::endl;
 }
@@ -190,13 +179,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
 JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
     (JNIEnv *env, jobject thisObj)
 {
-    jclass clazz = env->GetObjectClass(thisObj);
-    jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    auto *pThis = reinterpret_cast<JavaWindow*>(
-        static_cast<LONG_PTR>(
-            env->GetLongField(thisObj, nativeWindowFieldID)
-        )
-    );
+    auto *pThis = reinterpret_cast<JavaWindow *>(GetJavaWindowPtr(env, thisObj));
     
     HWND hwnd = pThis->Window();
     

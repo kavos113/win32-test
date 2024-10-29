@@ -47,6 +47,13 @@ public:
     void SetTextColor(int color);
     void SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT alignment);
     void SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment);
+    
+    void SetFontFamily(const std::wstring& fontFamily);
+    void SetFontSize(float fontSize);
+    void SetFontStretch(float stretch);
+    void SetFontStyle(DWRITE_FONT_STYLE style);
+    void SetFontWeight(int weight);
+    void SetFontLineHeight(float lineHeight);
 
 private:
     HRESULT CreateDeviceResources() override;
