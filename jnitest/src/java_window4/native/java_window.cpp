@@ -161,7 +161,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_create
     
     if (!window->Create(
         windowNameW.c_str(),
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         0,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
@@ -199,8 +199,6 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Window_showWindow
     );
     
     HWND hwnd = pThis->Window();
-    
-    std::cout << "[Native] ShowWindow hwnd: " << hwnd << std::endl;
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

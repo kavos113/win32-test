@@ -6,6 +6,7 @@
 #include <jni.h>
 #include <string>
 #include <iostream>
+#include <utility>
 #include <d2d1.h>
 #include <dwrite.h>
 #pragma comment(lib, "d2d1")
@@ -62,6 +63,24 @@ HRESULT JavaText::CreateDeviceIndependentResources()
     if (SUCCEEDED(hr))
     {
         hr = pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    }
+    
+    if (SUCCEEDED(hr))
+    {
+        RECT rc;
+        GetClientRect(m_hwnd, &rc);
+        
+        float width = static_cast<float>(rc.right - rc.left) / dpiScaleX;
+        float height = static_cast<float>(rc.bottom - rc.top) / dpiScaleY;
+        
+        hr = DXFactory::GetDWriteFactory()->CreateTextLayout(
+            text.c_str(),
+            text.size(),
+            pTextFormat,
+            width,
+            height,
+            &pTextLayout
+        );
     }
 
     return hr;
@@ -127,7 +146,7 @@ HRESULT JavaText::DrawD2DContent()
         pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
         pRenderTarget->Clear(m_backgroundColor);
         
-        hr = DrawTextHello();
+        hr = DrawTextContent();
         
         if (SUCCEEDED(hr))
         {
@@ -135,7 +154,7 @@ HRESULT JavaText::DrawD2DContent()
         }
     }
     
-    if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
+    if (FAILED(hr))
     {
         DiscardDeviceResources();
     }
@@ -143,11 +162,14 @@ HRESULT JavaText::DrawD2DContent()
     return hr;
 }
 
-HRESULT JavaText::DrawTextHello()
+HRESULT JavaText::DrawTextContent()
 {
     RECT rc;
 
     GetClientRect(m_hwnd, &rc);
+    
+    std::cout << "[Native] client rect: " << rc.left << ", " << rc.top << ", " << rc.right << ", " << rc.bottom << std::endl;
+    std::cout << "[Native] dpi scale: " << dpiScaleX << ", " << dpiScaleY << std::endl;
 
     D2D1_RECT_F layoutRect = D2D1::RectF(
         static_cast<FLOAT>(rc.left) / dpiScaleX,
@@ -189,6 +211,16 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             std::cout << "[Native] WM_PAINT in JavaText: " << wParam << std::endl;
             OnPaint();
             return 0;
+            
+        case WM_SIZE:
+        {
+            std::cout << "[Native] WM_SIZE in JavaText: " << wParam << std::endl;
+            UINT width = LOWORD(lParam);
+            UINT height = HIWORD(lParam);
+            
+            OnResize(width, height);
+        }
+            return 0;
 
         default:
             return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
@@ -198,7 +230,7 @@ LRESULT JavaText::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void JavaText::SetText(std::wstring newText)
 {
-    text = newText;
+    text = std::move(newText);
 }
 
 std::wstring JavaText::GetText()
@@ -287,7 +319,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setNativeText
 {
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    JavaText *pThis = reinterpret_cast<JavaText*>(
+    auto *pThis = reinterpret_cast<JavaText*>(
         static_cast<LONG_PTR>(
             env->GetLongField(thisObj, nativeWindowFieldID)
         )
@@ -309,7 +341,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
 {
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    JavaText *pThis = reinterpret_cast<JavaText*>(
+    auto *pThis = reinterpret_cast<JavaText*>(
         static_cast<LONG_PTR>(
             env->GetLongField(thisObj, nativeWindowFieldID)
         )
@@ -330,7 +362,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextHorizontalAlignment
 {
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    JavaText *pThis = reinterpret_cast<JavaText*>(
+    auto *pThis = reinterpret_cast<JavaText*>(
         static_cast<LONG_PTR>(
             env->GetLongField(thisObj, nativeWindowFieldID)
         )
@@ -380,7 +412,7 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextVerticalAlignment
 {
     jclass clazz = env->GetObjectClass(thisObj);
     jfieldID nativeWindowFieldID = env->GetFieldID(clazz, "nativeWindow", "J");
-    JavaText *pThis = reinterpret_cast<JavaText*>(
+    auto *pThis = reinterpret_cast<JavaText*>(
         static_cast<LONG_PTR>(
             env->GetLongField(thisObj, nativeWindowFieldID)
         )

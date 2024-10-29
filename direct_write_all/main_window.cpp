@@ -102,15 +102,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
     
     helloText.Create(
         L"Hello, DirectWrite!",
-        WS_CHILD,
+        WS_CHILD | WS_VISIBLE,
         0,
         0,
         0,
-        1000,
-        370,
+        300,
+        170,
         window.Window(),
         nullptr
         );
+    
+    
     
     if (SUCCEEDED(hr))
     {
@@ -122,9 +124,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
         hr = helloText.DrawD2DContent();
     }
     
-    
     ShowWindow(window.Window(), nCmdShow);
     ShowWindow(helloText.Window(), nCmdShow);
+    
+    SetWindowPos(
+        helloText.Window(),
+        nullptr,
+        10,
+        10,
+        600,
+        370,
+        SWP_NOZORDER
+    );
+    
+    
+    UpdateWindow(window.Window());
     
     // run message loop
     

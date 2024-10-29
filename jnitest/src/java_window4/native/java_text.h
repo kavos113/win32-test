@@ -20,7 +20,8 @@ public:
         pColorBrush(nullptr),
         pRenderTarget(nullptr),
         dpiScaleX(1.0f),
-        dpiScaleY(1.0f)
+        dpiScaleY(1.0f),
+        pTextLayout(nullptr)
     {
 
     }
@@ -51,7 +52,7 @@ private:
     HRESULT CreateDeviceResources() override;
     void DiscardDeviceResources() override;
 
-    HRESULT DrawTextHello();
+    HRESULT DrawTextContent();
 
 protected:
     void OnPaint() override;
@@ -65,6 +66,7 @@ private:
     ID2D1SolidColorBrush *pColorBrush;
 
     IDWriteTextFormat *pTextFormat;
+    IDWriteTextLayout *pTextLayout;
 
     std::wstring text;
     

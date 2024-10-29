@@ -38,6 +38,8 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Component_reshape
     
     HWND hwnd = pThis->Window();
     
+    std::cout << "Java_java_1window4_java_Component_reshape: " << hwnd << std::endl;
+    
     switch (operation)
     {
     case java_window4_java_Component_SET_POSITION:

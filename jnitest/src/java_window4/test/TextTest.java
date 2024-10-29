@@ -18,12 +18,12 @@ public class TextTest {
         window.setBackgroundColor(Color.LIGHT_GRAY);
 
         Text text = new Text(window, "Hello, World!");
-        text.setRectangle(10, 10, 400, 200);
+        text.setRectangle(0, 0, 640, 400);
         // text.setText("This is a text component. Who knows what will happen next?");
         text.setBackgroundColor(Color.AZURE2);
         text.setTextColor(Color.RED);
-        //text.setTextHorizontalAlignment(TextHorizontalAlignment.CENTER);
-        //text.setTextVerticalAlignment(TextVerticalAlignment.BOTTOM);
+        text.setTextHorizontalAlignment(TextHorizontalAlignment.JUSTIFY);
+        text.setTextVerticalAlignment(TextVerticalAlignment.BOTTOM);
 
         window.show();
         
