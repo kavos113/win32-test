@@ -2,6 +2,7 @@
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <stdlib.h>
 
 #define DEFAULT_MAIN_TEXT "Hello, World!"
 #define DEFAULT_EXIT_TEXT "Exit"
@@ -35,7 +36,7 @@ char *mgeom_cline = NULL;
 
 char *mtext = DEFAULT_MAIN_TEXT;
 char *etext = DEFAULT_EXIT_TEXT;
-char *geom = NULL;
+char *mgeom = NULL;
 
 /* 1. list of command line options */
 XHELLO_PARAMS options[] =
@@ -82,7 +83,7 @@ Window Main, Exit;
 GC main_gc, exit_gc;
 XEvent event;
 int Done = 0;
-char default_geom[32];
+char default_geom[80];
 
 void usage();
 
@@ -189,6 +190,200 @@ int main(int argc, char *argv[])
     }
     
     /* 5 setting size of top-level window */
+    if (etext_cline != NULL)
+    {
+        etext = etext_cline;
+    }
+    else if (etext_rsrc != NULL)
+    {
+        etext = etext_rsrc;
+    }
+    
+    if (mtext_cline != NULL)
+    {
+        mtext = mtext_cline;
+    }
+    else if (mtext_rsrc != NULL)
+    {
+        mtext = mtext_rsrc;
+    }
+    
+    extxt = efontstruct->max_bounds.width / 2;
+    eytxt = efontstruct->max_bounds.ascent + efontstruct->max_bounds.descent;
+    ewidth = extxt + XTextWidth(efontstruct, etext, strlen(etext)) + 4;
+    eheight = eytxt + 4;
+    
+    sizehints.flags = PPosition | PSize | PMinSize;
+    sizehints.height = mfontstruct->max_bounds.ascent + mfontstruct->max_bounds.descent + eheight + 10;
+    sizehints.min_height = sizehints.height;
+    sizehints.width = XTextWidth(mfontstruct, mtext, strlen(mtext)) + 2;
+    sizehints.width = (sizehints.width > ewidth) ? sizehints.width : ewidth;
+    sizehints.min_width = sizehints.width;
+    sizehints.x = DisplayWidth(p_display, DefaultScreen(p_display)) / 2 - sizehints.width / 2;
+    sizehints.y = DisplayHeight(p_display, DefaultScreen(p_display)) / 2 - sizehints.height / 2;
+    
+    sprintf(default_geom, "%dx%d+%d+%d", sizehints.width, sizehints.height, sizehints.x, sizehints.y);
+    mgeom = default_geom;
+    
+    if (mgeom_cline != NULL)
+    {
+        mgeom = mgeom_cline;
+    }
+    else if (mgeom_rsrc != NULL)
+    {
+        mgeom = mgeom_rsrc;
+    }
+    
+    /* change sizehints when mgeom is specified */
+    bitmask = XGeometry(p_display,
+                        DefaultScreen(p_display),
+                        mgeom,
+                        default_geom,
+                        DEFAULT_BDWIDTH,
+                        mfontstruct->max_bounds.width,
+                        mfontstruct->max_bounds.ascent + mfontstruct->max_bounds.descent,
+                        1,
+                        1,
+                        &sizehints.x,
+                        &sizehints.y,
+                        &sizehints.width,
+                        &sizehints.height
+                        );
+    
+    if (bitmask & (XValue | YValue))
+    {
+        sizehints.flags |= USPosition;
+    }
+    
+    if (bitmask & (WidthValue | HeightValue))
+    {
+        sizehints.flags |= USSize;
+    }
+    
+    /* 6. create top-level window */
+    Main = XCreateSimpleWindow(p_display,
+                               DefaultRootWindow(p_display),
+                               sizehints.x,
+                               sizehints.y,
+                               sizehints.width,
+                               sizehints.height,
+                               DEFAULT_BDWIDTH,
+                               mbgpixel,
+                               mfgpixel
+                               );
+    
+    /* 7. set properties to window manager */
+    XSetStandardProperties(p_display,
+                            Main,
+                            app_name,
+                            app_name,
+                            None,
+                            argv,
+                            argc,
+                            &sizehints
+                            );
+    
+    /* 8. create window manager hints */
+    wmhints.flags = InputHint | StateHint;
+    wmhints.input = False;
+    wmhints.initial_state = NormalState;
+    XSetWMHints(p_display, Main, &wmhints);
+    
+    /* 9. create GC */
+    gcvalues.font = mfontstruct->fid;
+    gcvalues.foreground = mfgpixel;
+    gcvalues.background = mbgpixel;
+    main_gc = XCreateGC(p_display, Main, GCForeground | GCBackground | GCFont, &gcvalues);
+    
+    /* 11. set event */
+    XSelectInput(p_display, Main, ExposureMask);
+    
+    /* 12. Mapping Window */
+    XMapWindow(p_display, Main);
+    
+    
+    /* 13. child window */
+    ex = 1;
+    ey = 1;
+    Exit = XCreateSimpleWindow(p_display,
+                               Main,
+                               ex,
+                               ey,
+                               ewidth,
+                               eheight,
+                               DEFAULT_BDWIDTH,
+                               ebgpixel,
+                               efgpixel
+                               );
+    
+    XSelectInput(p_display, Exit, ExposureMask | ButtonPressMask);
+    
+    XMapWindow(p_display, Exit);
+    
+    gcvalues.font = efontstruct->fid;
+    gcvalues.foreground = efgpixel;
+    gcvalues.background = ebgpixel;
+    exit_gc = XCreateGC(p_display, Exit, GCForeground | GCBackground | GCFont, &gcvalues);
+    
+    /* 14. event loop */
+    while (!Done)
+    {
+        XNextEvent(p_display, &event);
+        
+        if (event.xany.window == Main)
+        {
+            switch (event.type)
+            {
+            case Expose:
+                if (event.xexpose.count == 0)
+                {
+                    int x, y, itemp;
+                    unsigned int width, height, utemp;
+                    Window wtemp;
+                    
+                    if (XGetGeometry(p_display, Main, &wtemp, &itemp, &itemp, &width, &height, &utemp, &utemp) == 0)
+                    {
+                        break;
+                    }
+                    
+                    x = (width - XTextWidth(mfontstruct, mtext, strlen(mtext))) / 2;
+                    y = eheight + (height - eheight + mfontstruct->max_bounds.ascent - mfontstruct->max_bounds.descent) / 2;
+                    
+                    XClearWindow(p_display, Main);
+                    XDrawString(p_display, Main, main_gc, x, y, mtext, strlen(mtext));
+                }
+                break;
+            }
+        }
+        else if (event.xany.window == Exit)
+        {
+            switch (event.type)
+            {
+            case Expose:
+                if (event.xexpose.count == 0)
+                {
+                    XClearWindow(p_display, Exit);
+                    XDrawString(p_display, Exit, exit_gc, extxt, eytxt, etext, strlen(etext));
+                }
+                break;
+            case ButtonPress:
+                Done = 1;
+                break;
+            }
+        }
+    }
+    
+    /* 15. clean up */
+    XFreeGC(p_display, main_gc);
+    XFreeGC(p_display, exit_gc);
+    XDestroyWindow(p_display, Main);
+    XCloseDisplay(p_display);
     
     return 0;
+}
+
+void usage()
+{
+    fprintf(stderr, "Usage: xhello [-display display] [-geometry geom] [-mtext text] [-etext text]\n");
+    exit(1);
 }
