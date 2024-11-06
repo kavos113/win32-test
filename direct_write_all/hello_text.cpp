@@ -64,7 +64,7 @@ HRESULT HelloText::CreateDeviceIndependentResources()
         );
     }
     
-    text = L"Hello, World!";
+    text = L"Hello, World! Welcome to DirectWrite! Do you like it? I hope you do!";
     cTextLength = (UINT32) wcslen(text);
     
     if (SUCCEEDED(hr))
@@ -75,7 +75,7 @@ HRESULT HelloText::CreateDeviceIndependentResources()
             DWRITE_FONT_WEIGHT_REGULAR,
             DWRITE_FONT_STYLE_NORMAL,
             DWRITE_FONT_STRETCH_NORMAL,
-            72.0f,
+            36.0f,
             L"en-us",
             &pTextFormat
         );
@@ -91,6 +91,11 @@ HRESULT HelloText::CreateDeviceIndependentResources()
     if (SUCCEEDED(hr))
     {
         hr = pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+    }
+    
+    if (SUCCEEDED(hr))
+    {
+        hr = pTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_UNIFORM, 72.0f, -10.0f);
     }
     
     return hr;

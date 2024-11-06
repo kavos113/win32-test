@@ -258,40 +258,81 @@ void JavaText::SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment)
     pTextFormat->SetParagraphAlignment(alignment);
 }
 
-void JavaText::SetFontFamily(const std::wstring& fontFamily)
+void JavaText::SetFontFamily(const std::wstring& fontFamily, DWRITE_TEXT_RANGE range)
 {
     pTextLayout->SetFontFamilyName(
         fontFamily.c_str(),
-        DWRITE_TEXT_RANGE{0, static_cast<UINT32>(text.size())}
+        range
         );
 }
 
-void JavaText::SetFontSize(float fontSize)
+void JavaText::SetFontSize(float fontSize, DWRITE_TEXT_RANGE range)
 {
     pTextLayout->SetFontSize(
         fontSize,
-        DWRITE_TEXT_RANGE{0, static_cast<UINT32>(text.size())}
+        range
         );
 }
 
-void JavaText::SetFontStretch(float stretch)
+void JavaText::SetFontStretch(float stretch, DWRITE_TEXT_RANGE range)
 {
-
+    DWRITE_FONT_STRETCH fontStretch;
+    
+    if (stretch < 0.5625) fontStretch = DWRITE_FONT_STRETCH_ULTRA_CONDENSED;
+    else if (stretch < 0.6875) fontStretch = DWRITE_FONT_STRETCH_EXTRA_CONDENSED;
+    else if (stretch < 0.8125) fontStretch = DWRITE_FONT_STRETCH_CONDENSED;
+    else if (stretch < 0.9375) fontStretch = DWRITE_FONT_STRETCH_SEMI_CONDENSED;
+    else if (stretch < 1.0625) fontStretch = DWRITE_FONT_STRETCH_NORMAL;
+    else if (stretch < 1.1875) fontStretch = DWRITE_FONT_STRETCH_SEMI_EXPANDED;
+    else if (stretch < 1.375)  fontStretch = DWRITE_FONT_STRETCH_EXPANDED;
+    else if (stretch < 1.75)   fontStretch = DWRITE_FONT_STRETCH_EXTRA_EXPANDED;
+    else fontStretch = DWRITE_FONT_STRETCH_ULTRA_EXPANDED;
+    
+    pTextLayout->SetFontStretch(
+        fontStretch,
+        range
+        );
 }
 
-void JavaText::SetFontStyle(DWRITE_FONT_STYLE style)
+void JavaText::SetFontStyle(DWRITE_FONT_STYLE style, DWRITE_TEXT_RANGE range)
 {
-
+    pTextLayout->SetFontStyle(
+        style,
+        range
+        );
 }
 
-void JavaText::SetFontWeight(int weight)
+void JavaText::SetFontWeight(int weight, DWRITE_TEXT_RANGE range)
 {
-
+    DWRITE_FONT_WEIGHT fontWeight;
+    
+    if (weight < 250) fontWeight = DWRITE_FONT_WEIGHT_THIN;
+    else if (weight < 350) fontWeight = DWRITE_FONT_WEIGHT_EXTRA_LIGHT;
+    else if (weight < 450) fontWeight = DWRITE_FONT_WEIGHT_LIGHT;
+    else if (weight < 550) fontWeight = DWRITE_FONT_WEIGHT_SEMI_LIGHT;
+    else if (weight < 650) fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
+    else if (weight < 750) fontWeight = DWRITE_FONT_WEIGHT_MEDIUM;
+    else if (weight < 850) fontWeight = DWRITE_FONT_WEIGHT_SEMI_BOLD;
+    else if (weight < 950) fontWeight = DWRITE_FONT_WEIGHT_BOLD;
+    else fontWeight = DWRITE_FONT_WEIGHT_EXTRA_BOLD;
+    
+    pTextLayout->SetFontWeight(
+        fontWeight,
+        range
+        );
 }
 
+/*
+ * UNIFORM: px
+ * PROPORTIONAL: % of font size
+ */
 void JavaText::SetFontLineHeight(float lineHeight)
 {
-
+    pTextLayout->SetLineSpacing(
+        DWRITE_LINE_SPACING_METHOD_UNIFORM,
+        lineHeight,
+        lineHeight * 0.80f
+        );
 }
 
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_create
@@ -442,6 +483,55 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextVerticalAlignment
     else if (env->IsSameObject(alignment, bottom))
     {
         pThis->SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT_FAR);
+    }
+    
+    /*
+     * if (isVisible)
+     * {
+     *   SendMessage(pThis->Window(), WM_PAINT, 0, 0);
+     * }
+     */
+}
+
+JNIEXPORT void JNICALL Java_java_1window4_java_Text_setFont
+    (JNIEnv *env, jobject thisObj, jstring fontFamily, jfloat fontSize, jfloat stretch, jint style, jint weight, jfloat lineHeight, jint start, jint end, jint operation)
+{
+    auto *pThis = reinterpret_cast<JavaText*>(GetJavaWindowPtr(env, thisObj));
+    
+    std::wstring fontFamilyStr = JstringToWstring(env, fontFamily);
+    
+    DWRITE_TEXT_RANGE range{};
+    range.startPosition = start;
+    range.length = end - start;
+    
+    if (operation & java_window4_java_Text_SET_FONT_FAMILY)
+    {
+        pThis->SetFontFamily(fontFamilyStr, range);
+    }
+    
+    if (operation & java_window4_java_Text_SET_FONT_SIZE)
+    {
+        pThis->SetFontSize(fontSize, range);
+    }
+    
+    if (operation & java_window4_java_Text_SET_FONT_STRETCH)
+    {
+        pThis->SetFontStretch(stretch, range);
+    }
+    
+    if (operation & java_window4_java_Text_SET_FONT_STYLE)
+    {
+        pThis->SetFontStyle(static_cast<DWRITE_FONT_STYLE>(style), range);
+    }
+    
+    if (operation & java_window4_java_Text_SET_FONT_WEIGHT)
+    {
+        pThis->SetFontWeight(weight, range);
+    }
+    
+    if (operation & java_window4_java_Text_SET_FONT_LINE_HEIGHT)
+    {
+        pThis->SetFontLineHeight(lineHeight);
     }
     
     /*

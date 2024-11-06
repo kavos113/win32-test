@@ -48,11 +48,11 @@ public:
     void SetTextHorizontalAlignment(DWRITE_TEXT_ALIGNMENT alignment);
     void SetTextVerticalAlignment(DWRITE_PARAGRAPH_ALIGNMENT alignment);
     
-    void SetFontFamily(const std::wstring& fontFamily);
-    void SetFontSize(float fontSize);
-    void SetFontStretch(float stretch);
-    void SetFontStyle(DWRITE_FONT_STYLE style);
-    void SetFontWeight(int weight);
+    void SetFontFamily(const std::wstring& fontFamily, DWRITE_TEXT_RANGE range);
+    void SetFontSize(float fontSize, DWRITE_TEXT_RANGE range);
+    void SetFontStretch(float stretch, DWRITE_TEXT_RANGE range);
+    void SetFontStyle(DWRITE_FONT_STYLE style, DWRITE_TEXT_RANGE range);
+    void SetFontWeight(int weight, DWRITE_TEXT_RANGE range);
     void SetFontLineHeight(float lineHeight);
 
 private:

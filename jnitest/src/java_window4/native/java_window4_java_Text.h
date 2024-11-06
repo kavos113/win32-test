@@ -44,10 +44,10 @@ JNIEXPORT void JNICALL Java_java_1window4_java_Text_setTextColor
 /*
  * Class:     java_window4_java_Text
  * Method:    setFont
- * Signature: (Ljava/lang/String;FFIIFI)V
+ * Signature: (Ljava/lang/String;FFIIFIII)V
  */
 JNIEXPORT void JNICALL Java_java_1window4_java_Text_setFont
-  (JNIEnv *, jobject, jstring, jfloat, jfloat, jint, jint, jfloat, jint);
+  (JNIEnv *, jobject, jstring, jfloat, jfloat, jint, jint, jfloat, jint, jint, jint);
 
 /*
  * Class:     java_window4_java_Text
