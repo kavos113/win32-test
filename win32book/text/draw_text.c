@@ -49,7 +49,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wc.hInstance = hInstance;
     wc.hIcon = (HICON) LoadImage(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
     wc.hCursor = (HCURSOR) LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
-    wc.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH);
+    wc.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = CLASS_NAME;
     wc.hIconSm = (HICON) LoadImage(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE);
@@ -86,11 +86,53 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    PAINTSTRUCT ps;
+    HDC hdc;
+    RECT rc;
+    LPCTSTR text = TEXT("Hello, Windows!\tsssssss");
+    DRAWTEXTPARAMS dtp;
+    
     switch (uMsg)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+        
+    /* ----------------------------------------------- */
+    case WM_PAINT:
+        {
+            GetClientRect(hwnd, &rc);
+            
+            dtp.cbSize = sizeof(DRAWTEXTPARAMS);
+            dtp.iLeftMargin = 20;
+            dtp.iRightMargin = 20;
+            dtp.iTabLength = 4;
+            
+            hdc = BeginPaint(hwnd, &ps);
+            
+            /* TextOut(hdc, 0, 0, text, lstrlen(text)); */
+
+            /*
+            DrawText(hdc,
+                     text,
+                     -1,
+                     &rc,
+                     DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+            */
+            
+            SetTextColor(hdc, RGB(0, 128, 128));
+            DrawTextEx(hdc,
+                       text,
+                       -1,
+                       &rc,
+                       DT_SINGLELINE | DT_CENTER | DT_VCENTER,
+                       &dtp);
+            
+            EndPaint(hwnd, &ps);
+        }
+        return 0;
+    /* ----------------------------------------------- */
+    
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }

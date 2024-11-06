@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(win32_test CXX)
+project(win32_test LANGUAGES C CXX)
 
 file(GLOB_RECURSE children RELATIVE ${CMAKE_SOURCE_DIR} */CMakeLists.txt)
 
