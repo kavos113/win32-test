@@ -71,7 +71,7 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
         NULL,
         hInstance,
         NULL
-        );
+    );
     
     if (hwnd == NULL)
     {
@@ -86,8 +86,75 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HDC hdc;
+    PAINTSTRUCT ps;
+    HPEN hPen, hOldPen;
+    HBRUSH hBrush, hOldBrush;
+    
     switch (uMsg)
     {
+    
+    /* ---------------------------------------------------------- */
+    case WM_PAINT:
+        hdc = BeginPaint(hwnd, &ps);
+        
+        hPen = CreatePen(PS_SOLID, 0, RGB(255, 0, 0));
+        hOldPen = (HPEN) SelectObject(hdc, hPen);
+        
+        hBrush = CreateSolidBrush(RGB(0, 255, 0));
+        hOldBrush = (HBRUSH) SelectObject(hdc, hBrush);
+        
+        Rectangle(hdc, 10, 10, 100, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_BDIAGONAL, RGB(0, 0, 255));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 110, 10, 200, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_CROSS, RGB(255, 0, 255));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 210, 10, 300, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_DIAGCROSS, RGB(0, 255, 255));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 310, 10, 400, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_FDIAGONAL, RGB(255, 255, 0));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 410, 10, 500, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_HORIZONTAL, RGB(255, 0, 0));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 510, 10, 600, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateHatchBrush(HS_VERTICAL, RGB(0, 255, 0));
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 610, 10, 700, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = (HBRUSH) GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, 650, 10, 800, 100);
+        DeleteObject(hBrush);
+        
+        hBrush = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, hBrush);
+        RoundRect(hdc, 10, 110, 100, 200, 20, 20);
+        DeleteObject(hBrush);
+        
+        SelectObject(hdc, hOldPen);
+        SelectObject(hdc, hOldBrush);
+        
+        EndPaint(hwnd, &ps);
+        return 0;
+        
+    /* ---------------------------------------------------------- */
+    
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;

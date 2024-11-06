@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
+#include <time.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -64,14 +65,17 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
     hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        TEXT("Hello, Windows!"),
+        TEXT("Hello, Windows Points"),
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        800,
+        600,
         NULL,
         NULL,
         hInstance,
         NULL
-        );
+    );
     
     if (hwnd == NULL)
     {
@@ -86,8 +90,37 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HDC hdc;
+    PAINTSTRUCT ps;
+    RECT rc;
+    int i, x, y, r, g, b;
+    
     switch (uMsg)
     {
+    
+    /* ---------------------------------------------------------- */
+    case WM_CREATE:
+        srand((unsigned) time(NULL));
+        return 0;
+    case WM_PAINT:
+        hdc = BeginPaint(hwnd, &ps);
+        GetClientRect(hwnd, &rc);
+        
+        for (i = 0; i < 100000; i++)
+        {
+            x = rand() % rc.right;
+            y = rand() % rc.bottom;
+            r = rand() % 256;
+            g = rand() % 256;
+            b = rand() % 256;
+            
+            SetPixelV(hdc, x, y, RGB(r, g, b));
+        }
+        
+        EndPaint(hwnd, &ps);
+        return 0;
+    /* ---------------------------------------------------------- */
+    
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;

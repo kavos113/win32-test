@@ -64,14 +64,14 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
     hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        TEXT("Hello, Windows!"),
+        TEXT("Hello, Windows Lines"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         NULL,
         NULL,
         hInstance,
         NULL
-        );
+    );
     
     if (hwnd == NULL)
     {
@@ -86,8 +86,41 @@ BOOL InitHwnd(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    HDC hdc;
+    PAINTSTRUCT ps;
+    HPEN pen1, pen2, pen3, pen4;
+    
     switch (uMsg)
     {
+    
+    /* ---------------------------------------------------------- */
+    case WM_PAINT:
+        hdc = BeginPaint(hwnd, &ps);
+        
+        pen1 = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
+        SelectObject(hdc, pen1);
+        MoveToEx(hdc, 100, 100, NULL);
+        LineTo(hdc, 600, 100);
+        
+        pen2 = CreatePen(PS_DASH, 0, RGB(0, 255, 0));
+        SelectObject(hdc, pen2);
+        MoveToEx(hdc, 100, 200, NULL);
+        LineTo(hdc, 600, 200);
+        
+        pen3 = CreatePen(PS_DOT, 0, RGB(0, 0, 255));
+        SelectObject(hdc, pen3);
+        MoveToEx(hdc, 100, 300, NULL);
+        LineTo(hdc, 600, 300);
+        
+        pen4 = CreatePen(PS_DASHDOT, 0, RGB(255, 0, 255));
+        SelectObject(hdc, pen4);
+        MoveToEx(hdc, 100, 400, NULL);
+        LineTo(hdc, 600, 400);
+        
+        EndPaint(hwnd, &ps);
+        return 0;
+    /* ---------------------------------------------------------- */
+    
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
