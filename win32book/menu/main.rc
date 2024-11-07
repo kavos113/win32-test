@@ -1,0 +1,47 @@
+#include "resource.h"
+
+MYMENU MENU
+BEGIN
+    POPUP "&Menu"
+    BEGIN
+        MENUITEM "Item 1", IDM_ITEM1
+        MENUITEM "Item 2", IDM_ITEM2
+        MENUITEM "Item 3", IDM_ITEM3
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "Option 1", IDM_OPTION1
+        MENUITEM "Option 2", IDM_OPTION2
+        MENUITEM "Option 3", IDM_OPTION3
+    END
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "Close(&X)\tCtrl + X", IDM_CLOSE
+    END
+END
+
+MYACCELERATORS ACCELERATORS
+BEGIN
+    "X", IDM_CLOSE, VIRTKEY, CONTROL, NOINVERT
+END
+
+MYPOPUP MENU
+BEGIN
+    POPUP "&Menu"
+    BEGIN
+        MENUITEM "Item 1", IDM_ITEM1
+        MENUITEM "Item 2", IDM_ITEM2
+        MENUITEM "Item 3", IDM_ITEM3
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "Option 1", IDM_OPTION1
+        MENUITEM "Option 2", IDM_OPTION2
+        MENUITEM "Option 3", IDM_OPTION3
+    END
+    MENUITEM SEPARATOR
+    POPUP "&Action"
+    BEGIN
+        MENUITEM "Close(&X)\tCtrl + X", IDM_CLOSE
+    END
+END
