@@ -1,0 +1,21 @@
+#include "resource.h"
+
+IDR_TOOLBAR BITMAP "toolbar.bmp"
+
+MYMENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit", IDM_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About", IDM_ABOUT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Old", IDM_OLD
+        MENUITEM "Flat", IDM_FLAT
+        MENUITEM "Transparent", IDM_TRANSPARENT
+    END
+END

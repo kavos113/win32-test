@@ -1,0 +1,12 @@
+#ifndef WIN32_TEST_RESOURCE_H
+#define WIN32_TEST_RESOURCE_H
+
+#define IDM_EXIT 1001
+#define IDM_DIALOG 1002
+#define IDM_ABOUT 1003
+
+#define IDC_EDIT 1004
+
+#define IDC_STATIC (-1)
+
+#endif //WIN32_TEST_RESOURCE_H

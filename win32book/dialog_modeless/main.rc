@@ -1,0 +1,34 @@
+#include <windows.h>
+#include "resource.h"
+
+MYDIALOG DIALOGEX 0, 0, 200, 100
+STYLE DS_MODALFRAME | DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+    CAPTION "Option"
+FONT 8, "Arial", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 130, 10, 50, 14
+    PUSHBUTTON "Cancel", IDCANCEL, 130, 30, 50, 14
+    LTEXT "Option 1", IDC_STATIC, 10, 10, 100, 14
+    EDITTEXT IDC_EDIT, 10, 30, 100, 14, ES_AUTOHSCROLL
+END
+
+MYMENU MENU
+BEGIN
+    POPUP "File (&F)"
+    BEGIN
+        MENUITEM "Finish (&X)\tCtrl + X", IDM_EXIT
+    END
+    POPUP "Option (&O)"
+    BEGIN
+        MENUITEM "Dialog (D)", IDM_DIALOG
+    END
+    POPUP "Help (&H)"
+    BEGIN
+        MENUITEM "About (&A)", IDM_ABOUT
+    END
+END
+
+MYACCELERATORS ACCELERATORS
+BEGIN
+    "X", IDM_EXIT, VIRTKEY, CONTROL, NOINVERT
+END
