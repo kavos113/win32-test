@@ -35,13 +35,6 @@ struct TexRGBA
 	unsigned char r, g, b, a;
 };
 
-struct PMDHeader
-{
-	float version;
-    char model_name[20];
-    char comment[256];
-};
-
 std::vector<TexRGBA> textureData(256 * 256);
 
 void InitTextureData()
@@ -278,11 +271,91 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		rtvHandle.ptr += _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
+    // depth buffer
+    D3D12_RESOURCE_DESC depthResourceDesc = {};
+
+    depthResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    depthResourceDesc.Width = wr.right - wr.left;
+    depthResourceDesc.Height = wr.bottom - wr.top;
+    depthResourceDesc.DepthOrArraySize = 1;
+    depthResourceDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthResourceDesc.SampleDesc.Count = 1;
+    depthResourceDesc.SampleDesc.Quality = 0;
+    depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_HEAP_PROPERTIES heapProperties = {};
+
+    heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+    D3D12_CLEAR_VALUE clearValue = {};
+
+    clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+    clearValue.DepthStencil.Depth = 1.0f;
+
+    ID3D12Resource* _depthBuffer = nullptr;
+
+    hr = _dev->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &depthResourceDesc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clearValue,
+        IID_PPV_ARGS(&_depthBuffer)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create depth buffer\n"));
+        return 1;
+    }
+
+    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+
+    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    dsvHeapDesc.NumDescriptors = 1;
+    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    dsvHeapDesc.NodeMask = 0;
+
+    ID3D12DescriptorHeap* _dsvHeap = nullptr;
+
+    hr = _dev->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_dsvHeap));
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create DSV descriptor heap\n"));
+        return 1;
+    }
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+    _dev->CreateDepthStencilView(
+        _depthBuffer,
+        &dsvDesc,
+        _dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
+
 	// fence
 	ID3D12Fence* _fence = nullptr;
 	UINT64 _fenceValue = 0;
 
 	hr = _dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create fence\n"));
+        return 1;
+    }
+
+
+	struct PMDHeader
+	{
+		float version;
+		char model_name[20];
+		char comment[256];
+	};
 
 	char signatures[3] = {};
     FILE* fp = nullptr;
@@ -293,6 +366,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
+	// read header
     PMDHeader header = {};
 	size_t numRead = fread(signatures, sizeof(signatures), 1, fp);
     if (numRead != 1)
@@ -307,26 +381,60 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    int ret = fclose(fp);
-    if (ret != 0)
+    // read vertices
+	constexpr size_t pmd_vertex_size = 38;
+
+    unsigned int numVertices = 0;
+	numRead = fread(&numVertices, sizeof(numVertices), 1, fp);
+    if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to close file\n"));
+        OutputDebugString(_T("Failed to read vertices\n"));
         return 1;
     }
 
+    std::vector<unsigned char> pmd_vertices(numVertices * pmd_vertex_size);
+    numRead = fread(pmd_vertices.data(), pmd_vertex_size, numVertices, fp);
+    if (numRead != numVertices)
+    {
+        OutputDebugString(_T("Failed to read vertices\n"));
+        return 1;
+    }
+
+    unsigned int numIndices = 0;
+    numRead = fread(&numIndices, sizeof(numIndices), 1, fp);
+    if (numRead != 1)
+    {
+        OutputDebugString(_T("Failed to read indices\n"));
+        return 1;
+    }
+
+    std::vector<unsigned short> pmd_indices(numIndices);
+    numRead = fread(pmd_indices.data(), sizeof(pmd_indices[0]), numIndices, fp);
+    if (numRead != numIndices)
+    {
+        OutputDebugString(_T("Failed to read indices\n"));
+        return 1;
+    }
+
+	int ret = fclose(fp);
+	if (ret != 0)
+	{
+		OutputDebugString(_T("Failed to close file\n"));
+		return 1;
+	}
 
 	// copy vertex data to GPU
-	Vertex vertices[] = {
-		{{-1.0f,-1.0f,0.0f},{0.0f,1.0f} },//左下
-		{{-1.0f,1.0f,0.0f} ,{0.0f,0.0f}},//左上
-		{{1.0f,-1.0f,0.0f} ,{1.0f,1.0f}},//右下
-		{{1.0f,1.0f,0.0f} ,{1.0f,0.0f}},//右上 
-	};
-
-	unsigned short indices[] = {
-		0, 1, 2,
-		2, 1, 3
-	};
+	// Vertex vertices[] = {
+	// 	{{-1.0f,-1.0f,0.0f},{0.0f,1.0f} },//左下
+	// 	{{-1.0f,1.0f,0.0f} ,{0.0f,0.0f}},//左上
+	// 	{{1.0f,-1.0f,0.0f} ,{1.0f,1.0f}},//右下
+	// 	{{1.0f,1.0f,0.0f} ,{1.0f,0.0f}},//右上 
+	// };
+	//
+	// unsigned short indices[] = {
+	// 	0, 1, 2,
+	// 	2, 1, 3
+	// };
 
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 
@@ -337,7 +445,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	D3D12_RESOURCE_DESC resource_desc = {};
 
 	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resource_desc.Width = sizeof(vertices);
+	resource_desc.Width = pmd_vertices.size();
 	resource_desc.Height = 1;
 	resource_desc.DepthOrArraySize = 1;
 	resource_desc.MipLevels = 1;
@@ -362,7 +470,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-	Vertex* vertexMap = nullptr;
+	unsigned char* vertexMap = nullptr;
 
 	hr = vertexBuffer->Map(0, nullptr, (void**)&vertexMap);
 	if (FAILED(hr))
@@ -371,20 +479,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-	std::copy(std::begin(vertices), std::end(vertices), vertexMap);
+	std::copy(std::begin(pmd_vertices), std::end(pmd_vertices), vertexMap);
 
 	vertexBuffer->Unmap(0, nullptr);
 
 	D3D12_VERTEX_BUFFER_VIEW vbv = {};
 
 	vbv.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vbv.SizeInBytes = sizeof(vertices);
-	vbv.StrideInBytes = sizeof(vertices[0]);
+    vbv.SizeInBytes = pmd_vertices.size();
+	vbv.StrideInBytes = pmd_vertex_size;
 
 	ID3D12Resource* indexBuffer = nullptr;
-
-	resource_desc.Width = sizeof(indices);
-
+	
+    resource_desc.Width = pmd_indices.size() * sizeof(pmd_indices[0]);
+	
 	hr = _dev->CreateCommittedResource(
 		&heap_properties,
 		D3D12_HEAP_FLAG_NONE,
@@ -398,18 +506,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		OutputDebugString(_T("Failed to create committed resource\n"));
 		return 1;
 	}
-
+	
 	unsigned short* indexMap = nullptr;
 	indexBuffer->Map(0, nullptr, (void**)&indexMap);
-
-	std::copy(std::begin(indices), std::end(indices), indexMap);
-
+	
+	std::copy(std::begin(pmd_indices), std::end(pmd_indices), indexMap);
+	
 	indexBuffer->Unmap(0, nullptr);
-
+	
 	D3D12_INDEX_BUFFER_VIEW ibv = {};
-
+	
 	ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-	ibv.SizeInBytes = sizeof(indices);
+    ibv.SizeInBytes = pmd_indices.size() * sizeof(pmd_indices[0]);
 	ibv.Format = DXGI_FORMAT_R16_UINT;
 
 	// compile shaders
@@ -476,26 +584,82 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	// pipeline state
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-		{
-			"POSITION",
+	// D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+	// 	{
+	// 		"POSITION",
+	// 		0,
+	// 		DXGI_FORMAT_R32G32B32_FLOAT,
+	// 		0,
+	// 		D3D12_APPEND_ALIGNED_ELEMENT,
+	// 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+	// 		0
+	// 	},
+	// 	{
+	// 		"TEXCOORD",
+	// 		0,
+	// 		DXGI_FORMAT_R32G32_FLOAT,
+	// 		0,
+	// 		D3D12_APPEND_ALIGNED_ELEMENT,
+	// 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+	// 		0
+	// 	}
+	// };
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+        {
+            "POSITION",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "NORMAL",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "TEXCOORD",
+            0,
+            DXGI_FORMAT_R32G32_FLOAT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "BONE_NUMBER",
 			0,
-			DXGI_FORMAT_R32G32B32_FLOAT,
+            DXGI_FORMAT_R16G16_UINT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "WEIGHT",
 			0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"TEXCOORD",
-			0,
-			DXGI_FORMAT_R32G32_FLOAT,
-			0,
-			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-			0
-		}
-	};
+			DXGI_FORMAT_R8_UINT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "EDGE_FLAG",
+            0,
+            DXGI_FORMAT_R8_UINT,
+            0,
+            D3D12_APPEND_ALIGNED_ELEMENT,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        }
+    };
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphics_pipeline = {};
 
@@ -533,8 +697,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	graphics_pipeline.RasterizerState.ForcedSampleCount = 0;
 	graphics_pipeline.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-	graphics_pipeline.DepthStencilState.DepthEnable = FALSE;
+	graphics_pipeline.DepthStencilState.DepthEnable = TRUE;
+    graphics_pipeline.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    graphics_pipeline.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	graphics_pipeline.DepthStencilState.StencilEnable = FALSE;
+
+    graphics_pipeline.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 	graphics_pipeline.InputLayout.pInputElementDescs = inputElementDescs;
 	graphics_pipeline.InputLayout.NumElements = _countof(inputElementDescs);
@@ -943,11 +1111,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
     // constant buffer
-    float angle = DirectX::XM_PIDIV2;
-	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV4);
+	struct MatricesData
+	{
+		DirectX::XMMATRIX world;
+        DirectX::XMMATRIX viewproj;
+	};
 
-    DirectX::XMFLOAT3 eye(0.0f, 0.0f, -5.0f);
-    DirectX::XMFLOAT3 target(0.0f, 0.0f, 0.0f);
+    float angle = 0;
+	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
+    DirectX::XMFLOAT3 eye(0.0f, 0.0f, -15.0f);
+    DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
     DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
 
     DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(
@@ -957,10 +1131,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     );
 
     DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
-        angle,
+        DirectX::XM_PIDIV2,
         static_cast<float>(wr.right - wr.left) / static_cast<float>((wr.bottom - wr.top)),
         1.0f,
-        10.0f
+        100.0f
     );
 
     D3D12_HEAP_PROPERTIES constantBufferHeapProperties = {};
@@ -975,7 +1149,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     constantBufferResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
     constantBufferResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    constantBufferResourceDesc.Width = (sizeof(worldMatrix) + 0xff) & ~0xff;  // ~0xff: 256バイト以下が0
+    constantBufferResourceDesc.Width = (sizeof(MatricesData) + 0xff) & ~0xff;  // ~0xff: 256バイト以下が0
     constantBufferResourceDesc.Height = 1;
     constantBufferResourceDesc.DepthOrArraySize = 1;
     constantBufferResourceDesc.MipLevels = 1;
@@ -1000,7 +1174,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    DirectX::XMMATRIX* constantBufferMap = nullptr;
+    MatricesData* constantBufferMap = nullptr;
     hr = constantBuffer->Map(0, nullptr, (void**)&constantBufferMap);
     if (FAILED(hr))
     {
@@ -1008,7 +1182,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    *constantBufferMap = worldMatrix * viewMatrix * projectionMatrix;
+    constantBufferMap->world = worldMatrix;
+    constantBufferMap->viewproj = viewMatrix * projectionMatrix;
 
 	ID3D12DescriptorHeap* descriptorHeap = nullptr;
 
@@ -1075,11 +1250,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DispatchMessage(&msg);
 		}
 
-		angle += 0.1f;
-        worldMatrix = DirectX::XMMatrixRotationY(angle);
-        worldMatrix *= DirectX::XMMatrixRotationX(angle);
-        worldMatrix *= DirectX::XMMatrixRotationZ(angle);
-        *constantBufferMap = worldMatrix * viewMatrix * projectionMatrix;
+		angle += 0.02f;
+	    worldMatrix = DirectX::XMMatrixRotationY(angle);
+  //       worldMatrix *= DirectX::XMMatrixRotationX(angle);
+  //       worldMatrix *= DirectX::XMMatrixRotationZ(angle);
+        constantBufferMap->world = worldMatrix;
 
 		// swap chain
 		auto bbIdx = _swapchain->GetCurrentBackBufferIndex();
@@ -1101,10 +1276,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		auto rendertvHandle = _rtvHeap->GetCPUDescriptorHandleForHeapStart();
 		rendertvHandle.ptr += bbIdx * _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-		_cmdList->OMSetRenderTargets(1, &rendertvHandle, TRUE, nullptr);
+        auto dsvHandle = _dsvHeap->GetCPUDescriptorHandleForHeapStart();
+		_cmdList->OMSetRenderTargets(1, &rendertvHandle, TRUE, &dsvHandle);
 
-		float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+		float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		_cmdList->ClearRenderTargetView(rendertvHandle, clearColor, 0, nullptr);
+        _cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 		++frameIndex;
 
 		// draw polygon
@@ -1112,7 +1289,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		_cmdList->RSSetScissorRects(1, &scissorRect);
 		_cmdList->SetGraphicsRootSignature(rootSignature);
 
-		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		_cmdList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		_cmdList->IASetVertexBuffers(0, 1, &vbv);
 		_cmdList->IASetIndexBuffer(&ibv);
 
@@ -1132,7 +1309,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             descriptorHandle
         );
 
-		_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		//_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		_cmdList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
 
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
