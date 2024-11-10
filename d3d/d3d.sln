@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Polygon", "Polygon\Polygon.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "transform", "transform\transform.vcxproj", "{97BFE174-232D-49CF-A152-AB9408028CFF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd", "pmd\pmd.vcxproj", "{C61C2068-986C-4E14-991B-56E067CA9FF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{97BFE174-232D-49CF-A152-AB9408028CFF}.Release|x64.Build.0 = Release|x64
 		{97BFE174-232D-49CF-A152-AB9408028CFF}.Release|x86.ActiveCfg = Release|Win32
 		{97BFE174-232D-49CF-A152-AB9408028CFF}.Release|x86.Build.0 = Release|Win32
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Debug|x64.ActiveCfg = Debug|x64
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Debug|x64.Build.0 = Debug|x64
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Debug|x86.ActiveCfg = Debug|Win32
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Debug|x86.Build.0 = Debug|Win32
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x64.ActiveCfg = Release|x64
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x64.Build.0 = Release|x64
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x86.ActiveCfg = Release|Win32
+		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
