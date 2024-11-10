@@ -15,24 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="texture.cpp">
+    <ClCompile Include="tranform.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="BasicVertexShader.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="BasicShaderHeader.hlsli" />
+    <FxCompile Include="BasicPixelShader.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.png">
       <Filter>リソース ファイル</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BasicShaderHeader.hlsli" />
   </ItemGroup>
 </Project>
