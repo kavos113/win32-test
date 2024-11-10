@@ -1,4 +1,4 @@
-﻿#include <d3d12.h>
+#include <d3d12.h>
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
@@ -23,34 +23,34 @@ D3D_FEATURE_LEVEL featureLevels[] = {
 
 HWND InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)
 {
-    WNDCLASSEX wc = {};
+	WNDCLASSEX wc = {};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = _T("WindowClass1");
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = WindowProc;
+	wc.hInstance = hInstance;
+	wc.lpszClassName = _T("WindowClass1");
 
-    RegisterClassEx(&wc);
+	RegisterClassEx(&wc);
 
-    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(
-        0,
-        _T("WindowClass1"),
-        _T("Hello, Direct3D!"),
-        WS_OVERLAPPEDWINDOW,
-        300,
-        300,
-        wr.right - wr.left,
-        wr.bottom - wr.top,
-        nullptr,
-        nullptr,
-        hInstance,
-        nullptr
-    );
+	HWND hwnd = CreateWindowEx(
+		0,
+		_T("WindowClass1"),
+		_T("Hello, Direct3D!"),
+		WS_OVERLAPPEDWINDOW,
+		300,
+		300,
+		wr.right - wr.left,
+		wr.bottom - wr.top,
+		nullptr,
+		nullptr,
+		hInstance,
+		nullptr
+	);
 
-    return hwnd;
+	return hwnd;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -58,7 +58,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	RECT wr = { 0, 0, 800, 600 };
 
-    HWND hwnd = InitWindows(hInstance, nCmdShow, wr);
+	HWND hwnd = InitWindows(hInstance, nCmdShow, wr);
 
 	ID3D12Debug* debugController = nullptr;
 	HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
@@ -234,18 +234,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	hr = _dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence));
 
 
-    // copy vertex data to GPU
+	// copy vertex data to GPU
 	DirectX::XMFLOAT3 vertices[] = {
 		{-0.5f, -0.5f, 0.0f}, // index 0
-        {-0.5f,  0.5f, 0.0f}, // index 1
-        { 0.5f, -0.5f, 0.0f}, // index 2
-        { 0.5f,  0.5f, 0.0f}  // index 3
-    };
+		{-0.5f,  0.5f, 0.0f}, // index 1
+		{ 0.5f, -0.5f, 0.0f}, // index 2
+		{ 0.5f,  0.5f, 0.0f}  // index 3
+	};
 
 	unsigned short indices[] = {
 		0, 1, 2,
 		2, 1, 3
-    };
+	};
 
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 
@@ -271,13 +271,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ID3D12Resource* vertexBuffer = nullptr;
 
 	hr = _dev->CreateCommittedResource(
-        &heap_properties,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&vertexBuffer)
-    );
+		&heap_properties,
+		D3D12_HEAP_FLAG_NONE,
+		&resource_desc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertexBuffer)
+	);
 	if (FAILED(hr))
 	{
 		OutputDebugString(_T("Failed to create committed resource\n"));
@@ -288,10 +288,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	hr = vertexBuffer->Map(0, nullptr, (void**)&vertexMap);
 	if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to map vertex buffer\n"));
-        return 1;
-    }
+	{
+		OutputDebugString(_T("Failed to map vertex buffer\n"));
+		return 1;
+	}
 
 	std::copy(std::begin(vertices), std::end(vertices), vertexMap);
 
@@ -303,85 +303,56 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	vbv.SizeInBytes = sizeof(vertices);
 	vbv.StrideInBytes = sizeof(vertices[0]);
 
-    ID3D12Resource* indexBuffer = nullptr;
+	ID3D12Resource* indexBuffer = nullptr;
 
-    resource_desc.Width = sizeof(indices);
+	resource_desc.Width = sizeof(indices);
 
-    hr = _dev->CreateCommittedResource(
-        &heap_properties,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&indexBuffer)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create committed resource\n"));
-        return 1;
-    }
+	hr = _dev->CreateCommittedResource(
+		&heap_properties,
+		D3D12_HEAP_FLAG_NONE,
+		&resource_desc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&indexBuffer)
+	);
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to create committed resource\n"));
+		return 1;
+	}
 
-    unsigned short* indexMap = nullptr;
-    indexBuffer->Map(0, nullptr, (void**)&indexMap);
+	unsigned short* indexMap = nullptr;
+	indexBuffer->Map(0, nullptr, (void**)&indexMap);
 
-    std::copy(std::begin(indices), std::end(indices), indexMap);
+	std::copy(std::begin(indices), std::end(indices), indexMap);
 
-    indexBuffer->Unmap(0, nullptr);
+	indexBuffer->Unmap(0, nullptr);
 
-    D3D12_INDEX_BUFFER_VIEW ibv = {};
+	D3D12_INDEX_BUFFER_VIEW ibv = {};
 
-    ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-    ibv.SizeInBytes = sizeof(indices);
-    ibv.Format = DXGI_FORMAT_R16_UINT;
+	ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	ibv.SizeInBytes = sizeof(indices);
+	ibv.Format = DXGI_FORMAT_R16_UINT;
 
-    // compile shaders
-    ID3D10Blob* vertexShaderBlob = nullptr;
-    ID3D10Blob* pixelShaderBlob = nullptr;
-    ID3D10Blob* errorBlob = nullptr;
+	// compile shaders
+	ID3D10Blob* vertexShaderBlob = nullptr;
+	ID3D10Blob* pixelShaderBlob = nullptr;
+	ID3D10Blob* errorBlob = nullptr;
 
-    hr = D3DCompileFromFile(
-        L"BasicVertexShader.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "BasicVS",
-        "vs_5_0",
-        D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG,
-        0,
-        &vertexShaderBlob,
-        &errorBlob
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to compile vertex shader\n"));
-
-        if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
-        {
-            OutputDebugString(_T("File not found\n"));
-			return 0;
-        }
-
-		std::string errStr;
-        errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
-
-        OutputDebugStringA(errStr.c_str());
-        return 1;
-    }
-
-    hr = D3DCompileFromFile(
-        L"BasicPixelShader.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "BasicPS",
-        "ps_5_0",
-        D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG,
-        0,
-        &pixelShaderBlob,
-        &errorBlob
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to compile pixel shader\n"));
+	hr = D3DCompileFromFile(
+		L"BasicVertexShader.hlsl",
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"BasicVS",
+		"vs_5_0",
+		D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG,
+		0,
+		&vertexShaderBlob,
+		&errorBlob
+	);
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to compile vertex shader\n"));
 
 		if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
 		{
@@ -389,138 +360,167 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return 0;
 		}
 
-        std::string errStr;
-        errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+		std::string errStr;
+		errStr.resize(errorBlob->GetBufferSize());
+		std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
 
-        OutputDebugStringA(errStr.c_str());
-        return 1;
-    }
+		OutputDebugStringA(errStr.c_str());
+		return 1;
+	}
 
-    // pipeline state
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
-        {
-            "POSITION",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        }
-    };
+	hr = D3DCompileFromFile(
+		L"BasicPixelShader.hlsl",
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"BasicPS",
+		"ps_5_0",
+		D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG,
+		0,
+		&pixelShaderBlob,
+		&errorBlob
+	);
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to compile pixel shader\n"));
 
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC graphics_pipeline = {};
+		if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+		{
+			OutputDebugString(_T("File not found\n"));
+			return 0;
+		}
 
-    graphics_pipeline.pRootSignature = nullptr;
+		std::string errStr;
+		errStr.resize(errorBlob->GetBufferSize());
+		std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
 
-    graphics_pipeline.VS.pShaderBytecode = vertexShaderBlob->GetBufferPointer();
-    graphics_pipeline.VS.BytecodeLength = vertexShaderBlob->GetBufferSize();
+		OutputDebugStringA(errStr.c_str());
+		return 1;
+	}
 
-    graphics_pipeline.PS.pShaderBytecode = pixelShaderBlob->GetBufferPointer();
-    graphics_pipeline.PS.BytecodeLength = pixelShaderBlob->GetBufferSize();
+	// pipeline state
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+		{
+			"POSITION",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0
+		}
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphics_pipeline = {};
+
+	graphics_pipeline.pRootSignature = nullptr;
+
+	graphics_pipeline.VS.pShaderBytecode = vertexShaderBlob->GetBufferPointer();
+	graphics_pipeline.VS.BytecodeLength = vertexShaderBlob->GetBufferSize();
+
+	graphics_pipeline.PS.pShaderBytecode = pixelShaderBlob->GetBufferPointer();
+	graphics_pipeline.PS.BytecodeLength = pixelShaderBlob->GetBufferSize();
 
 	graphics_pipeline.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
-    graphics_pipeline.RasterizerState.MultisampleEnable = FALSE;
-    graphics_pipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-    graphics_pipeline.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-    graphics_pipeline.RasterizerState.DepthClipEnable = TRUE;
+	graphics_pipeline.RasterizerState.MultisampleEnable = FALSE;
+	graphics_pipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	graphics_pipeline.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	graphics_pipeline.RasterizerState.DepthClipEnable = TRUE;
 
-    graphics_pipeline.BlendState.AlphaToCoverageEnable = FALSE;
-    graphics_pipeline.BlendState.IndependentBlendEnable = FALSE;
+	graphics_pipeline.BlendState.AlphaToCoverageEnable = FALSE;
+	graphics_pipeline.BlendState.IndependentBlendEnable = FALSE;
 
-    D3D12_RENDER_TARGET_BLEND_DESC rtvBlendDesc = {};
-    rtvBlendDesc.BlendEnable = FALSE;
-    rtvBlendDesc.LogicOpEnable = FALSE;
-    rtvBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	D3D12_RENDER_TARGET_BLEND_DESC rtvBlendDesc = {};
+	rtvBlendDesc.BlendEnable = FALSE;
+	rtvBlendDesc.LogicOpEnable = FALSE;
+	rtvBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-    graphics_pipeline.BlendState.RenderTarget[0] = rtvBlendDesc;
+	graphics_pipeline.BlendState.RenderTarget[0] = rtvBlendDesc;
 
-    graphics_pipeline.InputLayout.pInputElementDescs = inputElementDescs;
-    graphics_pipeline.InputLayout.NumElements = _countof(inputElementDescs);
+	graphics_pipeline.InputLayout.pInputElementDescs = inputElementDescs;
+	graphics_pipeline.InputLayout.NumElements = _countof(inputElementDescs);
 
-    graphics_pipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    graphics_pipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	graphics_pipeline.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
+	graphics_pipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-    graphics_pipeline.NumRenderTargets = 1;
-    graphics_pipeline.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	graphics_pipeline.NumRenderTargets = 1;
+	graphics_pipeline.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    graphics_pipeline.SampleDesc.Count = 1;
+	graphics_pipeline.SampleDesc.Count = 1;
 	graphics_pipeline.SampleDesc.Quality = 0;
 
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 
-    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    ID3DBlob* signatureBlob = nullptr;
+	ID3DBlob* signatureBlob = nullptr;
 
-    hr = D3D12SerializeRootSignature(
-		&rootSignatureDesc, 
+	hr = D3D12SerializeRootSignature(
+		&rootSignatureDesc,
 		D3D_ROOT_SIGNATURE_VERSION_1,
 		&signatureBlob,
 		&errorBlob
 	);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to serialize root signature\n"));
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to serialize root signature\n"));
 
-        std::string errStr;
-        errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+		std::string errStr;
+		errStr.resize(errorBlob->GetBufferSize());
+		std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
 
-        OutputDebugStringA(errStr.c_str());
-        return 1;
-    }
+		OutputDebugStringA(errStr.c_str());
+		return 1;
+	}
 
-    ID3D12RootSignature* rootSignature = nullptr;
+	ID3D12RootSignature* rootSignature = nullptr;
 
-    hr = _dev->CreateRootSignature(
-		0, 
-		signatureBlob->GetBufferPointer(), 
+	hr = _dev->CreateRootSignature(
+		0,
+		signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(),
 		IID_PPV_ARGS(&rootSignature)
 	);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create root signature\n"));
-        return 1;
-    }
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to create root signature\n"));
+		return 1;
+	}
 
-    signatureBlob->Release();
+	signatureBlob->Release();
 
-    graphics_pipeline.pRootSignature = rootSignature;
+	graphics_pipeline.pRootSignature = rootSignature;
 
-    ID3D12PipelineState* _pipelineState = nullptr;
+	ID3D12PipelineState* _pipelineState = nullptr;
 
-    hr = _dev->CreateGraphicsPipelineState(
+	hr = _dev->CreateGraphicsPipelineState(
 		&graphics_pipeline,
 		IID_PPV_ARGS(&_pipelineState)
 	);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create pipeline state\n"));
-        return 1;
-    }
+	if (FAILED(hr))
+	{
+		OutputDebugString(_T("Failed to create pipeline state\n"));
+		return 1;
+	}
 
-    // viewport
-    D3D12_VIEWPORT viewport = {};
+	// viewport
+	D3D12_VIEWPORT viewport = {};
 
-    viewport.Width = wr.right - wr.left;
-    viewport.Height = wr.bottom - wr.top;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
+	viewport.Width = wr.right - wr.left;
+	viewport.Height = wr.bottom - wr.top;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
 
-    D3D12_RECT scissorRect = {};
+	D3D12_RECT scissorRect = {};
 
-    scissorRect.left = 0;
-    scissorRect.top = 0;
-    scissorRect.right = scissorRect.left + (wr.right - wr.left);
-    scissorRect.bottom = scissorRect.top + (wr.bottom - wr.top);
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = scissorRect.left + (wr.right - wr.left);
+	scissorRect.bottom = scissorRect.top + (wr.bottom - wr.top);
 
-    // main loop
+	// main loop
 
 	ShowWindow(hwnd, nCmdShow);
 
@@ -562,17 +562,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 		_cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-        // draw polygon
-        _cmdList->SetPipelineState(_pipelineState);
-        _cmdList->SetGraphicsRootSignature(rootSignature);
-        _cmdList->RSSetViewports(1, &viewport);
-        _cmdList->RSSetScissorRects(1, &scissorRect);
+		// draw polygon
+		_cmdList->SetPipelineState(_pipelineState);
+		_cmdList->SetGraphicsRootSignature(rootSignature);
+		_cmdList->RSSetViewports(1, &viewport);
+		_cmdList->RSSetScissorRects(1, &scissorRect);
 
-        _cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        _cmdList->IASetVertexBuffers(0, 1, &vbv);
-        _cmdList->IASetIndexBuffer(&ibv);
+		_cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		_cmdList->IASetVertexBuffers(0, 1, &vbv);
+		_cmdList->IASetIndexBuffer(&ibv);
 
-        _cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		_cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
