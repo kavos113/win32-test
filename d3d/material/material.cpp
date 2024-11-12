@@ -123,7 +123,8 @@ ID3D12Resource* LoadTextureFromFile(std::string& texturePath)
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to load texture from file\n"));
+        OutputDebugString(_T("Failed to load texture from file"));
+        OutputDebugString(GetWideString(texturePath + "\n").c_str());
         return nullptr;
     }
 
@@ -235,6 +236,59 @@ ID3D12Resource* CreateWhiteTexture()
     return texture;
 }
 
+ID3D12Resource* CreateBlackTexture()
+{
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+
+	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
+    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    heapProperties.CreationNodeMask = 0;
+    heapProperties.VisibleNodeMask = 0;
+
+    D3D12_RESOURCE_DESC resourceDesc = {};
+
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resourceDesc.Width = 4;
+    resourceDesc.Height = 4;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.SampleDesc.Quality = 0;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    ID3D12Resource* texture = nullptr;
+
+    HRESULT hr = _dev->CreateCommittedResource(
+        &heapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&texture)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create committed resource\n"));
+        return nullptr;
+    }
+
+    std::vector<unsigned char> data(4 * 4 * 4);
+    std::fill(data.begin(), data.end(), 0x00);
+
+    hr = texture->WriteToSubresource(
+        0,
+        nullptr,
+        data.data(),
+        4 * 4,
+        data.size()
+    );
+
+    return texture;
+}
+
 HWND InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)
 {
 	WNDCLASSEX wc = {};
@@ -254,8 +308,8 @@ HWND InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)
 		_T("WindowClass1"),
 		_T("Hello, Direct3D!"),
 		WS_OVERLAPPEDWINDOW,
-		300,
-		300,
+		700,
+		700,
 		wr.right - wr.left,
 		wr.bottom - wr.top,
 		nullptr,
@@ -271,7 +325,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	auto result = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-	RECT wr = { 0, 0, 800, 600 };
+	RECT wr = { 0, 0,1580, 1020 };
 
 	HWND hwnd = InitWindows(hInstance, nCmdShow, wr);
 
@@ -661,6 +715,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     std::vector<ID3D12Resource*> textureResources(numMaterials);
 	std::vector<ID3D12Resource*> sphResources(numMaterials);
+    std::vector<ID3D12Resource*> spaResources(numMaterials);
 
     for (size_t i = 0; i < pmd_materials.size(); ++i)
     {
@@ -674,6 +729,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     for (size_t i = 0; i < pmd_materials.size(); ++i)
     {
+        OutputDebugString(GetWideString(pmd_materials[i].texture_file).c_str());
+        OutputDebugString(_T("-\n"));
         if (strlen(pmd_materials[i].texture_file) == 0)
         {
             textureResources[i] = nullptr;
@@ -709,16 +766,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
             }
         }
+		else
+		{
+            if (GetExtention(textureFileName) == "sph")
+            {
+                sphFileName = pmd_materials[i].texture_file;
+                textureFileName = "";
+            }
+            else if (GetExtention(textureFileName) == "spa")
+            {
+                spaFileName = pmd_materials[i].texture_file;
+                textureFileName = "";
+            }
+            else
+            {
+                sphFileName = "";
+                spaFileName = "";
+                textureFileName = pmd_materials[i].texture_file;
+            }
+		}
 
-        std::string texturePath = GetTexturePathFromModelAndTexPath(
-			strModelPath, 
-			textureFileName.c_str()
-		);
-
-        textureResources[i] = LoadTextureFromFile(texturePath);
+        if (textureFileName != "")
+        {
+            std::string texturePath = GetTexturePathFromModelAndTexPath(
+                strModelPath,
+                textureFileName.c_str()
+            );
+            textureResources[i] = LoadTextureFromFile(texturePath);
+        }
+        else
+        {
+            textureResources[i] = nullptr;
+        }
 
         if (sphFileName != "")
         {
+			OutputDebugString(_T("sph file found"));
+			OutputDebugString(GetWideString(sphFileName + "\n").c_str());
             std::string sphPath = GetTexturePathFromModelAndTexPath(
                 strModelPath,
                 sphFileName.c_str()
@@ -729,6 +813,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
             sphResources[i] = nullptr;
 		}
+
+		OutputDebugString(GetWideString(spaFileName).c_str());
+
+        if (spaFileName != "")
+        {
+            OutputDebugString(_T("spa file found"));
+            OutputDebugString(GetWideString(spaFileName + "\n").c_str());
+            std::string spaPath = GetTexturePathFromModelAndTexPath(
+                strModelPath,
+                spaFileName.c_str()
+            );
+            spaResources[i] = LoadTextureFromFile(spaPath);
+        }
+        else
+        {
+            spaResources[i] = nullptr;
+        }
     }
 
 	size_t materialBufferSize = sizeof(MaterialForHlsl);
@@ -790,7 +891,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     D3D12_DESCRIPTOR_HEAP_DESC materialDescriptorHeapDesc = {};
 
     materialDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	materialDescriptorHeapDesc.NumDescriptors = numMaterials * 3;
+	materialDescriptorHeapDesc.NumDescriptors = numMaterials * 4;
     materialDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     materialDescriptorHeapDesc.NodeMask = 0;
 
@@ -817,6 +918,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     auto incSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     ID3D12Resource* whiteTexture = CreateWhiteTexture();
+    ID3D12Resource* blackTexture = CreateBlackTexture();
 
     for (size_t i = 0; i < numMaterials; ++i)
     {
@@ -847,6 +949,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         {
             materialSrvDesc.Format = sphResources[i]->GetDesc().Format;
             _dev->CreateShaderResourceView(sphResources[i], &materialSrvDesc, materialHandle);
+        }
+
+        materialHandle.ptr += incSize;
+
+        if (spaResources[i] == nullptr)
+        {
+            materialSrvDesc.Format = blackTexture->GetDesc().Format;
+            _dev->CreateShaderResourceView(blackTexture, &materialSrvDesc, materialHandle);
+        }
+        else
+        {
+            materialSrvDesc.Format = spaResources[i]->GetDesc().Format;
+            _dev->CreateShaderResourceView(spaResources[i], &materialSrvDesc, materialHandle);
         }
 
         materialHandle.ptr += incSize;
@@ -1166,7 +1281,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     descRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     // descriptor range for texture
-    descRange[2].NumDescriptors = 2;
+    descRange[2].NumDescriptors = 3;
     descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descRange[2].BaseShaderRegister = 0;
     descRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -1553,7 +1668,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     float angle = 0;
 	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
-    DirectX::XMFLOAT3 eye(0.0f, 10.0f, -15.0f);
+    DirectX::XMFLOAT3 eye(0.0f, 15.0f, -15.0f);
     DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
     DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
 
@@ -1683,7 +1798,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DispatchMessage(&msg);
 		}
 
-		angle += 0.02f;
+		angle += 0.05f;
 	    worldMatrix = DirectX::XMMatrixRotationY(angle);
   //       worldMatrix *= DirectX::XMMatrixRotationX(angle);
   //       worldMatrix *= DirectX::XMMatrixRotationZ(angle);
@@ -1742,7 +1857,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
 		unsigned int indexOffset = 0;
-        auto matIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 3;
+        auto matIncSize = _dev->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 4;
 
         for (auto& m : materials)
         {
