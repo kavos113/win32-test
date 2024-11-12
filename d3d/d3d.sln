@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "transform", "transform\tran
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd", "pmd\pmd.vcxproj", "{C61C2068-986C-4E14-991B-56E067CA9FF2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "material", "material\material.vcxproj", "{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +63,14 @@ Global
 		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x64.Build.0 = Release|x64
 		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x86.ActiveCfg = Release|Win32
 		{C61C2068-986C-4E14-991B-56E067CA9FF2}.Release|x86.Build.0 = Release|Win32
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Debug|x64.ActiveCfg = Debug|x64
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Debug|x64.Build.0 = Debug|x64
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Debug|x86.ActiveCfg = Debug|Win32
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Debug|x86.Build.0 = Debug|Win32
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x64.ActiveCfg = Release|x64
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x64.Build.0 = Release|x64
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x86.ActiveCfg = Release|Win32
+		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
