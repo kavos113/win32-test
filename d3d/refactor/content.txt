@@ -1,0 +1,34 @@
+Windows系
+	WindowProc
+	InitWindows
+	WinMain
+
+DirectX
+	初期化
+		Select GPU, Device
+		Command Allocator
+		Swapchain
+		Render Target View
+		Depth Stencil View
+		Fence
+	Compile Shader
+	Pipeline State Object
+	Viewport
+	Matrix, cbv
+
+PMD Model
+	Header, Material
+	File Read
+	Material Reading
+	D3Dにわたす(Material SRV)
+	Vertex Buffer View
+	Index Buffer View
+
+ユーティリティ
+	AlignmentSize
+	Path系
+	WideString
+
+Dx12util
+	LoadFile
+	ホワイトテクスチャ

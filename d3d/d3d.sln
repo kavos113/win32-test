@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd", "pmd\pmd.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "material", "material\material.vcxproj", "{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "refactor", "refactor\refactor.vcxproj", "{D0504ACD-CB72-4629-9DEE-0484A2D3562B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,6 +73,14 @@ Global
 		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x64.Build.0 = Release|x64
 		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x86.ActiveCfg = Release|Win32
 		{1484E24D-BE0A-4C8A-9ABC-B92F811CCDB1}.Release|x86.Build.0 = Release|Win32
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Debug|x64.ActiveCfg = Debug|x64
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Debug|x64.Build.0 = Debug|x64
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Debug|x86.ActiveCfg = Debug|Win32
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Debug|x86.Build.0 = Debug|Win32
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x64.ActiveCfg = Release|x64
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x64.Build.0 = Release|x64
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x86.ActiveCfg = Release|Win32
+		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
