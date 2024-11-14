@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d12.h>
 #include <DirectXMath.h>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -55,17 +56,19 @@ class PMDModel
 
 public:
     void Read();
-    void Render();
+    void Render(ID3D12GraphicsCommandList* m_commandList);
+
+    PMDModel(std::string filepath, ID3D12Device* dev);
 
 private:
-    void ReadHeader(FILE* fp);
-    void ReadVertices(FILE* fp);
-    void ReadIndices(FILE* fp);
-    void ReadMaterials(FILE* fp);
+    HRESULT ReadHeader(FILE* fp);
+    HRESULT ReadVertices(FILE* fp);
+    HRESULT ReadIndices(FILE* fp);
+    HRESULT ReadMaterials(FILE* fp);
 
-    void SetMaterialBuffer();
-    void SetVertexBuffer();
-    void SetIndexBuffer();
+    HRESULT SetMaterialBuffer();
+    HRESULT SetVertexBuffer();
+    HRESULT SetIndexBuffer();
 
     std::string str_model_path_;
 
@@ -75,8 +78,23 @@ private:
 
     std::vector<Material> materials_;
 
+    unsigned int num_vertices_;
+    unsigned int num_indices_;
+    unsigned int num_materials_;
+
     std::vector<ID3D12Resource*> textures_;
     std::vector<ID3D12Resource*> sph_;
     std::vector<ID3D12Resource*> spa_;
+    std::vector<ID3D12Resource*> toon_;
+
+    ID3D12Device* m_device;
+    ID3D12DescriptorHeap* m_materialDescriptorHeap;
+
+    const size_t pmd_vertex_size = 38;
+
+    D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
+    D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
+
+    std::map<std::string, ID3D12Resource*> resourceTable;
 };
 

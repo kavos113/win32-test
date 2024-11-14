@@ -54,7 +54,7 @@ std::string GetExtention(const std::string& path)
     return path.substr(pos + 1);
 }
 
-std::pair<std::string, std::string> SplitPath(const std::string& path, const char splitter = '*')
+std::pair<std::string, std::string> SplitPath(const std::string& path, const char splitter)
 {
     int i = path.find(splitter);
     return std::make_pair(path.substr(0, i), path.substr(i + 1));

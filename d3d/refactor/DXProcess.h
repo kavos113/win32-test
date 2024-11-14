@@ -1,7 +1,10 @@
 #pragma once
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <memory>
 #include <vector>
+
+#include "PMDModel.h"
 
 class DXProcess
 {
@@ -9,27 +12,54 @@ public:
     void Init();
     void Render();
 
+    DXProcess(HWND hwnd, RECT wr)
+        : 
+        m_dxgiFactory(nullptr),
+        m_device(nullptr),
+        m_commandQueue(nullptr),
+        m_commandAllocator(nullptr),
+        m_commandList(nullptr),
+        m_fence(nullptr),
+        m_fenceValue(0),
+        m_swapChain(nullptr),
+        m_rtvHeap(nullptr),
+        m_depthStencilBuffer(nullptr),
+        m_dsvHeap(nullptr),
+        m_vsBlob(nullptr),
+        m_psBlob(nullptr),
+        m_pipelineState(nullptr),
+        m_rootSignature(nullptr),
+        m_viewport(),
+        m_scissorRect(),
+        wr(wr),
+        hwnd(hwnd)
+    {
+        
+    }
+
 private:
     void EnableDebug();
-    void CreateDevice();
-    void CreateCommandQueue();
-    void CreateCommandAllocator();
-    void CreateCommandList();
+    HRESULT CreateDevice();
+    HRESULT CreateCommandQueue();
+    HRESULT CreateCommandAllocator();
+    HRESULT CreateCommandList();
 
-    void CreateSwapChain();
-    void SetRenderTargetView();
-    void SetDepthStencilView();
+    HRESULT CreateSwapChain();
+    HRESULT SetRenderTargetView();
+    HRESULT SetDepthStencilView();
 
-    void CreateFence();
+    HRESULT CreateFence();
 
-    void CompileShaders();
+    HRESULT CompileShaders();
 
-    void SetGraphicsPipeline();
-    ID3D12RootSignature* CreateRootSignature();
+    HRESULT SetGraphicsPipeline();
+    HRESULT CreateRootSignature();
 
-    void CreateViewPort();
+    HRESULT CreateViewPort();
 
-    void SetMatrixBuffer();
+    HRESULT SetMatrixBuffer();
+
+    HRESULT OnRender();
 
     IDXGIFactory6* m_dxgiFactory;
     ID3D12Device* m_device;
@@ -52,5 +82,16 @@ private:
     ID3D10Blob* m_psBlob;
 
     ID3D12PipelineState* m_pipelineState;
+    ID3D12RootSignature* m_rootSignature;
+
+    ID3D12DescriptorHeap* m_cbvHeap;
+
+    D3D12_VIEWPORT m_viewport;
+    D3D12_RECT m_scissorRect;
+
+    RECT wr;
+    HWND hwnd;
+
+    std::unique_ptr<PMDModel> model;
 };
 
