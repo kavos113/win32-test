@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "material", "material\materi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "refactor", "refactor\refactor.vcxproj", "{D0504ACD-CB72-4629-9DEE-0484A2D3562B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "posing", "posing\posing.vcxproj", "{B70793E9-5643-4B48-8BC1-8294C5C743C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x64.Build.0 = Release|x64
 		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x86.ActiveCfg = Release|Win32
 		{D0504ACD-CB72-4629-9DEE-0484A2D3562B}.Release|x86.Build.0 = Release|Win32
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Debug|x64.ActiveCfg = Debug|x64
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Debug|x64.Build.0 = Debug|x64
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Debug|x86.ActiveCfg = Debug|Win32
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Debug|x86.Build.0 = Debug|Win32
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Release|x64.ActiveCfg = Release|x64
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Release|x64.Build.0 = Release|x64
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Release|x86.ActiveCfg = Release|Win32
+		{B70793E9-5643-4B48-8BC1-8294C5C743C9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

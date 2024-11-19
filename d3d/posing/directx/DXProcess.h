@@ -8,15 +8,6 @@
 
 class DXProcess
 {
-    struct SceneMatrix
-    {
-        DirectX::XMMATRIX world;
-        DirectX::XMMATRIX view;
-        DirectX::XMMATRIX proj;
-
-        DirectX::XMFLOAT3 eye;
-    };
-
 public:
     HRESULT Init();
     void Render();
@@ -37,9 +28,7 @@ public:
         m_viewport(),
         m_scissorRect(),
         wr(wr),
-        hwnd(hwnd),
-        model(nullptr),
-        m_constantBufferMap(nullptr)
+        hwnd(hwnd)
     {
         
     }
@@ -84,8 +73,5 @@ private:
     HWND hwnd;
 
     std::unique_ptr<PMDModel> model;
-
-    SceneMatrix* m_constantBufferMap;
-    float angle = 0.0f;
 };
 

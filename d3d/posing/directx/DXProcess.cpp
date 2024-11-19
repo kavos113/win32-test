@@ -551,6 +551,16 @@ HRESULT DXProcess::CreateViewPort()
 
 HRESULT DXProcess::SetMatrixBuffer()
 {
+    struct SceneMatrix
+    {
+        DirectX::XMMATRIX world;
+        DirectX::XMMATRIX view;
+        DirectX::XMMATRIX proj;
+
+        DirectX::XMFLOAT3 eye;
+    };
+
+    float angle = 0;
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
     DirectX::XMFLOAT3 eye(0.0f, 15.0f, -15.0f);
@@ -607,17 +617,18 @@ HRESULT DXProcess::SetMatrixBuffer()
         return hr;
     }
 
-    hr = constantBuffer->Map(0, nullptr, (void**)&m_constantBufferMap);
+    SceneMatrix* constantBufferMap = nullptr;
+    hr = constantBuffer->Map(0, nullptr, (void**)&constantBufferMap);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map constant buffer\n"));
         return hr;
     }
 
-    m_constantBufferMap->world = worldMatrix;
-    m_constantBufferMap->view = viewMatrix;
-    m_constantBufferMap->proj = projectionMatrix;
-    m_constantBufferMap->eye = eye;
+    constantBufferMap->world = worldMatrix;
+    constantBufferMap->view = viewMatrix;
+    constantBufferMap->proj = projectionMatrix;
+    constantBufferMap->eye = eye;
 
     D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 
@@ -653,9 +664,6 @@ HRESULT DXProcess::SetMatrixBuffer()
 
 HRESULT DXProcess::OnRender()
 {
-    angle += 0.05f;
-    m_constantBufferMap->world = DirectX::XMMatrixRotationY(angle);
-
     auto bbIdx = m_swapChain->GetCurrentBackBufferIndex();
 
     D3D12_RESOURCE_BARRIER barrier = {};
