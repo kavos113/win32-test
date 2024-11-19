@@ -13,8 +13,21 @@ Application::Application()
 
 void Application::Init(RECT wr)
 {
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr))
+    {
+        exit(1);
+    }
+
     HWND hwnd = InitWindows(GetModuleHandle(nullptr), SW_SHOW, wr);
     this->m_hwnd_ = hwnd;
+
+    m_dxProcess_->SetHWND(hwnd);
+    hr = m_dxProcess_->Init();
+    if (FAILED(hr))
+    {
+        exit(1);
+    }
 }
 
 HWND Application::InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)

@@ -9,12 +9,13 @@
 class DXProcess
 {
 public:
-    void Init();
+    HRESULT Init();
     void Render();
+
+    void SetHWND(HWND hwnd);
 
     DXProcess(HWND hwnd, RECT wr)
         : 
-        m_dxgiFactory(nullptr),
         m_device(nullptr),
         m_commandQueue(nullptr),
         m_commandAllocator(nullptr),
@@ -29,6 +30,7 @@ public:
         m_psBlob(nullptr),
         m_pipelineState(nullptr),
         m_rootSignature(nullptr),
+        m_cbvHeap(nullptr), 
         m_viewport(),
         m_scissorRect(),
         wr(wr),
@@ -61,7 +63,6 @@ private:
 
     HRESULT OnRender();
 
-    IDXGIFactory6* m_dxgiFactory;
     ID3D12Device* m_device;
 
     ID3D12CommandQueue* m_commandQueue;

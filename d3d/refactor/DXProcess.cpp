@@ -5,6 +5,7 @@
 #include <memory>
 #include <tchar.h>
 
+#include "DXFactory.h"
 #include "PMDModel.h"
 
 #pragma comment(lib, "d3d12.lib")
@@ -12,49 +13,49 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTex.lib")
 
-void DXProcess::Init()
+HRESULT DXProcess::Init()
 {
     EnableDebug();
 
     OutputDebugString(_T("Debug layer is enabled\n"));
 
     HRESULT hr = CreateDevice();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateCommandAllocator();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateCommandList();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateCommandQueue();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateSwapChain();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = SetRenderTargetView();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = SetDepthStencilView();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateFence();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CompileShaders();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = SetGraphicsPipeline();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = CreateViewPort();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
     hr = SetMatrixBuffer();
-    if (FAILED(hr)) return;
+    if (FAILED(hr)) return E_FAIL;
 
-    if (m_dxgiFactory != nullptr)
+    if (DXFactory::GetDXGIFactory() != nullptr)
     {
         OutputDebugString(_T("DXGI Factory is created\n"));
     }
@@ -65,6 +66,8 @@ void DXProcess::Init()
 
     model = std::make_unique<PMDModel>("model/‰‰¹ƒ~ƒN.pmd", m_device);
     model->Read();
+
+    return S_OK;
 }
 
 void DXProcess::Render()
@@ -77,6 +80,10 @@ void DXProcess::Render()
     }
 }
 
+void DXProcess::SetHWND(HWND hwnd)
+{
+    this->hwnd = hwnd;
+}
 
 void DXProcess::EnableDebug()
 {
@@ -92,21 +99,13 @@ void DXProcess::EnableDebug()
 
 HRESULT DXProcess::CreateDevice()
 {
-    HRESULT hr = CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory));
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create DxGI Factory"));
-        return hr;
-    }
-
     // Selecting a GPU
-
     std::vector<IDXGIAdapter*> adapters;
 
     IDXGIAdapter* adapter = nullptr;
 
     for (int i = 0;
-        m_dxgiFactory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND;
+        DXFactory::GetDXGIFactory()->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND;
         ++i)
     {
         adapters.push_back(adapter);
@@ -217,7 +216,7 @@ HRESULT DXProcess::CreateSwapChain()
     swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-    HRESULT hr = m_dxgiFactory->CreateSwapChainForHwnd(
+    HRESULT hr = DXFactory::GetDXGIFactory()->CreateSwapChainForHwnd(
         m_commandQueue,
         hwnd,
         &swapchainDesc,
@@ -227,13 +226,7 @@ HRESULT DXProcess::CreateSwapChain()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("failed to create swap chain"));
-    }
-
-    if (m_swapChain == nullptr)
-    {
-        OutputDebugString(_T("Failed to create swap chain\n"));
-        return E_FAIL;
+        OutputDebugString(_T("failed to create swap chain\n"));
     }
 
     return hr;

@@ -11,3 +11,12 @@ ID3D12Resource* LoadTextureFromFile(
 ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev);
 ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev);
 ID3D12Resource* CreateGrayGradationTexture(ID3D12Device* _dev);
+
+template <class T> void SafeRelease(T** t)
+{
+    if (*t)
+    {
+        (*t)->Release();
+        *t = nullptr;
+    }
+}

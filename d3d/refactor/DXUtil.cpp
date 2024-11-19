@@ -7,6 +7,8 @@
 
 #include "Util.h"
 
+#pragma comment(lib, "DirectXTex.lib")
+
 ID3D12Resource* LoadTextureFromFile(
     const std::string& texturePath,
     std::map<std::string, ID3D12Resource*>& _resourceTable,
@@ -28,7 +30,7 @@ ID3D12Resource* LoadTextureFromFile(
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to load texture from file"));
+        OutputDebugString(_T("Failed to load texture from file: "));
         OutputDebugString(GetWideString(texturePath + "\n").c_str());
         return nullptr;
     }

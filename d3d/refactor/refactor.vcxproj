@@ -149,6 +149,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="DXFactory.cpp" />
     <ClCompile Include="DXProcess.cpp" />
     <ClCompile Include="DXUtil.cpp" />
     <ClCompile Include="main.cpp" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="DXFactory.h" />
     <ClInclude Include="DXProcess.h" />
     <ClInclude Include="DXUtil.h" />
     <ClInclude Include="PMDModel.h" />
