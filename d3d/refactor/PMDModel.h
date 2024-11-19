@@ -56,7 +56,7 @@ class PMDModel
 
 public:
     void Read();
-    void Render(ID3D12GraphicsCommandList* m_commandList);
+    void Render();
 
     PMDModel(std::string filepath, ID3D12Device* dev);
 

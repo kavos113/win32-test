@@ -2,6 +2,7 @@
 
 #include <tchar.h>
 
+#include "DXCommand.h"
 #include "DXUtil.h"
 #include "Util.h"
 
@@ -28,16 +29,27 @@ void PMDModel::Read()
     if (FAILED(hr)) return;
 
     fclose(fp);
+
+    hr = SetVertexBuffer();
+    if (FAILED(hr)) return;
+
+    hr = SetIndexBuffer();
+    if (FAILED(hr)) return;
+
+    hr = SetMaterialBuffer();
+    if (FAILED(hr)) return;
+
 }
 
-void PMDModel::Render(ID3D12GraphicsCommandList* m_commandList)
+void PMDModel::Render()
 {
-    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    m_commandList->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    m_commandList->IASetIndexBuffer(&index_buffer_view_);
+    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
 
-    m_commandList->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
-    m_commandList->SetGraphicsRootDescriptorTable(
+    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
+
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
         1,
         m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
@@ -49,18 +61,18 @@ void PMDModel::Render(ID3D12GraphicsCommandList* m_commandList)
 
     for (auto& m : materials_)
     {
-        m_commandList->SetGraphicsRootDescriptorTable(
+        DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
             1,
             materialDescHandle
         );
 
-        m_commandList->DrawIndexedInstanced(m.indices_count, 1, indexOffset, 0, 0);
+        DXCommand::GetCommandList()->DrawIndexedInstanced(m.indices_count, 1, indexOffset, 0, 0);
 
         indexOffset += m.indices_count;
         materialDescHandle.ptr += matIncSize;
     }
 
-    m_commandList->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
+    DXCommand::GetCommandList()->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
 }
 
 PMDModel::PMDModel(std::string filepath, ID3D12Device* dev)
@@ -68,7 +80,10 @@ PMDModel::PMDModel(std::string filepath, ID3D12Device* dev)
     num_vertices_(0),
     num_indices_(0),
     num_materials_(0),
-    m_device(dev)
+    m_device(dev),
+    m_materialDescriptorHeap(nullptr),
+    vertex_buffer_view_({}),
+    index_buffer_view_({})
 {
     
 }
@@ -326,7 +341,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create committed resource\n"));
-        return 1;
+        return hr;
     }
 
     unsigned char* materialMap = nullptr;
@@ -335,7 +350,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map material buffer\n"));
-        return 1;
+        return hr;
     }
 
     for (auto& m : materials_)
@@ -357,7 +372,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create material descriptor heap\n"));
-        return 1;
+        return hr;
     }
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
@@ -438,6 +453,8 @@ HRESULT PMDModel::SetMaterialBuffer()
 
         materialHandle.ptr += incSize;
     }
+
+    return S_OK;
 }
 
 HRESULT PMDModel::SetVertexBuffer()
@@ -482,7 +499,7 @@ HRESULT PMDModel::SetVertexBuffer()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map vertex buffer\n"));
-        return 1;
+        return hr;
     }
 
     std::copy(std::begin(vertices_), std::end(vertices_), vertexMap);
@@ -492,6 +509,8 @@ HRESULT PMDModel::SetVertexBuffer()
     vertex_buffer_view_.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
     vertex_buffer_view_.SizeInBytes = vertices_.size();
     vertex_buffer_view_.StrideInBytes = pmd_vertex_size;
+
+    return S_OK;
 }
 
 HRESULT PMDModel::SetIndexBuffer()
@@ -527,7 +546,7 @@ HRESULT PMDModel::SetIndexBuffer()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create committed resource\n"));
-        return 1;
+        return hr;
     }
 
     unsigned short* indexMap = nullptr;
@@ -540,4 +559,6 @@ HRESULT PMDModel::SetIndexBuffer()
     index_buffer_view_.BufferLocation = indexBuffer->GetGPUVirtualAddress();
     index_buffer_view_.SizeInBytes = indices_.size() * sizeof(indices_[0]);
     index_buffer_view_.Format = DXGI_FORMAT_R16_UINT;
+
+    return S_OK;
 }

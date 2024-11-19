@@ -16,12 +16,6 @@ public:
 
     DXProcess(HWND hwnd, RECT wr)
         : 
-        m_device(nullptr),
-        m_commandQueue(nullptr),
-        m_commandAllocator(nullptr),
-        m_commandList(nullptr),
-        m_fence(nullptr),
-        m_fenceValue(0),
         m_swapChain(nullptr),
         m_rtvHeap(nullptr),
         m_depthStencilBuffer(nullptr),
@@ -41,16 +35,10 @@ public:
 
 private:
     void EnableDebug();
-    HRESULT CreateDevice();
-    HRESULT CreateCommandQueue();
-    HRESULT CreateCommandAllocator();
-    HRESULT CreateCommandList();
 
     HRESULT CreateSwapChain();
     HRESULT SetRenderTargetView();
     HRESULT SetDepthStencilView();
-
-    HRESULT CreateFence();
 
     HRESULT CompileShaders();
 
@@ -62,15 +50,6 @@ private:
     HRESULT SetMatrixBuffer();
 
     HRESULT OnRender();
-
-    ID3D12Device* m_device;
-
-    ID3D12CommandQueue* m_commandQueue;
-    ID3D12CommandAllocator* m_commandAllocator;
-    ID3D12GraphicsCommandList* m_commandList;
-
-    ID3D12Fence* m_fence;
-    UINT64 m_fenceValue;
 
     IDXGISwapChain4* m_swapChain;
     ID3D12DescriptorHeap* m_rtvHeap;

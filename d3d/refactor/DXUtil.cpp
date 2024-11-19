@@ -5,6 +5,8 @@
 #include <DirectXTex.h>
 #include <map>
 
+#include "DXCommand.h"
+#include "DXFence.h"
 #include "Util.h"
 
 #pragma comment(lib, "DirectXTex.lib")
@@ -37,59 +39,254 @@ ID3D12Resource* LoadTextureFromFile(
 
     auto image = scratchImage.GetImage(0, 0, 0);
 
-    D3D12_HEAP_PROPERTIES heapProperties = {};
+    // D3D12_HEAP_PROPERTIES heapProperties = {};
+    //
+    // heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
+    // heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    // heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    // heapProperties.CreationNodeMask = 0;
+    // heapProperties.VisibleNodeMask = 0;
+    //
+    // D3D12_RESOURCE_DESC resourceDesc = {};
+    //
+    // resourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
+    // resourceDesc.Width = metadata.width;
+    // resourceDesc.Height = metadata.height;
+    // resourceDesc.DepthOrArraySize = metadata.arraySize;
+    // resourceDesc.MipLevels = metadata.mipLevels;
+    // resourceDesc.Format = metadata.format;
+    // resourceDesc.SampleDesc.Count = 1;
+    // resourceDesc.SampleDesc.Quality = 0;
+    // resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    // resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    //
+    // ID3D12Resource* texture = nullptr;
+    //
+    // hr = _dev->CreateCommittedResource(
+    //     &heapProperties,
+    //     D3D12_HEAP_FLAG_NONE,
+    //     &resourceDesc,
+    //     D3D12_RESOURCE_STATE_COPY_DEST,
+    //     nullptr,
+    //     IID_PPV_ARGS(&texture)
+    // );
+    // if (FAILED(hr))
+    // {
+    //     OutputDebugString(_T("Failed to create committed resource\n"));
+    //     return nullptr;
+    // }
+    //
+    // hr = texture->WriteToSubresource(
+    //     0,
+    //     nullptr,
+    //     image->pixels,
+    //     image->rowPitch,
+    //     image->slicePitch
+    // );
+    // if (FAILED(hr))
+    // {
+    //     OutputDebugString(_T("Failed to write to subresource\n"));
+    //     return nullptr;
+    // }
 
-    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-    heapProperties.CreationNodeMask = 0;
-    heapProperties.VisibleNodeMask = 0;
 
-    D3D12_RESOURCE_DESC resourceDesc = {};
+    D3D12_HEAP_PROPERTIES uploadHeapProperties = {};
 
-    resourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
-    resourceDesc.Width = metadata.width;
-    resourceDesc.Height = metadata.height;
-    resourceDesc.DepthOrArraySize = metadata.arraySize;
-    resourceDesc.MipLevels = metadata.mipLevels;
-    resourceDesc.Format = metadata.format;
-    resourceDesc.SampleDesc.Count = 1;
-    resourceDesc.SampleDesc.Quality = 0;
-    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+    uploadHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    uploadHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    uploadHeapProperties.CreationNodeMask = 0;
+    uploadHeapProperties.VisibleNodeMask = 0;
 
-    ID3D12Resource* texture = nullptr;
+    D3D12_RESOURCE_DESC uploadResourceDesc = {};
+
+    uploadResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uploadResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    uploadResourceDesc.Width = AlignmentSize(image->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * image->height;
+    uploadResourceDesc.Height = 1;
+    uploadResourceDesc.DepthOrArraySize = 1;
+    uploadResourceDesc.MipLevels = 1;
+    uploadResourceDesc.SampleDesc.Count = 1;
+    uploadResourceDesc.SampleDesc.Quality = 0;
+    uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    uploadResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    ID3D12Resource* uploadBuffer = nullptr;
 
     hr = _dev->CreateCommittedResource(
-        &heapProperties,
+        &uploadHeapProperties,
         D3D12_HEAP_FLAG_NONE,
-        &resourceDesc,
+        &uploadResourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadBuffer)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create upload buffer\n"));
+        return nullptr;
+    }
+
+    D3D12_HEAP_PROPERTIES textureHeapProps = {};
+
+    textureHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+    textureHeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    textureHeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    textureHeapProps.CreationNodeMask = 0;
+    textureHeapProps.VisibleNodeMask = 0;
+
+    uploadResourceDesc.Format = metadata.format;
+    uploadResourceDesc.Width = metadata.width;
+    uploadResourceDesc.Height = metadata.height;
+    uploadResourceDesc.DepthOrArraySize = metadata.arraySize;
+    uploadResourceDesc.MipLevels = metadata.mipLevels;
+    uploadResourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
+    uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+    ID3D12Resource* textureBuffer = nullptr;
+
+    hr = _dev->CreateCommittedResource(
+        &textureHeapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadResourceDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
-        IID_PPV_ARGS(&texture)
+        IID_PPV_ARGS(&textureBuffer)
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create committed resource\n"));
+        OutputDebugString(_T("Failed to create texture copy buffer\n"));
         return nullptr;
     }
 
-    hr = texture->WriteToSubresource(
+    uint8_t* mapForImage = nullptr;
+    hr = uploadBuffer->Map(0, nullptr, (void**)&mapForImage);
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to map upload buffer\n"));
+        return nullptr;
+    }
+
+    auto srcAddr = image->pixels;
+    auto rowPitch = AlignmentSize(image->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+
+    for (size_t i = 0; i < image->height; ++i)
+    {
+        std::copy_n(
+            srcAddr,
+            rowPitch,
+            mapForImage
+        );
+
+        srcAddr += image->rowPitch;
+        mapForImage += rowPitch;
+    }
+
+    uploadBuffer->Unmap(0, nullptr);
+
+    D3D12_TEXTURE_COPY_LOCATION src = {};
+
+    src.pResource = uploadBuffer;
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT placedFootprint = {};
+    UINT nrow;
+    UINT64 rowSize, totalSize;
+
+    auto desc = textureBuffer->GetDesc();
+    _dev->GetCopyableFootprints(
+        &desc,
         0,
-        nullptr,
-        image->pixels,
-        image->rowPitch,
-        image->slicePitch
+        1,
+        0,
+        &placedFootprint,
+        &nrow,
+        &rowSize,
+        &totalSize
     );
-    if (FAILED(hr))
+
+    src.PlacedFootprint = placedFootprint;
+    src.PlacedFootprint.Offset = 0;
+    src.PlacedFootprint.Footprint.Width = metadata.width;
+    src.PlacedFootprint.Footprint.Height = metadata.height;
+    src.PlacedFootprint.Footprint.Depth = metadata.depth;
+    src.PlacedFootprint.Footprint.RowPitch = AlignmentSize(image->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    src.PlacedFootprint.Footprint.Format = image->format;
+
+    D3D12_TEXTURE_COPY_LOCATION dst = {};
+
+    dst.pResource = textureBuffer;
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex = 0;
+
     {
-        OutputDebugString(_T("Failed to write to subresource\n"));
-        return nullptr;
+        // process in GPU
+        DXCommand::GetCommandList()->CopyTextureRegion(
+            &dst,
+            0,
+            0,
+            0,
+            &src,
+            nullptr
+        );
+
+        D3D12_RESOURCE_BARRIER barrierDesc = {};
+
+        barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        barrierDesc.Transition.pResource = textureBuffer;
+        barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        barrierDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+        DXCommand::GetCommandList()->ResourceBarrier(1, &barrierDesc);
+        hr = DXCommand::GetCommandList()->Close();
+        if (FAILED(hr))
+        {
+            OutputDebugString(_T("Failed to close command list\n"));
+            return nullptr;
+        }
+
+        ID3D12CommandList* cpyCmdLists[] = { DXCommand::GetCommandList() };
+        DXCommand::GetCommandQueue()->ExecuteCommandLists(1, cpyCmdLists);
+
+        hr = DXCommand::GetCommandQueue()->Signal(DXFence::GetFence(), DXFence::GetIncrementedFenceValue());
+        if (FAILED(hr))
+        {
+            OutputDebugString(_T("Failed to signal fence\n"));
+            return nullptr;
+        }
+
+        if (DXFence::GetFence()->GetCompletedValue() != DXFence::GetFenceValue())
+        {
+            HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+            hr = DXFence::GetFence()->SetEventOnCompletion(DXFence::GetFenceValue(), event);
+            if (FAILED(hr))
+            {
+                OutputDebugString(_T("Failed to set event on completion\n"));
+                return nullptr;
+            }
+            WaitForSingleObject(event, INFINITE);
+            CloseHandle(event);
+        }
+
+        hr = DXCommand::GetCommandAllocator()->Reset();
+        if (FAILED(hr))
+        {
+            OutputDebugString(_T("Failed to reset command allocator\n"));
+            return nullptr;
+        }
+        hr = DXCommand::GetCommandList()->Reset(DXCommand::GetCommandAllocator(), nullptr);
+        if (FAILED(hr))
+        {
+            OutputDebugString(_T("Failed to reset command list\n"));
+            return nullptr;
+        }
     }
 
-    _resourceTable[texturePath] = texture;
+    _resourceTable[texturePath] = textureBuffer;
 
-    return texture;
+    return textureBuffer;
 }
 
 ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev)

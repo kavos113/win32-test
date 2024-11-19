@@ -149,7 +149,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="DXCommand.cpp" />
+    <ClCompile Include="DXDevice.cpp" />
     <ClCompile Include="DXFactory.cpp" />
+    <ClCompile Include="DXFence.cpp" />
     <ClCompile Include="DXProcess.cpp" />
     <ClCompile Include="DXUtil.cpp" />
     <ClCompile Include="main.cpp" />
@@ -161,7 +164,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="DXCommand.h" />
+    <ClInclude Include="DXDevice.h" />
     <ClInclude Include="DXFactory.h" />
+    <ClInclude Include="DXFence.h" />
     <ClInclude Include="DXProcess.h" />
     <ClInclude Include="DXUtil.h" />
     <ClInclude Include="PMDModel.h" />

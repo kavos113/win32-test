@@ -5,7 +5,10 @@
 #include <memory>
 #include <tchar.h>
 
+#include "DXCommand.h"
+#include "DXDevice.h"
 #include "DXFactory.h"
+#include "DXFence.h"
 #include "PMDModel.h"
 
 #pragma comment(lib, "d3d12.lib")
@@ -19,28 +22,13 @@ HRESULT DXProcess::Init()
 
     OutputDebugString(_T("Debug layer is enabled\n"));
 
-    HRESULT hr = CreateDevice();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateCommandAllocator();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateCommandList();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateCommandQueue();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateSwapChain();
+    HRESULT hr = CreateSwapChain();
     if (FAILED(hr)) return E_FAIL;
 
     hr = SetRenderTargetView();
     if (FAILED(hr)) return E_FAIL;
 
     hr = SetDepthStencilView();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateFence();
     if (FAILED(hr)) return E_FAIL;
 
     hr = CompileShaders();
@@ -64,7 +52,7 @@ HRESULT DXProcess::Init()
         OutputDebugString(_T("DXGI Factory is not created\n"));
     }
 
-    model = std::make_unique<PMDModel>("model/初音ミク.pmd", m_device);
+    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd", DXDevice::GetDevice());
     model->Read();
 
     return S_OK;
@@ -97,108 +85,6 @@ void DXProcess::EnableDebug()
     debugController->Release();
 }
 
-HRESULT DXProcess::CreateDevice()
-{
-    // Selecting a GPU
-    std::vector<IDXGIAdapter*> adapters;
-
-    IDXGIAdapter* adapter = nullptr;
-
-    for (int i = 0;
-        DXFactory::GetDXGIFactory()->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND;
-        ++i)
-    {
-        adapters.push_back(adapter);
-    }
-
-    for (auto adp : adapters)
-    {
-        DXGI_ADAPTER_DESC desc;
-        adp->GetDesc(&desc);
-
-        std::wstring str(desc.Description);
-
-        if (str.find(L"NVIDIA") != std::string::npos)
-        {
-            adapter = adp;
-            break;
-        }
-    }
-
-    D3D_FEATURE_LEVEL featureLevels[] = {
-        D3D_FEATURE_LEVEL_12_1,
-        D3D_FEATURE_LEVEL_12_0,
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0
-    };
-
-    D3D_FEATURE_LEVEL featureLevel;
-    for (auto level : featureLevels)
-    {
-        if (D3D12CreateDevice(nullptr, level, IID_PPV_ARGS(&m_device)) == S_OK)
-        {
-            featureLevel = level;
-            break;
-        }
-    }
-    if (m_device == nullptr)
-    {
-        OutputDebugString(_T("Failed to create D3D12 device\n"));
-        return E_FAIL;
-    }
-
-    return S_OK;
-}
-
-HRESULT DXProcess::CreateCommandQueue()
-{
-    D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
-    cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-    cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    cmdQueueDesc.NodeMask = 0;
-
-    HRESULT hr = m_device->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(&m_commandQueue));
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create command queue\n"));
-    }
-
-    return hr;
-}
-
-HRESULT DXProcess::CreateCommandAllocator()
-{
-    HRESULT hr = m_device->CreateCommandAllocator(
-        D3D12_COMMAND_LIST_TYPE_DIRECT,
-        IID_PPV_ARGS(&m_commandAllocator)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create command allocator\n"));
-    }
-
-    return hr;
-}
-
-HRESULT DXProcess::CreateCommandList()
-{
-    HRESULT hr = m_device->CreateCommandList(
-        0,
-        D3D12_COMMAND_LIST_TYPE_DIRECT,
-        m_commandAllocator, 
-        nullptr,
-        IID_PPV_ARGS(&m_commandList)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create command list\n"));
-    }
-
-    return hr;
-
-}
-
 HRESULT DXProcess::CreateSwapChain()
 {
     DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
@@ -217,7 +103,7 @@ HRESULT DXProcess::CreateSwapChain()
     swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
     HRESULT hr = DXFactory::GetDXGIFactory()->CreateSwapChainForHwnd(
-        m_commandQueue,
+        DXCommand::GetCommandQueue(),
         hwnd,
         &swapchainDesc,
         nullptr,
@@ -241,7 +127,7 @@ HRESULT DXProcess::SetRenderTargetView()
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
 
-    HRESULT hr = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
+    HRESULT hr = DXDevice::GetDevice()->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create RTV descriptor heap\n"));
@@ -272,13 +158,13 @@ HRESULT DXProcess::SetRenderTargetView()
             return hr;
         }
 
-        m_device->CreateRenderTargetView(
+        DXDevice::GetDevice()->CreateRenderTargetView(
             back_buffers_[idx],
             &rtvDesc,
             rtvHandle
         );
 
-        rtvHandle.ptr += m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        rtvHandle.ptr += DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     }
 
     return S_OK;
@@ -308,7 +194,7 @@ HRESULT DXProcess::SetDepthStencilView()
     clearValue.Format = DXGI_FORMAT_D32_FLOAT;
     clearValue.DepthStencil.Depth = 1.0f;
 
-    HRESULT hr = m_device->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &depthResourceDesc,
@@ -329,9 +215,7 @@ HRESULT DXProcess::SetDepthStencilView()
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     dsvHeapDesc.NodeMask = 0;
 
-    ID3D12DescriptorHeap* _dsvHeap = nullptr;
-
-    hr = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&_dsvHeap));
+    hr = DXDevice::GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap));
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create DSV descriptor heap\n"));
@@ -344,23 +228,11 @@ HRESULT DXProcess::SetDepthStencilView()
     dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-    m_device->CreateDepthStencilView(
+    DXDevice::GetDevice()->CreateDepthStencilView(
         m_depthStencilBuffer,
         &dsvDesc,
-        _dsvHeap->GetCPUDescriptorHandleForHeapStart()
+        m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
     );
-
-    return S_OK;
-}
-
-HRESULT DXProcess::CreateFence()
-{
-    HRESULT hr = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create fence\n"));
-        return hr;
-    }
 
     return S_OK;
 }
@@ -553,7 +425,7 @@ HRESULT DXProcess::SetGraphicsPipeline()
 
     graphics_pipeline.pRootSignature = m_rootSignature;
 
-    hr = m_device->CreateGraphicsPipelineState(
+    hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
         &graphics_pipeline,
         IID_PPV_ARGS(&m_pipelineState)
     );
@@ -643,7 +515,7 @@ HRESULT DXProcess::CreateRootSignature()
         return hr;
     }
 
-    hr = m_device->CreateRootSignature(
+    hr = DXDevice::GetDevice()->CreateRootSignature(
         0,
         signatureBlob->GetBufferPointer(),
         signatureBlob->GetBufferSize(),
@@ -731,7 +603,7 @@ HRESULT DXProcess::SetMatrixBuffer()
 
     ID3D12Resource* constantBuffer = nullptr;
 
-    HRESULT hr = m_device->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &constantBufferHeapProperties,
         D3D12_HEAP_FLAG_NONE,
         &constantBufferResourceDesc,
@@ -765,7 +637,7 @@ HRESULT DXProcess::SetMatrixBuffer()
     descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     descriptorHeapDesc.NodeMask = 0;
 
-    hr = m_device->CreateDescriptorHeap(
+    hr = DXDevice::GetDevice()->CreateDescriptorHeap(
         &descriptorHeapDesc,
         IID_PPV_ARGS(&m_cbvHeap)
     );
@@ -782,7 +654,7 @@ HRESULT DXProcess::SetMatrixBuffer()
 
     D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = m_cbvHeap->GetCPUDescriptorHandleForHeapStart();
 
-    m_device->CreateConstantBufferView(
+    DXDevice::GetDevice()->CreateConstantBufferView(
         &cbvDesc,
         cbvHandle
     );
@@ -804,86 +676,88 @@ HRESULT DXProcess::OnRender()
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-    m_commandList->ResourceBarrier(1, &barrier);
+    DXCommand::GetCommandList()->ResourceBarrier(1, &barrier);
 
-    m_commandList->SetPipelineState(m_pipelineState);
+    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     auto rendertvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    rendertvHandle.ptr += bbIdx * m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rendertvHandle.ptr += bbIdx * DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     auto dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
-    m_commandList->OMSetRenderTargets(1, &rendertvHandle, TRUE, &dsvHandle);
+    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rendertvHandle, TRUE, &dsvHandle);
 
     float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    m_commandList->ClearRenderTargetView(rendertvHandle, clearColor, 0, nullptr);
-    m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    DXCommand::GetCommandList()->ClearRenderTargetView(rendertvHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // draw polygon
-    m_commandList->RSSetViewports(1, &m_viewport);
-    m_commandList->RSSetScissorRects(1, &m_scissorRect);
-    m_commandList->SetGraphicsRootSignature(m_rootSignature);
+    DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
+    DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
+    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
-    m_commandList->SetGraphicsRootSignature(m_rootSignature);
-    m_commandList->SetDescriptorHeaps(1, &m_cbvHeap);
-    m_commandList->SetGraphicsRootDescriptorTable(
+    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
+    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_cbvHeap);
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
         0,
         m_cbvHeap->GetGPUDescriptorHandleForHeapStart()
     );
 
-    model->Render(m_commandList);
+    model->Render();
 
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 
-    m_commandList->ResourceBarrier(1, &barrier);
+    DXCommand::GetCommandList()->ResourceBarrier(1, &barrier);
 
-    HRESULT hr = m_commandList->Close();
+    HRESULT hr = DXCommand::GetCommandList()->Close();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to close command list\n"));
         return hr;
     }
 
-    ID3D12CommandList* cmdLists[] = { m_commandList };
-    m_commandQueue->ExecuteCommandLists(1, cmdLists);
+    ID3D12CommandList* cmdLists[] = { DXCommand::GetCommandList() };
+    DXCommand::GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
 
-    hr = m_commandQueue->Signal(m_fence, ++m_fenceValue);
+    hr = DXCommand::GetCommandQueue()->Signal(DXFence::GetFence(), DXFence::GetIncrementedFenceValue());
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to signal fence\n"));
-        return 1;
+        return hr;
     }
 
-    if (m_fence->GetCompletedValue() != m_fenceValue)
+    if (DXFence::GetFence()->GetCompletedValue() != DXFence::GetFenceValue())
     {
         HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        hr = m_fence->SetEventOnCompletion(m_fenceValue, event);
+        hr = DXFence::GetFence()->SetEventOnCompletion(DXFence::GetFenceValue(), event);
         if (FAILED(hr))
         {
             OutputDebugString(_T("Failed to set event on completion\n"));
-            return 1;
+            return hr;
         }
         WaitForSingleObject(event, INFINITE);
         CloseHandle(event);
     }
 
-    hr = m_commandAllocator->Reset();
+    hr = DXCommand::GetCommandAllocator()->Reset();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to reset command allocator\n"));
-        return 1;
+        return hr;
     }
-    hr = m_commandList->Reset(m_commandAllocator, nullptr);
+    hr = DXCommand::GetCommandList()->Reset(DXCommand::GetCommandAllocator(), nullptr);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to reset command list\n"));
-        return 1;
+        return hr;
     }
 
     hr = m_swapChain->Present(1, 0);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to present\n"));
-        return 1;
+        return hr;
     }
+
+    return S_OK;
 }
