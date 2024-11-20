@@ -12,7 +12,7 @@ void PMDModel::Read()
     fopen_s(&fp, str_model_path_.c_str(), "rb");
     if (fp == nullptr)
     {
-        OutputDebugString(_T("Failed to open file"));
+        OutputDebugString(_T("Failed to open file\n"));
         return;
     }
 
@@ -98,7 +98,7 @@ HRESULT PMDModel::ReadHeader(FILE* fp)
         OutputDebugString(_T("Failed to read file\n"));
         return E_FAIL;
     }
-    numRead = fread(&header, sizeof(PMDHeader), 1, fp);
+    numRead = fread(&header, sizeof(header), 1, fp);
     if (numRead != 1)
     {
         OutputDebugString(_T("Failed to read pmd file\n"));
@@ -117,14 +117,17 @@ HRESULT PMDModel::ReadVertices(FILE* fp)
         return E_FAIL;
     }
 
-    vertices_.resize(num_vertices_ * pmd_vertex_size);
-    numRead = fread(vertices_.data(), pmd_vertex_size, num_vertices_, fp);
-    if (numRead != num_vertices_)
+    vertices_.resize(num_vertices_);
+    for (auto i = 0; i < num_vertices_; ++i)
     {
-        OutputDebugString(_T("Failed to read vertices\n"));
-        return E_FAIL;
+        numRead = fread(&vertices_[i], pmd_vertex_size, 1, fp);
+        if (numRead != 1)
+        {
+            OutputDebugString(_T("Failed to read vertices\n"));
+            return E_FAIL;
+        }
     }
-
+    
     return S_OK;
 }
 
@@ -468,7 +471,7 @@ HRESULT PMDModel::SetVertexBuffer()
     D3D12_RESOURCE_DESC resource_desc = {};
 
     resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resource_desc.Width = vertices_.size();
+    resource_desc.Width = vertices_.size() * sizeof(PMDVertex);
     resource_desc.Height = 1;
     resource_desc.DepthOrArraySize = 1;
     resource_desc.MipLevels = 1;
@@ -476,6 +479,7 @@ HRESULT PMDModel::SetVertexBuffer()
     resource_desc.SampleDesc.Count = 1;
     resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    resource_desc.Alignment = 0;
 
     ID3D12Resource* vertexBuffer = nullptr;
 
@@ -493,7 +497,7 @@ HRESULT PMDModel::SetVertexBuffer()
         return 1;
     }
 
-    unsigned char* vertexMap = nullptr;
+    PMDVertex* vertexMap = nullptr;
 
     hr = vertexBuffer->Map(0, nullptr, (void**)&vertexMap);
     if (FAILED(hr))
@@ -502,13 +506,13 @@ HRESULT PMDModel::SetVertexBuffer()
         return hr;
     }
 
-    std::copy(std::begin(vertices_), std::end(vertices_), vertexMap);
+    std::copy(vertices_.begin(), vertices_.end(), vertexMap);
 
     vertexBuffer->Unmap(0, nullptr);
 
     vertex_buffer_view_.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    vertex_buffer_view_.SizeInBytes = vertices_.size();
-    vertex_buffer_view_.StrideInBytes = pmd_vertex_size;
+    vertex_buffer_view_.SizeInBytes = static_cast<UINT>(vertices_.size() * sizeof(PMDVertex)); 
+    vertex_buffer_view_.StrideInBytes = sizeof(PMDVertex);
 
     return S_OK;
 }
@@ -552,12 +556,12 @@ HRESULT PMDModel::SetIndexBuffer()
     unsigned short* indexMap = nullptr;
     indexBuffer->Map(0, nullptr, (void**)&indexMap);
 
-    std::copy(std::begin(indices_), std::end(indices_), indexMap);
+    std::copy(indices_.begin(), indices_.end(), indexMap);
 
     indexBuffer->Unmap(0, nullptr);
 
     index_buffer_view_.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-    index_buffer_view_.SizeInBytes = indices_.size() * sizeof(indices_[0]);
+    index_buffer_view_.SizeInBytes = static_cast<UINT>(indices_.size() * sizeof(indices_[0]));
     index_buffer_view_.Format = DXGI_FORMAT_R16_UINT;
 
     return S_OK;

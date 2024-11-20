@@ -14,6 +14,21 @@ class PMDModel
         char comment[256];
     };
 
+#pragma pack(push, 1) // for padding
+
+    struct PMDVertex
+    {
+        DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
+        DirectX::XMFLOAT2 uv;
+        uint16_t bone_num[2];
+        uint8_t bone_weight;
+        uint8_t edge_flag;
+        uint16_t dummy;
+    };
+
+#pragma pack(pop)
+
 #pragma pack(1) // for padding
 
     struct PMDMaterial
@@ -72,7 +87,7 @@ private:
 
     std::string str_model_path_;
 
-    std::vector<unsigned char> vertices_;
+    std::vector<PMDVertex> vertices_;
     std::vector<unsigned short> indices_;
     std::vector<PMDMaterial> pmd_materials_;
 
