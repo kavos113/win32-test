@@ -52,7 +52,7 @@ HRESULT DXProcess::Init()
         OutputDebugString(_T("DXGI Factory is not created\n"));
     }
 
-    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd", DXDevice::GetDevice());
+    model = std::make_unique<PMDModel>("Model/初音ミクmetal.pmd", DXDevice::GetDevice());
     model->Read();
 
     return S_OK;
@@ -149,17 +149,19 @@ HRESULT DXProcess::SetRenderTargetView()
 
     back_buffers_.resize(swapChainDesc.BufferCount);
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    for (int idx = 0; idx < swapChainDesc.BufferCount; ++idx)
+    for (int i = 0; i < swapChainDesc.BufferCount; ++i)
     {
-        hr = m_swapChain->GetBuffer(idx, IID_PPV_ARGS(&back_buffers_[idx]));
+        hr = m_swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&back_buffers_[i]));
         if (FAILED(hr))
         {
             OutputDebugString(_T("Failed to get buffer from swap chain\n"));
             return hr;
         }
 
+        rtvDesc.Format = back_buffers_[i]->GetDesc().Format;
+
         DXDevice::GetDevice()->CreateRenderTargetView(
-            back_buffers_[idx],
+            back_buffers_[i],
             &rtvDesc,
             rtvHandle
         );
@@ -182,6 +184,9 @@ HRESULT DXProcess::SetDepthStencilView()
     depthResourceDesc.SampleDesc.Count = 1;
     depthResourceDesc.SampleDesc.Quality = 0;
     depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    depthResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    depthResourceDesc.MipLevels = 1;
+    depthResourceDesc.Alignment = 0;
 
     D3D12_HEAP_PROPERTIES heapProperties = {};
 

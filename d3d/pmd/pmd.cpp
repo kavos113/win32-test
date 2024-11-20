@@ -24,6 +24,19 @@ D3D_FEATURE_LEVEL featureLevels[] = {
 	D3D_FEATURE_LEVEL_11_0
 };
 
+#pragma pack(push, 1)
+struct PMD_VERTEX
+{
+	DirectX::XMFLOAT3 pos;
+	DirectX::XMFLOAT3 normal;
+	DirectX::XMFLOAT2 uv;
+	uint16_t bone_no[2];
+	uint8_t  weight;
+	uint8_t  EdgeFlag;
+	uint16_t dummy;
+};
+#pragma pack(pop)
+
 struct Vertex
 {
 	DirectX::XMFLOAT3 pos;
@@ -109,7 +122,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	IDXGIFactory6* _dxgiFactory = nullptr;
 	IDXGISwapChain4* _swapchain = nullptr;
 
-	hr = CreateDXGIFactory1(IID_PPV_ARGS(&_dxgiFactory));
+	hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&_dxgiFactory));
 	if (FAILED(hr))
 	{
 		OutputDebugString(_T("Failed to create DxGI Factory"));
@@ -253,17 +266,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	std::vector<ID3D12Resource*> _backBuffers(swapChainDesc.BufferCount);
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = _rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	for (int idx = 0; idx < swapChainDesc.BufferCount; ++idx)
+	for (int i = 0; i < swapChainDesc.BufferCount; ++i)
 	{
-		hr = _swapchain->GetBuffer(idx, IID_PPV_ARGS(&_backBuffers[idx]));
+		hr = _swapchain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&_backBuffers[i]));
 		if (FAILED(hr))
 		{
 			OutputDebugString(_T("Failed to get buffer from swap chain\n"));
 			return 1;
 		}
 
+        rtvDesc.Format = _backBuffers[i]->GetDesc().Format;
+
 		_dev->CreateRenderTargetView(
-			_backBuffers[idx],
+			_backBuffers[i],
 			&rtvDesc,
 			rtvHandle
 		);
@@ -282,6 +297,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     depthResourceDesc.SampleDesc.Count = 1;
     depthResourceDesc.SampleDesc.Quality = 0;
     depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+    depthResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    depthResourceDesc.MipLevels = 1;
+    depthResourceDesc.Alignment = 0;
 
     D3D12_HEAP_PROPERTIES heapProperties = {};
 
@@ -374,7 +392,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         OutputDebugString(_T("Failed to read file\n"));
         return 1;
     }
-    numRead = fread(&header, sizeof(PMDHeader), 1, fp);
+    numRead = fread(&header, sizeof(header), 1, fp);
     if (numRead != 1)
     {
         OutputDebugString(_T("Failed to read pmd file\n"));
@@ -392,12 +410,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    std::vector<unsigned char> pmd_vertices(numVertices * pmd_vertex_size);
-    numRead = fread(pmd_vertices.data(), pmd_vertex_size, numVertices, fp);
-    if (numRead != numVertices)
+    std::vector<PMD_VERTEX> pmd_vertices(numVertices);
+    for (auto i = 0; i < numVertices; i++)
     {
-        OutputDebugString(_T("Failed to read vertices\n"));
-        return 1;
+        numRead = fread(&pmd_vertices[i], pmd_vertex_size, 1, fp);
+        if (numRead != 1)
+        {
+            OutputDebugString(_T("Failed to read vertices\n"));
+            return 1;
+        }
     }
 
     unsigned int numIndices = 0;
@@ -445,7 +466,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	D3D12_RESOURCE_DESC resource_desc = {};
 
 	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resource_desc.Width = pmd_vertices.size();
+	resource_desc.Width = pmd_vertices.size() * sizeof(PMD_VERTEX);
 	resource_desc.Height = 1;
 	resource_desc.DepthOrArraySize = 1;
 	resource_desc.MipLevels = 1;
@@ -453,6 +474,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	resource_desc.SampleDesc.Count = 1;
 	resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    resource_desc.Alignment = 0;
 
 	ID3D12Resource* vertexBuffer = nullptr;
 
@@ -470,7 +492,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-	unsigned char* vertexMap = nullptr;
+	PMD_VERTEX* vertexMap = nullptr;
 
 	hr = vertexBuffer->Map(0, nullptr, (void**)&vertexMap);
 	if (FAILED(hr))
@@ -479,15 +501,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-	std::copy(std::begin(pmd_vertices), std::end(pmd_vertices), vertexMap);
+	std::copy(pmd_vertices.begin(), pmd_vertices.end(), vertexMap);
 
 	vertexBuffer->Unmap(0, nullptr);
 
 	D3D12_VERTEX_BUFFER_VIEW vbv = {};
 
 	vbv.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    vbv.SizeInBytes = pmd_vertices.size();
-	vbv.StrideInBytes = pmd_vertex_size;
+    vbv.SizeInBytes = static_cast<UINT>(pmd_vertices.size() * sizeof(PMD_VERTEX)); 
+    vbv.StrideInBytes = sizeof(PMD_VERTEX);
 
 	ID3D12Resource* indexBuffer = nullptr;
 	
@@ -510,19 +532,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	unsigned short* indexMap = nullptr;
 	indexBuffer->Map(0, nullptr, (void**)&indexMap);
 	
-	std::copy(std::begin(pmd_indices), std::end(pmd_indices), indexMap);
+	std::copy(pmd_indices.begin(), pmd_indices.end(), indexMap);
 	
 	indexBuffer->Unmap(0, nullptr);
 	
 	D3D12_INDEX_BUFFER_VIEW ibv = {};
 	
 	ibv.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-    ibv.SizeInBytes = pmd_indices.size() * sizeof(pmd_indices[0]);
+    ibv.SizeInBytes = static_cast<UINT>(pmd_indices.size() * sizeof(pmd_indices[0]));
 	ibv.Format = DXGI_FORMAT_R16_UINT;
 
 	// compile shaders
 	ID3D10Blob* vertexShaderBlob = nullptr;
 	ID3D10Blob* pixelShaderBlob = nullptr;
+
 	ID3D10Blob* errorBlob = nullptr;
 
 	hr = D3DCompileFromFile(

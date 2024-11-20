@@ -1,5 +1,7 @@
 #pragma once
-#include "DXProcess.h"
+#include <memory>
+
+#include "directx/DXProcess.h"
 
 class Application
 {
