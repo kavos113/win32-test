@@ -6,14 +6,17 @@ SamplerState sam : register(s0);
 
 cbuffer cbuff0 : register(b0)
 {
-    matrix world;
     matrix view;
     matrix projection;
-
     float3 eye;
 };
 
-cbuffer Material : register(b1)
+cbuffer cbuff1 : register(b1)
+{
+    matrix world;
+};
+
+cbuffer Material : register(b2)
 {
     float4 diffuse;
     float4 specular;

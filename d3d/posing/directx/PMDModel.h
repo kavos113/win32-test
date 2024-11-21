@@ -69,6 +69,11 @@ class PMDModel
         AdditionalMaterial additional;
     };
 
+    struct ModelMatrix
+    {
+        DirectX::XMMATRIX world;
+    };
+
 public:
     void Read();
     void Render();
@@ -84,6 +89,7 @@ private:
     HRESULT SetMaterialBuffer();
     HRESULT SetVertexBuffer();
     HRESULT SetIndexBuffer();
+    HRESULT SetMatrixBuffer();
 
     std::string str_model_path_;
 
