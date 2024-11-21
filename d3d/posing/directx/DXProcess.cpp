@@ -437,8 +437,10 @@ HRESULT DXProcess::SetGraphicsPipeline()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create pipeline state\n"));
-        return 1;
+        return hr;
     }
+
+    return S_OK;
 }
 
 HRESULT DXProcess::CreateRootSignature()
@@ -448,41 +450,53 @@ HRESULT DXProcess::CreateRootSignature()
 
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descRange[3] = {};
+    D3D12_DESCRIPTOR_RANGE descRange[4] = {};
 
-    // descriptor range for constant buffer
+    // descriptor range for scene matrix buffer
     descRange[0].NumDescriptors = 1;
     descRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
     descRange[0].BaseShaderRegister = 0;
     descRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // descriptor range for material buffer
+    // descriptor range for model matrix buffer
     descRange[1].NumDescriptors = 1;
     descRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
     descRange[1].BaseShaderRegister = 1;
     descRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // descriptor range for texture
-    descRange[2].NumDescriptors = 4;
-    descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    descRange[2].BaseShaderRegister = 0;
+    // descriptor range for material buffer
+    descRange[2].NumDescriptors = 1;
+    descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    descRange[2].BaseShaderRegister = 2;
     descRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParam[2] = {};
+    // descriptor range for texture
+    descRange[3].NumDescriptors = 4;
+    descRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descRange[3].BaseShaderRegister = 0;
+    descRange[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // root parameter for constant buffer
+    D3D12_ROOT_PARAMETER rootParam[3] = {};
+
+    // root parameter for scene matrix buffer
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParam[0].DescriptorTable.pDescriptorRanges = &descRange[0];
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
 
-    // root parameter for material buffer
+    // root parameter for model matrix buffer
     rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParam[1].DescriptorTable.pDescriptorRanges = &descRange[1];
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 2;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
 
-    rootSignatureDesc.NumParameters = 2;
+    // root parameter for material buffer
+    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[2].DescriptorTable.pDescriptorRanges = &descRange[2];
+    rootParam[2].DescriptorTable.NumDescriptorRanges = 2;
+
+    rootSignatureDesc.NumParameters = 3;
     rootSignatureDesc.pParameters = rootParam;
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -558,15 +572,10 @@ HRESULT DXProcess::SetMatrixBuffer()
 {
     struct SceneMatrix
     {
-        DirectX::XMMATRIX world;
         DirectX::XMMATRIX view;
         DirectX::XMMATRIX proj;
-
         DirectX::XMFLOAT3 eye;
     };
-
-    float angle = 0;
-    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
     DirectX::XMFLOAT3 eye(0.0f, 15.0f, -15.0f);
     DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
@@ -585,36 +594,36 @@ HRESULT DXProcess::SetMatrixBuffer()
         100.0f
     );
 
-    D3D12_HEAP_PROPERTIES constantBufferHeapProperties = {};
+    D3D12_HEAP_PROPERTIES heap_properties = {};
 
-    constantBufferHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-    constantBufferHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    constantBufferHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    constantBufferHeapProperties.CreationNodeMask = 0;
-    constantBufferHeapProperties.VisibleNodeMask = 0;
+    heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heap_properties.CreationNodeMask = 0;
+    heap_properties.VisibleNodeMask = 0;
 
-    D3D12_RESOURCE_DESC constantBufferResourceDesc = {};
+    D3D12_RESOURCE_DESC resource_desc = {};
 
-    constantBufferResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-    constantBufferResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    constantBufferResourceDesc.Width = (sizeof(SceneMatrix) + 0xff) & ~0xff;  // ~0xff: 256バイト以下が0
-    constantBufferResourceDesc.Height = 1;
-    constantBufferResourceDesc.DepthOrArraySize = 1;
-    constantBufferResourceDesc.MipLevels = 1;
-    constantBufferResourceDesc.SampleDesc.Count = 1;
-    constantBufferResourceDesc.SampleDesc.Quality = 0;
-    constantBufferResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    constantBufferResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resource_desc.Width = (sizeof(SceneMatrix) + 0xff) & ~0xff;  // ~0xff: 256バイト以下が0
+    resource_desc.Height = 1;
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    ID3D12Resource* constantBuffer = nullptr;
+    ID3D12Resource* buffer = nullptr;
 
     HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &constantBufferHeapProperties,
+        &heap_properties,
         D3D12_HEAP_FLAG_NONE,
-        &constantBufferResourceDesc,
+        &resource_desc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(&constantBuffer)
+        IID_PPV_ARGS(&buffer)
     );
     if (FAILED(hr))
     {
@@ -622,28 +631,27 @@ HRESULT DXProcess::SetMatrixBuffer()
         return hr;
     }
 
-    SceneMatrix* constantBufferMap = nullptr;
-    hr = constantBuffer->Map(0, nullptr, (void**)&constantBufferMap);
+    SceneMatrix* buffer_map = nullptr;
+    hr = buffer->Map(0, nullptr, (void**)&buffer_map);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map constant buffer\n"));
         return hr;
     }
 
-    constantBufferMap->world = worldMatrix;
-    constantBufferMap->view = viewMatrix;
-    constantBufferMap->proj = projectionMatrix;
-    constantBufferMap->eye = eye;
+    buffer_map->view = viewMatrix;
+    buffer_map->proj = projectionMatrix;
+    buffer_map->eye = eye;
 
-    D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+    D3D12_DESCRIPTOR_HEAP_DESC descriptor_heap_desc = {};
 
-    descriptorHeapDesc.NumDescriptors = 1; // texture(SRV) and constant(CBV) buffer
-    descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    descriptorHeapDesc.NodeMask = 0;
+    descriptor_heap_desc.NumDescriptors = 1; // texture(SRV) and constant(CBV) buffer
+    descriptor_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    descriptor_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    descriptor_heap_desc.NodeMask = 0;
 
     hr = DXDevice::GetDevice()->CreateDescriptorHeap(
-        &descriptorHeapDesc,
+        &descriptor_heap_desc,
         IID_PPV_ARGS(&m_cbvHeap)
     );
     if (FAILED(hr))
@@ -654,8 +662,8 @@ HRESULT DXProcess::SetMatrixBuffer()
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 
-    cbvDesc.BufferLocation = constantBuffer->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = constantBuffer->GetDesc().Width;
+    cbvDesc.BufferLocation = buffer->GetGPUVirtualAddress();
+    cbvDesc.SizeInBytes = buffer->GetDesc().Width;
 
     D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = m_cbvHeap->GetCPUDescriptorHandleForHeapStart();
 

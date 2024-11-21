@@ -3,6 +3,7 @@
 #include <tchar.h>
 
 #include "DXCommand.h"
+#include "DXDevice.h"
 #include "DXUtil.h"
 #include "Util.h"
 
@@ -563,6 +564,60 @@ HRESULT PMDModel::SetIndexBuffer()
     index_buffer_view_.BufferLocation = indexBuffer->GetGPUVirtualAddress();
     index_buffer_view_.SizeInBytes = static_cast<UINT>(indices_.size() * sizeof(indices_[0]));
     index_buffer_view_.Format = DXGI_FORMAT_R16_UINT;
+
+    return S_OK;
+}
+
+HRESULT PMDModel::SetMatrixBuffer()
+{
+    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
+    D3D12_HEAP_PROPERTIES heap_properties = {};
+
+    heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heap_properties.CreationNodeMask = 0;
+    heap_properties.VisibleNodeMask = 0;
+
+    D3D12_RESOURCE_DESC resource_desc = {};
+
+    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resource_desc.Width = (sizeof(ModelMatrix) + 0xff) & ~0xff;
+    resource_desc.Height = 1;
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    ID3D12Resource* matrix_buffer = nullptr;
+
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
+        &heap_properties,
+        D3D12_HEAP_FLAG_NONE,
+        &resource_desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&matrix_buffer)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create constant buffer\n"));
+        return hr;
+    }
+
+    ModelMatrix* modelMatrixBufferMap = nullptr;
+    hr = matrix_buffer->Map(0, nullptr, (void**)&modelMatrixBufferMap);
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to map constant buffer\n"));
+        return hr;
+    }
+
+    modelMatrixBufferMap->world = worldMatrix;
 
     return S_OK;
 }
