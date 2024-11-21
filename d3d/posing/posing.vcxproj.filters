@@ -48,6 +48,9 @@
     <ClInclude Include="directx\PMDModel.h">
       <Filter>ヘッダー ファイル\directx</Filter>
     </ClInclude>
+    <ClInclude Include="directx\DXWorld.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Util.cpp">
@@ -78,6 +81,9 @@
       <Filter>ソース ファイル\directx</Filter>
     </ClCompile>
     <ClCompile Include="directx\PMDModel.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\DXWorld.cpp">
       <Filter>ソース ファイル\directx</Filter>
     </ClCompile>
   </ItemGroup>

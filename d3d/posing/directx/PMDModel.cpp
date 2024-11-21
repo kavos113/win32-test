@@ -609,15 +609,15 @@ HRESULT PMDModel::SetMatrixBuffer()
         return hr;
     }
 
-    ModelMatrix* modelMatrixBufferMap = nullptr;
-    hr = matrix_buffer->Map(0, nullptr, (void**)&modelMatrixBufferMap);
+    ModelMatrix* buffer_map = nullptr;
+    hr = matrix_buffer->Map(0, nullptr, (void**)&buffer_map);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map constant buffer\n"));
         return hr;
     }
 
-    modelMatrixBufferMap->world = worldMatrix;
+    buffer_map->world = worldMatrix;
 
     return S_OK;
 }

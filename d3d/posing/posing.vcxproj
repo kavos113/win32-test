@@ -136,6 +136,7 @@
     <ClInclude Include="directx\DXFence.h" />
     <ClInclude Include="directx\DXProcess.h" />
     <ClInclude Include="directx\DXUtil.h" />
+    <ClInclude Include="directx\DXWorld.h" />
     <ClInclude Include="directx\PMDModel.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
@@ -147,6 +148,7 @@
     <ClCompile Include="directx\DXFence.cpp" />
     <ClCompile Include="directx\DXProcess.cpp" />
     <ClCompile Include="directx\DXUtil.cpp" />
+    <ClCompile Include="directx\DXWorld.cpp" />
     <ClCompile Include="directx\PMDModel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Util.cpp" />
