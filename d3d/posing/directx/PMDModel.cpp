@@ -40,10 +40,18 @@ void PMDModel::Read()
     hr = SetMaterialBuffer();
     if (FAILED(hr)) return;
 
+    hr = SetMatrixBuffer();
+    if (FAILED(hr)) return;
 }
 
 void PMDModel::Render()
 {
+    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_matrixDescriptorHeap);
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        0,
+        m_matrixDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+    );
+
     DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -58,7 +66,7 @@ void PMDModel::Render()
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
     unsigned int indexOffset = 0;
-    auto matIncSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
+    auto matIncSize = DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 5;
 
     for (auto& m : materials_)
     {
@@ -76,15 +84,17 @@ void PMDModel::Render()
     DXCommand::GetCommandList()->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
 }
 
-PMDModel::PMDModel(std::string filepath, ID3D12Device* dev)
+PMDModel::PMDModel(std::string filepath)
     : str_model_path_(filepath),
     num_vertices_(0),
     num_indices_(0),
     num_materials_(0),
-    m_device(dev),
     m_materialDescriptorHeap(nullptr),
+    m_matrixDescriptorHeap(nullptr),
     vertex_buffer_view_({}),
-    index_buffer_view_({})
+    index_buffer_view_({}),
+    resourceTable({}),
+    matrix_buffer_map_(nullptr)
 {
     
 }
@@ -201,7 +211,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
 
         toonFilePath += toonFileName;
 
-        toon_[i] = LoadTextureFromFile(toonFilePath, resourceTable, m_device);
+        toon_[i] = LoadTextureFromFile(toonFilePath, resourceTable, DXDevice::GetDevice());
 
         OutputDebugString(GetWideString(pmd_materials_[i].texture_file).c_str());
         OutputDebugString(_T("-\n"));
@@ -266,7 +276,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
                 str_model_path_,
                 textureFileName.c_str()
             );
-            textures_[i] = LoadTextureFromFile(texturePath, resourceTable, m_device);
+            textures_[i] = LoadTextureFromFile(texturePath, resourceTable, DXDevice::GetDevice());
         }
         else
         {
@@ -281,7 +291,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
                 str_model_path_,
                 sphFileName.c_str()
             );
-            sph_[i] = LoadTextureFromFile(sphPath, resourceTable, m_device);
+            sph_[i] = LoadTextureFromFile(sphPath, resourceTable, DXDevice::GetDevice());
         }
         else
         {
@@ -298,7 +308,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
                 str_model_path_,
                 spaFileName.c_str()
             );
-            spa_[i] = LoadTextureFromFile(spaPath, resourceTable, m_device);
+            spa_[i] = LoadTextureFromFile(spaPath, resourceTable, DXDevice::GetDevice());
         }
         else
         {
@@ -334,7 +344,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     ID3D12Resource* materialBuffer = nullptr;
 
-    HRESULT hr = m_device->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &materialHeapProperties,
         D3D12_HEAP_FLAG_NONE,
         &materialResourceDesc,
@@ -372,7 +382,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     materialDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     materialDescriptorHeapDesc.NodeMask = 0;
 
-    hr = m_device->CreateDescriptorHeap(&materialDescriptorHeapDesc, IID_PPV_ARGS(&m_materialDescriptorHeap));
+    hr = DXDevice::GetDevice()->CreateDescriptorHeap(&materialDescriptorHeapDesc, IID_PPV_ARGS(&m_materialDescriptorHeap));
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create material descriptor heap\n"));
@@ -392,15 +402,15 @@ HRESULT PMDModel::SetMaterialBuffer()
     materialSrvDesc.Texture2D.MipLevels = 1;
 
     D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = m_materialDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    auto incSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    auto incSize = DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    ID3D12Resource* whiteTexture = CreateWhiteTexture(m_device);
-    ID3D12Resource* blackTexture = CreateBlackTexture(m_device);
-    ID3D12Resource* grayGradationTexture = CreateGrayGradationTexture(m_device);
+    ID3D12Resource* whiteTexture = CreateWhiteTexture(DXDevice::GetDevice());
+    ID3D12Resource* blackTexture = CreateBlackTexture(DXDevice::GetDevice());
+    ID3D12Resource* grayGradationTexture = CreateGrayGradationTexture(DXDevice::GetDevice());
 
     for (size_t i = 0; i < num_materials_; ++i)
     {
-        m_device->CreateConstantBufferView(&materialCbvDesc, materialHandle);
+        DXDevice::GetDevice()->CreateConstantBufferView(&materialCbvDesc, materialHandle);
 
         materialCbvDesc.BufferLocation += materialBufferSize;
         materialHandle.ptr += incSize;
@@ -408,12 +418,12 @@ HRESULT PMDModel::SetMaterialBuffer()
         if (textures_[i] == nullptr)
         {
             materialSrvDesc.Format = whiteTexture->GetDesc().Format;
-            m_device->CreateShaderResourceView(whiteTexture, &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(whiteTexture, &materialSrvDesc, materialHandle);
         }
         else
         {
             materialSrvDesc.Format = textures_[i]->GetDesc().Format;
-            m_device->CreateShaderResourceView(textures_[i], &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(textures_[i], &materialSrvDesc, materialHandle);
         }
 
         materialHandle.ptr += incSize;
@@ -421,12 +431,12 @@ HRESULT PMDModel::SetMaterialBuffer()
         if (sph_[i] == nullptr)
         {
             materialSrvDesc.Format = whiteTexture->GetDesc().Format;
-            m_device->CreateShaderResourceView(whiteTexture, &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(whiteTexture, &materialSrvDesc, materialHandle);
         }
         else
         {
             materialSrvDesc.Format = sph_[i]->GetDesc().Format;
-            m_device->CreateShaderResourceView(sph_[i], &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(sph_[i], &materialSrvDesc, materialHandle);
         }
 
         materialHandle.ptr += incSize;
@@ -434,12 +444,12 @@ HRESULT PMDModel::SetMaterialBuffer()
         if (spa_[i] == nullptr)
         {
             materialSrvDesc.Format = blackTexture->GetDesc().Format;
-            m_device->CreateShaderResourceView(blackTexture, &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(blackTexture, &materialSrvDesc, materialHandle);
         }
         else
         {
             materialSrvDesc.Format = spa_[i]->GetDesc().Format;
-            m_device->CreateShaderResourceView(spa_[i], &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(spa_[i], &materialSrvDesc, materialHandle);
         }
 
         materialHandle.ptr += incSize;
@@ -447,12 +457,12 @@ HRESULT PMDModel::SetMaterialBuffer()
         if (toon_[i] == nullptr)
         {
             materialSrvDesc.Format = whiteTexture->GetDesc().Format;
-            m_device->CreateShaderResourceView(grayGradationTexture, &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(grayGradationTexture, &materialSrvDesc, materialHandle);
         }
         else
         {
             materialSrvDesc.Format = toon_[i]->GetDesc().Format;
-            m_device->CreateShaderResourceView(toon_[i], &materialSrvDesc, materialHandle);
+            DXDevice::GetDevice()->CreateShaderResourceView(toon_[i], &materialSrvDesc, materialHandle);
         }
 
         materialHandle.ptr += incSize;
@@ -484,7 +494,7 @@ HRESULT PMDModel::SetVertexBuffer()
 
     ID3D12Resource* vertexBuffer = nullptr;
 
-    HRESULT hr = m_device->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heap_properties,
         D3D12_HEAP_FLAG_NONE,
         &resource_desc,
@@ -540,7 +550,7 @@ HRESULT PMDModel::SetIndexBuffer()
 
     ID3D12Resource* indexBuffer = nullptr;
 
-    HRESULT hr = m_device->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heap_properties,
         D3D12_HEAP_FLAG_NONE,
         &resource_desc,
@@ -609,15 +619,41 @@ HRESULT PMDModel::SetMatrixBuffer()
         return hr;
     }
 
-    ModelMatrix* buffer_map = nullptr;
-    hr = matrix_buffer->Map(0, nullptr, (void**)&buffer_map);
+    hr = matrix_buffer->Map(0, nullptr, (void**)&matrix_buffer_map_);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map constant buffer\n"));
         return hr;
     }
 
-    buffer_map->world = worldMatrix;
+    matrix_buffer_map_->world = worldMatrix;
+
+    D3D12_DESCRIPTOR_HEAP_DESC matrix_descriptor_heap_desc = {};
+
+    matrix_descriptor_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    matrix_descriptor_heap_desc.NumDescriptors = 1;
+    matrix_descriptor_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    matrix_descriptor_heap_desc.NodeMask = 0;
+
+    hr = DXDevice::GetDevice()->CreateDescriptorHeap(
+        &matrix_descriptor_heap_desc,
+        IID_PPV_ARGS(&m_matrixDescriptorHeap)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create descriptor heap\n"));
+        return hr;
+    }
+
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc = {};
+
+    cbv_desc.BufferLocation = matrix_buffer->GetGPUVirtualAddress();
+    cbv_desc.SizeInBytes = matrix_buffer->GetDesc().Width;
+
+    DXDevice::GetDevice()->CreateConstantBufferView(
+        &cbv_desc,
+        m_matrixDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
+    );
 
     return S_OK;
 }

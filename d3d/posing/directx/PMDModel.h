@@ -78,7 +78,7 @@ public:
     void Read();
     void Render();
 
-    PMDModel(std::string filepath, ID3D12Device* dev);
+    PMDModel(std::string filepath);
 
 private:
     HRESULT ReadHeader(FILE* fp);
@@ -108,8 +108,8 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    ID3D12Device* m_device;
     ID3D12DescriptorHeap* m_materialDescriptorHeap;
+    ID3D12DescriptorHeap* m_matrixDescriptorHeap;
 
     const size_t pmd_vertex_size = 38;
 
@@ -117,5 +117,7 @@ private:
     D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
 
     std::map<std::string, ID3D12Resource*> resourceTable;
+
+    ModelMatrix* matrix_buffer_map_;
 };
 

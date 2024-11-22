@@ -55,7 +55,7 @@ HRESULT DXProcess::Init()
         OutputDebugString(_T("DXGI Factory is not created\n"));
     }
 
-    model = std::make_unique<PMDModel>("Model/初音ミクmetal.pmd", DXDevice::GetDevice());
+    model = std::make_unique<PMDModel>("Model/初音ミクmetal.pmd");
     model->Read();
 
     return S_OK;
@@ -604,6 +604,7 @@ HRESULT DXProcess::OnRender()
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
+    world.SetDescriptorHeap();
     model->Render();
 
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
