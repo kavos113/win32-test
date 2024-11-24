@@ -91,6 +91,7 @@
     <None Include="BasicShaderHeader.hlsli">
       <Filter>リソース ファイル</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="BasicVertexShader.hlsl">
