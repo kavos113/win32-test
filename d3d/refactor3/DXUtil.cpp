@@ -336,8 +336,13 @@ ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev)
         nullptr,
         data.data(),
         4 * 4,
-        data.size()
+        static_cast<UINT>(data.size())
     );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to write to subresource\n"));
+        return nullptr;
+    }
 
     return texture;
 }
@@ -389,8 +394,13 @@ ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev)
         nullptr,
         data.data(),
         4 * 4,
-        data.size()
+        static_cast<UINT>(data.size()) 
     );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to write to subresource\n"));
+        return nullptr;
+    }
 
     return texture;
 }

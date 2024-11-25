@@ -20,9 +20,10 @@ class PMDModel
         DirectX::XMFLOAT3 position;
         DirectX::XMFLOAT3 normal;
         DirectX::XMFLOAT2 uv;
-        unsigned short bone_num[2];
-        unsigned char bone_weight;
-        unsigned char edge_flag;
+        uint16_t bone_num[2];
+        uint8_t bone_weight;
+        uint8_t edge_flag;
+        uint16_t dummy;
     };
 #pragma pack(pop)
 

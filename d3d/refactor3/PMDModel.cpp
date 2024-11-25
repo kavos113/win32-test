@@ -28,7 +28,12 @@ void PMDModel::Read()
     hr = ReadMaterials(fp);
     if (FAILED(hr)) return;
 
-    fclose(fp);
+    int ret = fclose(fp);
+    if (ret != 0)
+    {
+        OutputDebugString(_T("Failed to close file\n"));
+        return;
+    }
 
     hr = SetVertexBuffer();
     if (FAILED(hr)) return;
@@ -43,12 +48,11 @@ void PMDModel::Read()
 
 void PMDModel::Render() const
 {
-    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
-
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
 
+    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
         1,
         m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
@@ -71,8 +75,6 @@ void PMDModel::Render() const
         indexOffset += m.indices_count;
         materialDescHandle.ptr += matIncSize;
     }
-
-    DXCommand::GetCommandList()->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
 }
 
 PMDModel::PMDModel(std::string filepath, ID3D12Device* dev)
@@ -141,8 +143,8 @@ HRESULT PMDModel::ReadIndices(FILE* fp)
     }
 
     indices_.resize(num_indices_);
-    numRead = fread(indices_.data(), sizeof(unsigned short), num_indices_, fp);
-    if (numRead != num_indices_)
+    numRead = fread(indices_.data(), indices_.size() * sizeof(indices_[0]), 1, fp);
+    if (numRead != 1)
     {
         OutputDebugString(_T("Failed to read indices\n"));
         return E_FAIL;
@@ -168,13 +170,6 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         return E_FAIL;
     }
 
-    int ret = fclose(fp);
-    if (ret != 0)
-    {
-        OutputDebugString(_T("Failed to close file\n"));
-        return E_FAIL;
-    }
-
     materials_.resize(num_materials_);
     for (size_t i = 0; i < pmd_materials_.size(); ++i)
     {
@@ -184,6 +179,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         materials_[i].material.specular = pmd_materials_[i].specular;
         materials_[i].material.specularity = pmd_materials_[i].specularity;
         materials_[i].material.ambient = pmd_materials_[i].ambient;
+        materials_[i].additional.toon_index = pmd_materials_[i].toon_index;
     }
 
     textures_.resize(num_materials_);
@@ -196,7 +192,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         std::string toonFilePath = "toon/";
         char toonFileName[16] = {};
 
-        sprintf_s(toonFileName, "toon%02d.bmp", pmd_materials_[i].toon_index + 1);
+        sprintf_s(toonFileName, 16, "toon%02d.bmp", pmd_materials_[i].toon_index + 1);
 
         toonFilePath += toonFileName;
 
@@ -322,7 +318,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     D3D12_RESOURCE_DESC materialResourceDesc = {};
 
     materialResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    materialResourceDesc.Width = materialBufferSize * num_materials_;
+    materialResourceDesc.Width = materialBufferSize * num_materials_; // mottainai
     materialResourceDesc.Height = 1;
     materialResourceDesc.DepthOrArraySize = 1;
     materialResourceDesc.MipLevels = 1;
@@ -347,7 +343,7 @@ HRESULT PMDModel::SetMaterialBuffer()
         return hr;
     }
 
-    unsigned char* materialMap = nullptr;
+    char* materialMap = nullptr;
 
     hr = materialBuffer->Map(0, nullptr, (void**)&materialMap);
     if (FAILED(hr))
@@ -381,7 +377,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
 
     materialCbvDesc.BufferLocation = materialBuffer->GetGPUVirtualAddress();
-    materialCbvDesc.SizeInBytes = materialBufferSize;
+    materialCbvDesc.SizeInBytes = static_cast<UINT>(materialBufferSize); 
 
     D3D12_SHADER_RESOURCE_VIEW_DESC materialSrvDesc = {};
 

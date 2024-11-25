@@ -95,7 +95,7 @@ HRESULT DXProcess::CreateSwapChain()
     swapchainDesc.Stereo = FALSE;
     swapchainDesc.SampleDesc.Count = 1;
     swapchainDesc.SampleDesc.Quality = 0;
-    swapchainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER;
+    swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapchainDesc.BufferCount = 2;
     swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
     swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -355,15 +355,15 @@ HRESULT DXProcess::SetGraphicsPipeline()
             D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
             0
         },
-        {
-            "EDGE_FLAG",
-            0,
-            DXGI_FORMAT_R8_UINT,
-            0,
-            D3D12_APPEND_ALIGNED_ELEMENT,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        }
+        // {
+        //     "EDGE_FLAG",
+        //     0,
+        //     DXGI_FORMAT_R8_UINT,
+        //     0,
+        //     D3D12_APPEND_ALIGNED_ELEMENT,
+        //     D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+        //     0
+        // }
     };
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphics_pipeline = {};
@@ -478,33 +478,39 @@ HRESULT DXProcess::CreateRootSignature()
 
     // root parameter for material buffer
     rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParam[1].DescriptorTable.pDescriptorRanges = &descRange[1];
     rootParam[1].DescriptorTable.NumDescriptorRanges = 2;
 
     rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
 
-    D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+    D3D12_STATIC_SAMPLER_DESC samplerDesc[2] = {};
 
-    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-    samplerDesc.MinLOD = 0.0f;
-    samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    samplerDesc[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc[0].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+    samplerDesc[0].Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    samplerDesc[0].MaxLOD = D3D12_FLOAT32_MAX;
+    samplerDesc[0].MinLOD = 0.0f;
+    samplerDesc[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    samplerDesc[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    samplerDesc[0].ShaderRegister = 0;
+    samplerDesc[1] = samplerDesc[0];
+    samplerDesc[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc[1].ShaderRegister = 1;
 
-    rootSignatureDesc.NumStaticSamplers = 1;
-    rootSignatureDesc.pStaticSamplers = &samplerDesc;
+    rootSignatureDesc.NumStaticSamplers = 2;
+    rootSignatureDesc.pStaticSamplers = samplerDesc;
 
     ID3DBlob* signatureBlob = nullptr;
 
     HRESULT hr = D3D12SerializeRootSignature(
         &rootSignatureDesc,
-        D3D_ROOT_SIGNATURE_VERSION_1,
+        D3D_ROOT_SIGNATURE_VERSION_1_0,
         &signatureBlob,
         &errorBlob
     );
@@ -644,7 +650,7 @@ HRESULT DXProcess::SetMatrixBuffer()
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 
     cbvDesc.BufferLocation = constantBuffer->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = constantBuffer->GetDesc().Width;
+    cbvDesc.SizeInBytes = static_cast<UINT>(constantBuffer->GetDesc().Width);
 
     D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = m_cbvHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -678,10 +684,10 @@ HRESULT DXProcess::OnRender()
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     auto rendertvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    rendertvHandle.ptr += bbIdx * DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    rendertvHandle.ptr += static_cast<ULONG_PTR>(bbIdx) * DXDevice::GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV); 
 
     auto dsvHandle = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
-    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rendertvHandle, TRUE, &dsvHandle);
+    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rendertvHandle, FALSE, &dsvHandle);
 
     float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     DXCommand::GetCommandList()->ClearRenderTargetView(rendertvHandle, clearColor, 0, nullptr);
@@ -690,7 +696,6 @@ HRESULT DXProcess::OnRender()
     // draw polygon
     DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
-    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
     DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_cbvHeap);
@@ -732,27 +737,26 @@ HRESULT DXProcess::OnRender()
             OutputDebugString(_T("Failed to set event on completion\n"));
             return hr;
         }
-        WaitForSingleObject(event, INFINITE);
+        WaitForSingleObjectEx(event, INFINITE, false);
         CloseHandle(event);
-    }
-
-    hr = DXCommand::GetCommandAllocator()->Reset();
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to reset command allocator\n"));
-        return hr;
-    }
-    hr = DXCommand::GetCommandList()->Reset(DXCommand::GetCommandAllocator(), nullptr);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to reset command list\n"));
-        return hr;
     }
 
     hr = m_swapChain->Present(1, 0);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to present\n"));
+        return hr;
+    }
+    hr = DXCommand::GetCommandAllocator()->Reset();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to reset command allocator\n"));
+        return hr;
+    }
+    hr = DXCommand::GetCommandList()->Reset(DXCommand::GetCommandAllocator(), m_pipelineState);
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to reset command list\n"));
         return hr;
     }
 

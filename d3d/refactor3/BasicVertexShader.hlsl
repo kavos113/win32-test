@@ -3,9 +3,7 @@
 Output BasicVS( 
     float4 pos : POSITION,
     float4 normal : NORMAL,
-    float2 uv : TEXCOORD,
-    min16uint2 bone_number : BONE_NUMBER,
-    min16uint weight : WEIGHT
+    float2 uv : TEXCOORD
 )
 {
     Output output;
@@ -13,9 +11,9 @@ Output BasicVS(
     normal.w = 0;
     output.normal = mul(world, normal);
     output.vnormal = mul(view, output.normal);
-    output.pos = pos;
+    output.pos = mul(view, pos);
     output.uv = uv;
-    output.ray = normalize(eye - pos);
+    output.ray = normalize(pos.xyz - mul(view, eye));
 
     return output;
 }
