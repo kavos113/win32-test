@@ -5,12 +5,11 @@
 
 ID3D12Resource* LoadTextureFromFile(
     const std::string& texturePath,
-    std::map<std::string, ID3D12Resource*>& _resourceTable,
-    ID3D12Device* _dev
+    std::map<std::string, ID3D12Resource*>& _resourceTable
 );
-ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev);
-ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev);
-ID3D12Resource* CreateGrayGradationTexture(ID3D12Device* _dev);
+ID3D12Resource* CreateWhiteTexture();
+ID3D12Resource* CreateBlackTexture();
+ID3D12Resource* CreateGrayGradationTexture();
 
 template <class T> void SafeRelease(T** t)
 {

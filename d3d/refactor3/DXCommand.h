@@ -43,6 +43,8 @@ public:
         SafeRelease(&m_commandList);
     }
 
+    static HRESULT ExecuteCommands();
+
 private:
     static ID3D12CommandQueue* m_commandQueue;
     static ID3D12CommandAllocator* m_commandAllocator;

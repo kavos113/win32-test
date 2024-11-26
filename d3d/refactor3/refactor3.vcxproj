@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="DXCommand.h" />
+    <ClInclude Include="DXDescriptorHeap.h" />
     <ClInclude Include="DXDevice.h" />
     <ClInclude Include="DXFactory.h" />
     <ClInclude Include="DXFence.h" />
@@ -143,6 +144,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="DXCommand.cpp" />
+    <ClCompile Include="DXDescriptorHeap.cpp" />
     <ClCompile Include="DXDevice.cpp" />
     <ClCompile Include="DXFactory.cpp" />
     <ClCompile Include="DXFence.cpp" />

@@ -8,15 +8,13 @@
 class DXFence
 {
 public:
+    static void Init()
+    {
+        CreateFence();
+    }
+
     static ID3D12Fence* GetFence()
     {
-        if (m_fence == nullptr)
-        {
-            if (CreateFence() != 0)
-            {
-                return nullptr;
-            }
-        }
         return m_fence;
     }
 
@@ -39,6 +37,8 @@ public:
     {
         SafeRelease(&m_fence);
     }
+
+    static HRESULT WaitFence();
 private:
     static ID3D12Fence* m_fence;
     static int m_fenceValue;
@@ -48,6 +48,7 @@ private:
         HRESULT hr = DXDevice::GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
         if (FAILED(hr))
         {
+            OutputDebugString(_T("Failed to create fence\n"));
             return -1;
         }
         return 0;

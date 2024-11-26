@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "DXDescriptorHeap.h"
 #include "PMDModel.h"
 #include "PMDRenderer.h"
 
@@ -27,10 +28,7 @@ public:
     DXProcess(HWND hwnd, RECT wr)
         : 
         m_swapChain(nullptr),
-        m_rtvHeap(nullptr),
         m_depthStencilBuffer(nullptr),
-        m_dsvHeap(nullptr),
-        m_cbvHeap(nullptr), 
         m_viewport(),
         m_scissorRect(),
         wr(wr),
@@ -55,13 +53,13 @@ private:
     HRESULT OnRender();
 
     IDXGISwapChain4* m_swapChain;
-    ID3D12DescriptorHeap* m_rtvHeap;
+    DXDescriptorHeap m_rtvHeap;
     std::vector<ID3D12Resource*> back_buffers_;
 
     ID3D12Resource* m_depthStencilBuffer;
-    ID3D12DescriptorHeap* m_dsvHeap;
+    DXDescriptorHeap m_dsvHeap;
 
-    ID3D12DescriptorHeap* m_cbvHeap;
+    DXDescriptorHeap m_cbvHeap;
 
     D3D12_VIEWPORT m_viewport;
     D3D12_RECT m_scissorRect;

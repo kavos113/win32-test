@@ -13,8 +13,7 @@
 
 ID3D12Resource* LoadTextureFromFile(
     const std::string& texturePath,
-    std::map<std::string, ID3D12Resource*>& _resourceTable,
-    ID3D12Device* _dev
+    std::map<std::string, ID3D12Resource*>& _resourceTable
 )
 {
     if (_resourceTable.find(texturePath) != _resourceTable.end())
@@ -113,7 +112,7 @@ ID3D12Resource* LoadTextureFromFile(
 
     ID3D12Resource* uploadBuffer = nullptr;
 
-    hr = _dev->CreateCommittedResource(
+    hr = DXDevice::GetDevice() ->CreateCommittedResource(
         &uploadHeapProperties,
         D3D12_HEAP_FLAG_NONE,
         &uploadResourceDesc,
@@ -145,7 +144,7 @@ ID3D12Resource* LoadTextureFromFile(
 
     ID3D12Resource* textureBuffer = nullptr;
 
-    hr = _dev->CreateCommittedResource(
+    hr = DXDevice::GetDevice()->CreateCommittedResource(
         &textureHeapProps,
         D3D12_HEAP_FLAG_NONE,
         &uploadResourceDesc,
@@ -194,7 +193,7 @@ ID3D12Resource* LoadTextureFromFile(
     UINT64 rowSize, totalSize;
 
     auto desc = textureBuffer->GetDesc();
-    _dev->GetCopyableFootprints(
+    DXDevice::GetDevice()->GetCopyableFootprints(
         &desc,
         0,
         1,
@@ -240,48 +239,8 @@ ID3D12Resource* LoadTextureFromFile(
         barrierDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
         DXCommand::GetCommandList()->ResourceBarrier(1, &barrierDesc);
-        hr = DXCommand::GetCommandList()->Close();
-        if (FAILED(hr))
-        {
-            OutputDebugString(_T("Failed to close command list\n"));
-            return nullptr;
-        }
 
-        ID3D12CommandList* cpyCmdLists[] = { DXCommand::GetCommandList() };
-        DXCommand::GetCommandQueue()->ExecuteCommandLists(1, cpyCmdLists);
-
-        hr = DXCommand::GetCommandQueue()->Signal(DXFence::GetFence(), DXFence::GetIncrementedFenceValue());
-        if (FAILED(hr))
-        {
-            OutputDebugString(_T("Failed to signal fence\n"));
-            return nullptr;
-        }
-
-        if (DXFence::GetFence()->GetCompletedValue() != DXFence::GetFenceValue())
-        {
-            HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            hr = DXFence::GetFence()->SetEventOnCompletion(DXFence::GetFenceValue(), event);
-            if (FAILED(hr))
-            {
-                OutputDebugString(_T("Failed to set event on completion\n"));
-                return nullptr;
-            }
-            WaitForSingleObject(event, INFINITE);
-            CloseHandle(event);
-        }
-
-        hr = DXCommand::GetCommandAllocator()->Reset();
-        if (FAILED(hr))
-        {
-            OutputDebugString(_T("Failed to reset command allocator\n"));
-            return nullptr;
-        }
-        hr = DXCommand::GetCommandList()->Reset(DXCommand::GetCommandAllocator(), nullptr);
-        if (FAILED(hr))
-        {
-            OutputDebugString(_T("Failed to reset command list\n"));
-            return nullptr;
-        }
+        DXCommand::ExecuteCommands();
     }
 
     _resourceTable[texturePath] = textureBuffer;
@@ -289,7 +248,7 @@ ID3D12Resource* LoadTextureFromFile(
     return textureBuffer;
 }
 
-ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev)
+ID3D12Resource* CreateWhiteTexture()
 {
     D3D12_HEAP_PROPERTIES heapProperties = {};
 
@@ -314,7 +273,7 @@ ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev)
 
     ID3D12Resource* texture = nullptr;
 
-    HRESULT hr = _dev->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
@@ -347,7 +306,7 @@ ID3D12Resource* CreateWhiteTexture(ID3D12Device* _dev)
     return texture;
 }
 
-ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev)
+ID3D12Resource* CreateBlackTexture()
 {
     D3D12_HEAP_PROPERTIES heapProperties = {};
 
@@ -372,7 +331,7 @@ ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev)
 
     ID3D12Resource* texture = nullptr;
 
-    HRESULT hr = _dev->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
@@ -405,7 +364,7 @@ ID3D12Resource* CreateBlackTexture(ID3D12Device* _dev)
     return texture;
 }
 
-ID3D12Resource* CreateGrayGradationTexture(ID3D12Device* _dev)
+ID3D12Resource* CreateGrayGradationTexture()
 {
     D3D12_HEAP_PROPERTIES heapProperties = {};
 
@@ -430,7 +389,7 @@ ID3D12Resource* CreateGrayGradationTexture(ID3D12Device* _dev)
 
     ID3D12Resource* texture = nullptr;
 
-    HRESULT hr = _dev->CreateCommittedResource(
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
         &heapProperties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,

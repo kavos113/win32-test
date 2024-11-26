@@ -3,10 +3,43 @@
 #include <tchar.h>
 
 #include "DXDevice.h"
+#include "DXFence.h"
 
 ID3D12CommandQueue* DXCommand::m_commandQueue = nullptr;
 ID3D12CommandAllocator* DXCommand::m_commandAllocator = nullptr;
 ID3D12GraphicsCommandList* DXCommand::m_commandList = nullptr;
+
+HRESULT DXCommand::ExecuteCommands()
+{
+    HRESULT hr = m_commandList->Close();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to close command list\n"));
+        return hr;
+    }
+
+    ID3D12CommandList* cmdLists[] = { m_commandList };
+    m_commandQueue->ExecuteCommandLists(1, cmdLists);
+
+    DXFence::WaitFence();
+
+    hr = m_commandAllocator->Reset();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to reset command allocator\n"));
+        return hr;
+    }
+
+    // null is not high cost
+    hr = m_commandList->Reset(m_commandAllocator, nullptr);
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to reset command list\n"));
+        return hr;
+    }
+
+    return S_OK;
+}
 
 int DXCommand::CreateCommandAllocator()
 {

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "DXDescriptorHeap.h"
+
 class PMDModel
 {
     struct PMDHeader
@@ -70,10 +72,18 @@ public:
     void Render() const;
     void SetIA() const;
 
-    PMDModel(std::string filepath, ID3D12Device* dev);
+    PMDModel(std::string filepath)
+        : str_model_path_(filepath),
+        num_vertices_(0),
+        num_indices_(0),
+        num_materials_(0),
+        vertex_buffer_view_({}),
+        index_buffer_view_({})
+    {
+    }
 
 private:
-    HRESULT ReadHeader(FILE* fp);
+    static HRESULT ReadHeader(FILE* fp);
     HRESULT ReadVertices(FILE* fp);
     HRESULT ReadIndices(FILE* fp);
     HRESULT ReadMaterials(FILE* fp);
@@ -99,8 +109,7 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    ID3D12Device* m_device;
-    ID3D12DescriptorHeap* m_materialDescriptorHeap;
+    DXDescriptorHeap m_materialDescriptorHeap;
 
     const size_t pmd_vertex_size = 38;
 
