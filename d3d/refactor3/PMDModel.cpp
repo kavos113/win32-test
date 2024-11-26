@@ -48,10 +48,6 @@ void PMDModel::Read()
 
 void PMDModel::Render() const
 {
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
-
     DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
 
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -71,6 +67,13 @@ void PMDModel::Render() const
         indexOffset += m.indices_count;
         materialDescHandle.ptr += matIncSize;
     }
+}
+
+void PMDModel::SetIA() const
+{
+    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
 }
 
 PMDModel::PMDModel(std::string filepath, ID3D12Device* dev)

@@ -13,15 +13,12 @@
 class DXDevice
 {
 public:
+    static void Init()
+    {
+        CreateDevice();
+    }
     static ID3D12Device* GetDevice()
     {
-        if (m_device == nullptr)
-        {
-            if (CreateDevice() != 0)
-            {
-                return nullptr;
-            }
-        }
         return m_device;
     }
 

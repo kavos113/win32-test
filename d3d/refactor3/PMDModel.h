@@ -68,6 +68,7 @@ class PMDModel
 public:
     void Read();
     void Render() const;
+    void SetIA() const;
 
     PMDModel(std::string filepath, ID3D12Device* dev);
 

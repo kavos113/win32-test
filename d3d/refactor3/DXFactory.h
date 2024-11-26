@@ -9,15 +9,12 @@
 class DXFactory
 {
 public:
+    static void Init()
+    {
+        CreateDXGIFactory();
+    }
     static IDXGIFactory6* GetDXGIFactory()
     {
-        if (m_dxgiFactory == nullptr)
-        {
-            if (CreateDXGIFactory() != 0)
-            {
-                return nullptr;
-            }
-        }
         return m_dxgiFactory;
     }
 
@@ -33,6 +30,7 @@ private:
         HRESULT hr = CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_dxgiFactory));
         if (FAILED(hr))
         {
+            OutputDebugString(L"Failed to create DXGI Factory\n");
             return -1;
         }
         return 0;

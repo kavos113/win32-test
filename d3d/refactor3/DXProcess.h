@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "PMDModel.h"
+#include "PMDRenderer.h"
 
 class DXProcess
 {
@@ -29,10 +30,6 @@ public:
         m_rtvHeap(nullptr),
         m_depthStencilBuffer(nullptr),
         m_dsvHeap(nullptr),
-        m_vsBlob(nullptr),
-        m_psBlob(nullptr),
-        m_pipelineState(nullptr),
-        m_rootSignature(nullptr),
         m_cbvHeap(nullptr), 
         m_viewport(),
         m_scissorRect(),
@@ -45,16 +42,11 @@ public:
     }
 
 private:
-    void EnableDebug();
+    static void EnableDebug();
 
     HRESULT CreateSwapChain();
     HRESULT SetRenderTargetView();
     HRESULT SetDepthStencilView();
-
-    HRESULT CompileShaders();
-
-    HRESULT SetGraphicsPipeline();
-    HRESULT CreateRootSignature();
 
     HRESULT CreateViewPort();
 
@@ -69,12 +61,6 @@ private:
     ID3D12Resource* m_depthStencilBuffer;
     ID3D12DescriptorHeap* m_dsvHeap;
 
-    ID3D10Blob* m_vsBlob;
-    ID3D10Blob* m_psBlob;
-
-    ID3D12PipelineState* m_pipelineState;
-    ID3D12RootSignature* m_rootSignature;
-
     ID3D12DescriptorHeap* m_cbvHeap;
 
     D3D12_VIEWPORT m_viewport;
@@ -84,6 +70,7 @@ private:
     HWND hwnd;
 
     std::unique_ptr<PMDModel> model;
+    std::unique_ptr<PMDRenderer> renderer; 
 
     SceneMatrix* m_constantBufferMap;
     float angle = 0.0f;
