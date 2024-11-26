@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "DepthStencilBuffer.h"
 #include "DXDescriptorHeap.h"
 #include "PMDModel.h"
 #include "PMDRenderer.h"
@@ -28,7 +29,7 @@ public:
     DXProcess(HWND hwnd, RECT wr)
         : 
         m_swapChain(nullptr),
-        m_depthStencilBuffer(nullptr),
+        m_depthStencilBuffer(wr),
         m_viewport(),
         m_scissorRect(),
         wr(wr),
@@ -56,7 +57,7 @@ private:
     DXDescriptorHeap m_rtvHeap;
     std::vector<ID3D12Resource*> back_buffers_;
 
-    ID3D12Resource* m_depthStencilBuffer;
+    DepthStencilBuffer m_depthStencilBuffer;
     DXDescriptorHeap m_dsvHeap;
 
     DXDescriptorHeap m_cbvHeap;

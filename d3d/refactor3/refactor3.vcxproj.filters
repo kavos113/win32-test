@@ -66,6 +66,9 @@
     <ClInclude Include="DepthStencilBuffer.h">
       <Filter>ヘッダー ファイル\directx\buffer</Filter>
     </ClInclude>
+    <ClInclude Include="ConstantBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -108,6 +111,9 @@
       <Filter>ソース ファイル\directx\buffer</Filter>
     </ClCompile>
     <ClCompile Include="DepthStencilBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBuffer.cpp">
       <Filter>ソース ファイル\directx\buffer</Filter>
     </ClCompile>
   </ItemGroup>

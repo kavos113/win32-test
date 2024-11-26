@@ -47,3 +47,18 @@ HRESULT DepthStencilBuffer::CreateBuffer()
 
     return S_OK;
 }
+
+void DepthStencilBuffer::CreateView()
+{
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+    DXDevice::GetDevice()->CreateDepthStencilView(
+        m_buffer,
+        &dsvDesc,
+        m_descriptorHeap->GetCPUHandle()
+    );
+}

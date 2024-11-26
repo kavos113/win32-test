@@ -1,19 +1,15 @@
 #pragma once
 #include "DXBuffer.h"
-class DepthStencilBuffer :
+
+template <typename T>
+class ConstantBuffer :
     public DXBuffer
 {
 public:
     HRESULT CreateBuffer() override;
     void CreateView() override;
 
-    DepthStencilBuffer(RECT wr)
-        :
-        wr(wr)
-    {
-    }
-
 private:
-    RECT wr;
+    T* mappedBuffer;
 };
 

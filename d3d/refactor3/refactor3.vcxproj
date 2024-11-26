@@ -130,6 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DepthStencilBuffer.h" />
     <ClInclude Include="DXBuffer.h" />
     <ClInclude Include="DXCommand.h" />
@@ -145,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DepthStencilBuffer.cpp" />
     <ClCompile Include="DXBuffer.cpp" />
     <ClCompile Include="DXCommand.cpp" />
