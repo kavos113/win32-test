@@ -19,6 +19,12 @@
     <Filter Include="ヘッダー ファイル\directx">
       <UniqueIdentifier>{ca938eb5-e280-4a84-a3cf-2acfa6296376}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\directx\buffer">
+      <UniqueIdentifier>{d0e9e3f5-004c-4b8f-a941-fe84b6dc7af1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\directx\buffer">
+      <UniqueIdentifier>{b38f4572-ac44-4657-b0ce-690bc983cf09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Util.h">
@@ -53,6 +59,12 @@
     </ClInclude>
     <ClInclude Include="DXDescriptorHeap.h">
       <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="DXBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthStencilBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +103,12 @@
     </ClCompile>
     <ClCompile Include="DXDescriptorHeap.cpp">
       <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="DXBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthStencilBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
