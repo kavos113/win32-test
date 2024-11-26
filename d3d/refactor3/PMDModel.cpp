@@ -53,10 +53,6 @@ void PMDModel::Render() const
     DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
 
     DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_materialDescriptorHeap);
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        1,
-        m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-    );
 
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = m_materialDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 

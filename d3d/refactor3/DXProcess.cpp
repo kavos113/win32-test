@@ -1,8 +1,10 @@
 #include "DXProcess.h"
 
+#include <chrono>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <memory>
+#include <ratio>
 #include <tchar.h>
 
 #include "DXCommand.h"
@@ -664,6 +666,8 @@ HRESULT DXProcess::SetMatrixBuffer()
 
 HRESULT DXProcess::OnRender()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+
     angle += 0.05f;
     m_constantBufferMap->world = DirectX::XMMatrixRotationY(angle);
 
@@ -759,6 +763,11 @@ HRESULT DXProcess::OnRender()
         OutputDebugString(_T("Failed to reset command list\n"));
         return hr;
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    OutputDebugStringA(std::to_string(elapsed.count()).c_str());
+    OutputDebugStringA("ms\n");
 
     return S_OK;
 }
