@@ -26,20 +26,12 @@ HRESULT DXProcess::Init()
     DXCommand::Init();
     DXFence::Init();
 
-    HRESULT hr = CreateSwapChain();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = SetRenderTargetView();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = SetDepthStencilView();
+    display.SetHWND(hwnd);
+    HRESULT hr = display.Init();
     if (FAILED(hr)) return E_FAIL;
 
     renderer = std::make_unique<PMDRenderer>(hwnd, wr);
     hr = renderer->Init();
-    if (FAILED(hr)) return E_FAIL;
-
-    hr = CreateViewPort();
     if (FAILED(hr)) return E_FAIL;
 
     hr = SetMatrixBuffer();
@@ -88,139 +80,6 @@ void DXProcess::EnableDebug()
     OutputDebugString(_T("Debug layer is enabled\n"));
 }
 
-HRESULT DXProcess::CreateSwapChain()
-{
-    DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
-
-    swapchainDesc.Width = wr.right - wr.left;
-    swapchainDesc.Height = wr.bottom - wr.top;
-    swapchainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapchainDesc.Stereo = FALSE;
-    swapchainDesc.SampleDesc.Count = 1;
-    swapchainDesc.SampleDesc.Quality = 0;
-    swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapchainDesc.BufferCount = 2;
-    swapchainDesc.Scaling = DXGI_SCALING_STRETCH;
-    swapchainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapchainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-    swapchainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-
-    HRESULT hr = DXFactory::GetDXGIFactory()->CreateSwapChainForHwnd(
-        DXCommand::GetCommandQueue(),
-        hwnd,
-        &swapchainDesc,
-        nullptr,
-        nullptr,
-        (IDXGISwapChain1**)&m_swapChain
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("failed to create swap chain\n"));
-    }
-
-    return hr;
-}
-
-HRESULT DXProcess::SetRenderTargetView()
-{
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 2;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    rtvHeapDesc.NodeMask = 0;
-
-    HRESULT hr = m_rtvHeap.CreateDescriptorHeap(&rtvHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create RTV descriptor heap\n"));
-        return hr;
-    }
-
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    hr = m_swapChain->GetDesc(&swapChainDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to get swap chain description\n"));
-        return hr;
-    }
-
-    D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-
-    rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-    back_buffers_.resize(swapChainDesc.BufferCount);
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap.GetCPUHandle();
-    for (int i = 0; i < swapChainDesc.BufferCount; ++i)
-    {
-        hr = m_swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&back_buffers_[i]));
-        if (FAILED(hr))
-        {
-            OutputDebugString(_T("Failed to get buffer from swap chain\n"));
-            return hr;
-        }
-
-        rtvDesc.Format = back_buffers_[i]->GetDesc().Format;
-
-        DXDevice::GetDevice()->CreateRenderTargetView(
-            back_buffers_[i],
-            &rtvDesc,
-            rtvHandle
-        );
-
-        rtvHandle.ptr += m_rtvHeap.GetIncrementSize();
-    }
-
-    return S_OK;
-}
-
-HRESULT DXProcess::SetDepthStencilView()
-{
-    HRESULT hr = m_depthStencilBuffer.CreateBuffer();
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create depth buffer\n"));
-        return hr;
-    }
-
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-
-    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.NumDescriptors = 1;
-    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    dsvHeapDesc.NodeMask = 0;
-
-    hr = m_dsvHeap.CreateDescriptorHeap(&dsvHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create DSV descriptor heap\n"));
-        return hr;
-    }
-
-    m_depthStencilBuffer.SetDescriptorHeap(&m_dsvHeap);
-    m_depthStencilBuffer.CreateView();
-
-    return S_OK;
-}
-
-HRESULT DXProcess::CreateViewPort()
-{
-    m_viewport.Width = wr.right - wr.left;
-    m_viewport.Height = wr.bottom - wr.top;
-    m_viewport.TopLeftX = 0;
-    m_viewport.TopLeftY = 0;
-    m_viewport.MinDepth = 0.0f;
-    m_viewport.MaxDepth = 1.0f;
-
-    m_scissorRect.left = 0;
-    m_scissorRect.top = 0;
-    m_scissorRect.right = m_scissorRect.left + (wr.right - wr.left);
-    m_scissorRect.bottom = m_scissorRect.top + (wr.bottom - wr.top);
-
-    return S_OK;
-}
-
 HRESULT DXProcess::SetMatrixBuffer()
 {
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
@@ -242,54 +101,18 @@ HRESULT DXProcess::SetMatrixBuffer()
         100.0f
     );
 
-    D3D12_HEAP_PROPERTIES constantBufferHeapProperties = {};
-
-    constantBufferHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-    constantBufferHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    constantBufferHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-    constantBufferHeapProperties.CreationNodeMask = 0;
-    constantBufferHeapProperties.VisibleNodeMask = 0;
-
-    D3D12_RESOURCE_DESC constantBufferResourceDesc = {};
-
-    constantBufferResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-    constantBufferResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    constantBufferResourceDesc.Width = (sizeof(SceneMatrix) + 0xff) & ~0xff;  // ~0xff: 256ƒoƒCƒgˆÈ‰º‚ª0
-    constantBufferResourceDesc.Height = 1;
-    constantBufferResourceDesc.DepthOrArraySize = 1;
-    constantBufferResourceDesc.MipLevels = 1;
-    constantBufferResourceDesc.SampleDesc.Count = 1;
-    constantBufferResourceDesc.SampleDesc.Quality = 0;
-    constantBufferResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    constantBufferResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-    ID3D12Resource* constantBuffer = nullptr;
-
-    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &constantBufferHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &constantBufferResourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&constantBuffer)
-    );
+    m_matrixBuffer.SetResourceWidth((sizeof(SceneMatrix) + 0xff) & ~0xff);
+    HRESULT hr = m_matrixBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create constant buffer\n"));
+        OutputDebugString(_T("Failed to create matrix buffer\n"));
         return hr;
     }
 
-    hr = constantBuffer->Map(0, nullptr, (void**)&m_constantBufferMap);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to map constant buffer\n"));
-        return hr;
-    }
-
-    m_constantBufferMap->world = worldMatrix;
-    m_constantBufferMap->view = viewMatrix;
-    m_constantBufferMap->proj = projectionMatrix;
-    m_constantBufferMap->eye = eye;
+    m_matrixBuffer.GetMappedBuffer()->world = worldMatrix;
+    m_matrixBuffer.GetMappedBuffer()->view = viewMatrix;
+    m_matrixBuffer.GetMappedBuffer()->proj = projectionMatrix;
+    m_matrixBuffer.GetMappedBuffer()->eye = eye;
 
     D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 
@@ -305,17 +128,8 @@ HRESULT DXProcess::SetMatrixBuffer()
         return hr;
     }
 
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-
-    cbvDesc.BufferLocation = constantBuffer->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = static_cast<UINT>(constantBuffer->GetDesc().Width);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = m_cbvHeap.GetCPUHandle();
-
-    DXDevice::GetDevice()->CreateConstantBufferView(
-        &cbvDesc,
-        cbvHandle
-    );
+    m_matrixBuffer.SetDescriptorHeap(&m_cbvHeap);
+    m_matrixBuffer.CreateView();
 
     return S_OK;
 }
@@ -326,37 +140,13 @@ HRESULT DXProcess::OnRender()
     auto start = std::chrono::high_resolution_clock::now();
 
     angle += 0.05f;
-    m_constantBufferMap->world = DirectX::XMMatrixRotationY(angle);
+    m_matrixBuffer.GetMappedBuffer()->world = DirectX::XMMatrixRotationY(angle);
 
-    auto bbIdx = m_swapChain->GetCurrentBackBufferIndex();
-
-    D3D12_RESOURCE_BARRIER barrier = {};
-
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = back_buffers_[bbIdx];
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &barrier);
+    display.SetBeginBarrier();
 
     renderer->SetPipelineState();
 
-    auto rtvHandle = m_rtvHeap.GetCPUHandle();
-    rtvHandle.ptr += static_cast<ULONG_PTR>(bbIdx) * m_rtvHeap.GetIncrementSize();
-
-    auto dsvHandle = m_dsvHeap.GetCPUHandle();
-    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-
-    float clearColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    DXCommand::GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    // draw polygon
-    DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
-    DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
+    display.SetView();
 
     model->SetIA();
 
@@ -370,10 +160,7 @@ HRESULT DXProcess::OnRender()
 
     model->Render();
 
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &barrier);
+    display.SetEndBarrier();
 
     HRESULT hr = DXCommand::ExecuteCommands();
     if (FAILED(hr))
@@ -382,12 +169,7 @@ HRESULT DXProcess::OnRender()
         return hr;
     }
 
-    hr = m_swapChain->Present(1, 0);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to present\n"));
-        return hr;
-    }
+    display.Present();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;

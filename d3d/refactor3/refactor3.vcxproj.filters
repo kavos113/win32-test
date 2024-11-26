@@ -69,6 +69,9 @@
     <ClInclude Include="ConstantBuffer.h">
       <Filter>ヘッダー ファイル\directx\buffer</Filter>
     </ClInclude>
+    <ClInclude Include="Display.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -115,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="ConstantBuffer.cpp">
       <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="Display.cpp">
+      <Filter>ソース ファイル\directx</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

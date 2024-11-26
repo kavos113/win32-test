@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "ConstantBuffer.h"
 #include "DXDescriptorHeap.h"
 
 class PMDModel
@@ -15,19 +16,6 @@ class PMDModel
         char model_name[20];
         char comment[256];
     };
-
-#pragma pack(push, 1)
-    struct PMDVertex
-    {
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT3 normal;
-        DirectX::XMFLOAT2 uv;
-        uint16_t bone_num[2];
-        uint8_t bone_weight;
-        uint8_t edge_flag;
-        uint16_t dummy;
-    };
-#pragma pack(pop)
 
 #pragma pack(1) // for padding
     struct PMDMaterial
@@ -68,6 +56,20 @@ class PMDModel
     };
 
 public:
+
+#pragma pack(push, 1)
+    struct PMDVertex
+    {
+        DirectX::XMFLOAT3 position;
+        DirectX::XMFLOAT3 normal;
+        DirectX::XMFLOAT2 uv;
+        uint16_t bone_num[2];
+        uint8_t bone_weight;
+        uint8_t edge_flag;
+        uint16_t dummy;
+    };
+#pragma pack(pop)
+
     void Read();
     void Render() const;
     void SetIA() const;
@@ -115,6 +117,9 @@ private:
 
     D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
     D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
+
+    ConstantBuffer<PMDVertex> vertex_buffer_;
+    ConstantBuffer<unsigned short> index_buffer_;
 
     std::map<std::string, ID3D12Resource*> resourceTable;
 };

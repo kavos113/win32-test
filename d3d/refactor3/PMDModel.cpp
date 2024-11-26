@@ -2,6 +2,7 @@
 
 #include <tchar.h>
 
+#include "ConstantBuffer.h"
 #include "DXCommand.h"
 #include "DXDevice.h"
 #include "DXUtil.h"
@@ -107,7 +108,7 @@ HRESULT PMDModel::ReadVertices(FILE* fp)
     }
 
     vertices_.resize(num_vertices_ );
-    for (int i = 0; i < num_vertices_; ++i)
+    for (unsigned int i = 0; i < num_vertices_; ++i)
     {
         numRead = fread(&vertices_[i], pmd_vertex_size, 1, fp);
         if (numRead != 1)
@@ -296,56 +297,24 @@ HRESULT PMDModel::SetMaterialBuffer()
     size_t materialBufferSize = sizeof(MaterialForHlsl);
     materialBufferSize = (materialBufferSize + 0xff) & ~0xff;
 
-    D3D12_HEAP_PROPERTIES materialHeapProperties = {};
+    ConstantBuffer<char> materialBuffer;
 
-    materialHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-    materialHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    materialHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC materialResourceDesc = {};
-
-    materialResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    materialResourceDesc.Width = materialBufferSize * num_materials_; // mottainai
-    materialResourceDesc.Height = 1;
-    materialResourceDesc.DepthOrArraySize = 1;
-    materialResourceDesc.MipLevels = 1;
-    materialResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-    materialResourceDesc.SampleDesc.Count = 1;
-    materialResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    materialResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-    ID3D12Resource* materialBuffer = nullptr;
-
-    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &materialHeapProperties,
-        D3D12_HEAP_FLAG_NONE,
-        &materialResourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&materialBuffer)
-    );
+    materialBuffer.SetResourceWidth(materialBufferSize * num_materials_); // mottainai
+    HRESULT hr = materialBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create committed resource\n"));
+        OutputDebugString(_T("Failed to create material buffer\n"));
         return hr;
     }
 
-    char* materialMap = nullptr;
-
-    hr = materialBuffer->Map(0, nullptr, (void**)&materialMap);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to map material buffer\n"));
-        return hr;
-    }
-
+    char* mappedBuffer = materialBuffer.GetMappedBuffer();
     for (auto& m : materials_)
     {
-        *(MaterialForHlsl*)materialMap = m.material;
-        materialMap += materialBufferSize;
+        *(MaterialForHlsl*)mappedBuffer = m.material;
+        mappedBuffer += materialBufferSize;
     }
 
-    materialBuffer->Unmap(0, nullptr);
+    materialBuffer.UmmapBuffer();
 
     D3D12_DESCRIPTOR_HEAP_DESC materialDescriptorHeapDesc = {};
 
@@ -363,7 +332,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
 
-    materialCbvDesc.BufferLocation = materialBuffer->GetGPUVirtualAddress();
+    materialCbvDesc.BufferLocation = materialBuffer.GetGPUVirtualAddress();
     materialCbvDesc.SizeInBytes = static_cast<UINT>(materialBufferSize); 
 
     D3D12_SHADER_RESOURCE_VIEW_DESC materialSrvDesc = {};
@@ -445,55 +414,19 @@ HRESULT PMDModel::SetMaterialBuffer()
 
 HRESULT PMDModel::SetVertexBuffer()
 {
-    D3D12_HEAP_PROPERTIES heap_properties = {};
-
-    heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;
-    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC resource_desc = {};
-
-    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resource_desc.Width = vertices_.size() * sizeof(PMDVertex);
-    resource_desc.Height = 1;
-    resource_desc.DepthOrArraySize = 1;
-    resource_desc.MipLevels = 1;
-    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
-    resource_desc.SampleDesc.Count = 1;
-    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    resource_desc.Alignment = 0;
-
-    ID3D12Resource* vertexBuffer = nullptr;
-
-    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heap_properties,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&vertexBuffer)
-    );
+    vertex_buffer_.SetResourceWidth(vertices_.size() * sizeof(PMDVertex));
+    HRESULT hr = vertex_buffer_.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create committed resource\n"));
-        return 1;
-    }
-
-    PMDVertex* vertexMap = nullptr;
-
-    hr = vertexBuffer->Map(0, nullptr, (void**)&vertexMap);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to map vertex buffer\n"));
+        OutputDebugString(_T("Failed to create vertex buffer\n"));
         return hr;
     }
 
-    std::copy(vertices_.begin(), vertices_.end(), vertexMap);
+    std::copy(vertices_.begin(), vertices_.end(), vertex_buffer_.GetMappedBuffer());
 
-    vertexBuffer->Unmap(0, nullptr);
+    vertex_buffer_.UmmapBuffer();
 
-    vertex_buffer_view_.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    vertex_buffer_view_.BufferLocation = vertex_buffer_.GetGPUVirtualAddress();
     vertex_buffer_view_.SizeInBytes = static_cast<UINT>(vertices_.size() * sizeof(PMDVertex));
     vertex_buffer_view_.StrideInBytes = sizeof(PMDVertex);
 
@@ -502,48 +435,19 @@ HRESULT PMDModel::SetVertexBuffer()
 
 HRESULT PMDModel::SetIndexBuffer()
 {
-    D3D12_HEAP_PROPERTIES heap_properties = {};
-
-    heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;
-    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC resource_desc = {};
-
-    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resource_desc.Width = indices_.size() * sizeof(indices_[0]);
-    resource_desc.Height = 1;
-    resource_desc.DepthOrArraySize = 1;
-    resource_desc.MipLevels = 1;
-    resource_desc.Format = DXGI_FORMAT_UNKNOWN;
-    resource_desc.SampleDesc.Count = 1;
-    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-    ID3D12Resource* indexBuffer = nullptr;
-
-    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heap_properties,
-        D3D12_HEAP_FLAG_NONE,
-        &resource_desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&indexBuffer)
-    );
+    index_buffer_.SetResourceWidth(indices_.size() * sizeof(indices_[0]));
+    HRESULT hr = index_buffer_.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create committed resource\n"));
+        OutputDebugString(_T("Failed to create index buffer\n"));
         return hr;
     }
 
-    unsigned short* indexMap = nullptr;
-    indexBuffer->Map(0, nullptr, (void**)&indexMap);
+    std::copy(indices_.begin(), indices_.end(), index_buffer_.GetMappedBuffer());
 
-    std::copy(indices_.begin(), indices_.end(), indexMap);
+    index_buffer_.UmmapBuffer();
 
-    indexBuffer->Unmap(0, nullptr);
-
-    index_buffer_view_.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+    index_buffer_view_.BufferLocation = index_buffer_.GetGPUVirtualAddress();
     index_buffer_view_.SizeInBytes = static_cast<UINT>(indices_.size() * sizeof(indices_[0]));
     index_buffer_view_.Format = DXGI_FORMAT_R16_UINT;
 

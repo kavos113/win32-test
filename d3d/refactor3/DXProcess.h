@@ -4,13 +4,17 @@
 #include <memory>
 #include <vector>
 
+#include "ConstantBuffer.h"
 #include "DepthStencilBuffer.h"
+#include "Display.h"
 #include "DXDescriptorHeap.h"
 #include "PMDModel.h"
 #include "PMDRenderer.h"
 
 class DXProcess
 {
+public:
+
     struct SceneMatrix
     {
         DirectX::XMMATRIX world;
@@ -20,7 +24,6 @@ class DXProcess
         DirectX::XMFLOAT3 eye;
     };
 
-public:
     HRESULT Init();
     void Render();
 
@@ -28,14 +31,10 @@ public:
 
     DXProcess(HWND hwnd, RECT wr)
         : 
-        m_swapChain(nullptr),
-        m_depthStencilBuffer(wr),
-        m_viewport(),
-        m_scissorRect(),
         wr(wr),
         hwnd(hwnd),
         model(nullptr),
-        m_constantBufferMap(nullptr)
+        display(hwnd, wr)
     {
         
     }
@@ -43,27 +42,13 @@ public:
 private:
     static void EnableDebug();
 
-    HRESULT CreateSwapChain();
-    HRESULT SetRenderTargetView();
-    HRESULT SetDepthStencilView();
-
-    HRESULT CreateViewPort();
-
     HRESULT SetMatrixBuffer();
 
     HRESULT OnRender();
 
-    IDXGISwapChain4* m_swapChain;
-    DXDescriptorHeap m_rtvHeap;
-    std::vector<ID3D12Resource*> back_buffers_;
-
-    DepthStencilBuffer m_depthStencilBuffer;
-    DXDescriptorHeap m_dsvHeap;
+    Display display;
 
     DXDescriptorHeap m_cbvHeap;
-
-    D3D12_VIEWPORT m_viewport;
-    D3D12_RECT m_scissorRect;
 
     RECT wr;
     HWND hwnd;
@@ -71,7 +56,7 @@ private:
     std::unique_ptr<PMDModel> model;
     std::unique_ptr<PMDRenderer> renderer; 
 
-    SceneMatrix* m_constantBufferMap;
+    ConstantBuffer<SceneMatrix> m_matrixBuffer;
     float angle = 0.0f;
 };
 
