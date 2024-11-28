@@ -102,7 +102,7 @@ private:
     HRESULT SetMaterialBuffer();
     HRESULT SetVertexBuffer();
     HRESULT SetIndexBuffer();
-    HRESULT SetTransformMatrix();
+    HRESULT SetTransformBuffer();
 
     std::string str_model_path_;
 

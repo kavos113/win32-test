@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ソース ファイル\directx">
+      <UniqueIdentifier>{20e397d6-003e-402e-859b-0729ec6867ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\directx">
+      <UniqueIdentifier>{d4e18797-3c6c-4215-9a11-de18dd54ae3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\directx\buffer">
+      <UniqueIdentifier>{fd337578-2eed-4c56-9866-6122ffa8bf51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\directx\model">
+      <UniqueIdentifier>{01fb5b24-53ff-439f-a339-3bffddee5f0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\directx\resources">
+      <UniqueIdentifier>{2fc4e797-3dec-493e-b6a8-2eb863f9c7ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\directx\buffer">
+      <UniqueIdentifier>{685f4255-aa4a-4e42-93dd-a0f1cc95c885}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\directx\model">
+      <UniqueIdentifier>{015d92de-8420-49c6-8f9e-5b4fa0c4c79c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\directx\resources">
+      <UniqueIdentifier>{5b7d036d-83d0-44f2-845b-2459248cb050}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Util.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Application.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\Display.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\DisplayMatrix.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\DXDescriptorHeap.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\DXEngine.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\DXUtil.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\GlobalDescriptorHeap.cpp">
+      <Filter>ソース ファイル\directx</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\buffer\ConstantBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\buffer\DepthStencilBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\buffer\DXBuffer.cpp">
+      <Filter>ソース ファイル\directx\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\model\PMDModel.cpp">
+      <Filter>ソース ファイル\directx\model</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\model\PMDRenderer.cpp">
+      <Filter>ソース ファイル\directx\model</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\resources\DXCommand.cpp">
+      <Filter>ソース ファイル\directx\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\resources\DXDevice.cpp">
+      <Filter>ソース ファイル\directx\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\resources\DXFactory.cpp">
+      <Filter>ソース ファイル\directx\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="directx\resources\DXFence.cpp">
+      <Filter>ソース ファイル\directx\resources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Util.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\Display.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\DisplayMatrix.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\DXDescriptorHeap.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\DXEngine.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\DXUtil.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\GlobalDescriptorHeap.h">
+      <Filter>ヘッダー ファイル\directx</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\buffer\ConstantBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\buffer\DepthStencilBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\buffer\DXBuffer.h">
+      <Filter>ヘッダー ファイル\directx\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\model\PMDRenderer.h">
+      <Filter>ヘッダー ファイル\directx\model</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\model\PMDModel.h">
+      <Filter>ヘッダー ファイル\directx\model</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\resources\DXCommand.h">
+      <Filter>ヘッダー ファイル\directx\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\resources\DXDevice.h">
+      <Filter>ヘッダー ファイル\directx\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\resources\DXFactory.h">
+      <Filter>ヘッダー ファイル\directx\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="directx\resources\DXFence.h">
+      <Filter>ヘッダー ファイル\directx\resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\BasicVertexShader.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BasicPixelShader.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\BasicShaderHeader.hlsli">
+      <Filter>リソース ファイル</Filter>
+    </None>
+  </ItemGroup>
+</Project>

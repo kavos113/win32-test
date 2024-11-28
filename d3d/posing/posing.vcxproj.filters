@@ -39,7 +39,7 @@
     <ClInclude Include="directx\DXFence.h">
       <Filter>ヘッダー ファイル\directx</Filter>
     </ClInclude>
-    <ClInclude Include="directx\DXProcess.h">
+    <ClInclude Include="directx\DXEngine.h">
       <Filter>ヘッダー ファイル\directx</Filter>
     </ClInclude>
     <ClInclude Include="directx\DXUtil.h">
@@ -74,7 +74,7 @@
     <ClCompile Include="directx\DXFence.cpp">
       <Filter>ソース ファイル\directx</Filter>
     </ClCompile>
-    <ClCompile Include="directx\DXProcess.cpp">
+    <ClCompile Include="directx\DXEngine.cpp">
       <Filter>ソース ファイル\directx</Filter>
     </ClCompile>
     <ClCompile Include="directx\DXUtil.cpp">

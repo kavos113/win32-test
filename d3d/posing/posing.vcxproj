@@ -134,7 +134,7 @@
     <ClInclude Include="directx\DXDevice.h" />
     <ClInclude Include="directx\DXFactory.h" />
     <ClInclude Include="directx\DXFence.h" />
-    <ClInclude Include="directx\DXProcess.h" />
+    <ClInclude Include="directx\DXEngine.h" />
     <ClInclude Include="directx\DXUtil.h" />
     <ClInclude Include="directx\DXWorld.h" />
     <ClInclude Include="directx\PMDModel.h" />
@@ -146,7 +146,7 @@
     <ClCompile Include="directx\DXDevice.cpp" />
     <ClCompile Include="directx\DXFactory.cpp" />
     <ClCompile Include="directx\DXFence.cpp" />
-    <ClCompile Include="directx\DXProcess.cpp" />
+    <ClCompile Include="directx\DXEngine.cpp" />
     <ClCompile Include="directx\DXUtil.cpp" />
     <ClCompile Include="directx\DXWorld.cpp" />
     <ClCompile Include="directx\PMDModel.cpp" />

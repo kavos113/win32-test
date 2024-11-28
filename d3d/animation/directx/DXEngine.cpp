@@ -1,22 +1,19 @@
-#include "DXProcess.h"
+#include "DXEngine.h"
 
 #include <chrono>
 #include <memory>
 #include <ratio>
 #include <tchar.h>
 
-#include "DXCommand.h"
-#include "DXDevice.h"
-#include "DXFactory.h"
-#include "DXFence.h"
-#include "PMDModel.h"
+#include "resources/DXCommand.h"
+#include "resources/DXFence.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTex.lib")
 
-HRESULT DXProcess::Init()
+HRESULT DXEngine::Init()
 {
     EnableDebug();
 
@@ -35,7 +32,7 @@ HRESULT DXProcess::Init()
     hr = displayMatrix.Init(globalHeap);
     if (FAILED(hr)) return E_FAIL;
 
-    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd", globalHeap);
+    model = std::make_unique<PMDModel>("model/初音ミク.pmd", globalHeap);
     model->Read();
 
     renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
@@ -45,7 +42,7 @@ HRESULT DXProcess::Init()
     return S_OK;
 }
 
-void DXProcess::Render()
+void DXEngine::Render()
 {
     HRESULT hr = OnRender();
     if (FAILED(hr))
@@ -55,12 +52,12 @@ void DXProcess::Render()
     }
 }
 
-void DXProcess::SetHWND(HWND hwnd)
+void DXEngine::SetHWND(HWND hwnd)
 {
     this->hwnd = hwnd;
 }
 
-void DXProcess::EnableDebug()
+void DXEngine::EnableDebug()
 {
     ID3D12Debug* debugController = nullptr;
     HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
@@ -74,7 +71,7 @@ void DXProcess::EnableDebug()
 }
 
 // 重く見えていたのはWM_PAINTメッセージが呼ばれておらずペイントされていなかっただけだった T_T
-HRESULT DXProcess::OnRender()
+HRESULT DXEngine::OnRender()
 {
     auto start = std::chrono::high_resolution_clock::now();
 

@@ -1,4 +1,4 @@
-#include "DXProcess.h"
+#include "DXEngine.h"
 
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
@@ -16,7 +16,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTex.lib")
 
-HRESULT DXProcess::Init()
+HRESULT DXEngine::Init()
 {
     EnableDebug();
 
@@ -40,10 +40,7 @@ HRESULT DXProcess::Init()
     hr = CreateViewPort();
     if (FAILED(hr)) return E_FAIL;
 
-    world.SetAspectRatio(
-        static_cast<float>(wr.right - wr.left) / static_cast<float>(wr.bottom - wr.top) 
-    );
-    hr = world.SetMatrixBuffer();
+    hr = SetMatrixBuffer();
     if (FAILED(hr)) return E_FAIL;
 
     if (DXFactory::GetDXGIFactory() != nullptr)
@@ -55,13 +52,13 @@ HRESULT DXProcess::Init()
         OutputDebugString(_T("DXGI Factory is not created\n"));
     }
 
-    model = std::make_unique<PMDModel>("Model/初音ミクmetal.pmd");
+    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd", DXDevice::GetDevice());
     model->Read();
 
     return S_OK;
 }
 
-void DXProcess::Render()
+void DXEngine::Render()
 {
     HRESULT hr = OnRender();
     if (FAILED(hr))
@@ -71,12 +68,12 @@ void DXProcess::Render()
     }
 }
 
-void DXProcess::SetHWND(HWND hwnd)
+void DXEngine::SetHWND(HWND hwnd)
 {
     this->hwnd = hwnd;
 }
 
-void DXProcess::EnableDebug()
+void DXEngine::EnableDebug()
 {
     ID3D12Debug* debugController = nullptr;
     HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
@@ -88,7 +85,7 @@ void DXProcess::EnableDebug()
     debugController->Release();
 }
 
-HRESULT DXProcess::CreateSwapChain()
+HRESULT DXEngine::CreateSwapChain()
 {
     DXGI_SWAP_CHAIN_DESC1 swapchainDesc = {};
 
@@ -121,7 +118,7 @@ HRESULT DXProcess::CreateSwapChain()
     return hr;
 }
 
-HRESULT DXProcess::SetRenderTargetView()
+HRESULT DXEngine::SetRenderTargetView()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 
@@ -152,19 +149,17 @@ HRESULT DXProcess::SetRenderTargetView()
 
     back_buffers_.resize(swapChainDesc.BufferCount);
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    for (int i = 0; i < swapChainDesc.BufferCount; ++i)
+    for (int idx = 0; idx < swapChainDesc.BufferCount; ++idx)
     {
-        hr = m_swapChain->GetBuffer(static_cast<UINT>(i), IID_PPV_ARGS(&back_buffers_[i]));
+        hr = m_swapChain->GetBuffer(idx, IID_PPV_ARGS(&back_buffers_[idx]));
         if (FAILED(hr))
         {
             OutputDebugString(_T("Failed to get buffer from swap chain\n"));
             return hr;
         }
 
-        rtvDesc.Format = back_buffers_[i]->GetDesc().Format;
-
         DXDevice::GetDevice()->CreateRenderTargetView(
-            back_buffers_[i],
+            back_buffers_[idx],
             &rtvDesc,
             rtvHandle
         );
@@ -175,7 +170,7 @@ HRESULT DXProcess::SetRenderTargetView()
     return S_OK;
 }
 
-HRESULT DXProcess::SetDepthStencilView()
+HRESULT DXEngine::SetDepthStencilView()
 {
     D3D12_RESOURCE_DESC depthResourceDesc = {};
 
@@ -187,9 +182,6 @@ HRESULT DXProcess::SetDepthStencilView()
     depthResourceDesc.SampleDesc.Count = 1;
     depthResourceDesc.SampleDesc.Quality = 0;
     depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-    depthResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    depthResourceDesc.MipLevels = 1;
-    depthResourceDesc.Alignment = 0;
 
     D3D12_HEAP_PROPERTIES heapProperties = {};
 
@@ -245,7 +237,7 @@ HRESULT DXProcess::SetDepthStencilView()
     return S_OK;
 }
 
-HRESULT DXProcess::CompileShaders()
+HRESULT DXEngine::CompileShaders()
 {
     ID3DBlob* errorBlob = nullptr;
 
@@ -310,7 +302,7 @@ HRESULT DXProcess::CompileShaders()
     return S_OK;
 }
 
-HRESULT DXProcess::SetGraphicsPipeline()
+HRESULT DXEngine::SetGraphicsPipeline()
 {
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
         {
@@ -440,66 +432,52 @@ HRESULT DXProcess::SetGraphicsPipeline()
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create pipeline state\n"));
-        return hr;
+        return 1;
     }
-
-    return S_OK;
 }
 
-HRESULT DXProcess::CreateRootSignature()
+HRESULT DXEngine::CreateRootSignature()
 {
     ID3DBlob* errorBlob = nullptr;
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descRange[4] = {};
+    D3D12_DESCRIPTOR_RANGE descRange[3] = {};
 
-    // descriptor range for scene matrix buffer
+    // descriptor range for constant buffer
     descRange[0].NumDescriptors = 1;
     descRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
     descRange[0].BaseShaderRegister = 0;
     descRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // descriptor range for model matrix buffer
+    // descriptor range for material buffer
     descRange[1].NumDescriptors = 1;
     descRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
     descRange[1].BaseShaderRegister = 1;
     descRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // descriptor range for material buffer
-    descRange[2].NumDescriptors = 1;
-    descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    descRange[2].BaseShaderRegister = 2;
+    // descriptor range for texture
+    descRange[2].NumDescriptors = 4;
+    descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descRange[2].BaseShaderRegister = 0;
     descRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    // descriptor range for texture
-    descRange[3].NumDescriptors = 4;
-    descRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    descRange[3].BaseShaderRegister = 0;
-    descRange[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    D3D12_ROOT_PARAMETER rootParam[2] = {};
 
-    D3D12_ROOT_PARAMETER rootParam[3] = {};
-
-    // root parameter for scene matrix buffer
+    // root parameter for constant buffer
     rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParam[0].DescriptorTable.pDescriptorRanges = &descRange[0];
     rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
 
-    // root parameter for model matrix buffer
+    // root parameter for material buffer
     rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParam[1].DescriptorTable.pDescriptorRanges = &descRange[1];
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParam[1].DescriptorTable.NumDescriptorRanges = 2;
 
-    // root parameter for material buffer
-    rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParam[2].DescriptorTable.pDescriptorRanges = &descRange[2];
-    rootParam[2].DescriptorTable.NumDescriptorRanges = 2;
-
-    rootSignatureDesc.NumParameters = 3;
+    rootSignatureDesc.NumParameters = 2;
     rootSignatureDesc.pParameters = rootParam;
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -554,7 +532,7 @@ HRESULT DXProcess::CreateRootSignature()
     return S_OK;
 }
 
-HRESULT DXProcess::CreateViewPort()
+HRESULT DXEngine::CreateViewPort()
 {
     m_viewport.Width = wr.right - wr.left;
     m_viewport.Height = wr.bottom - wr.top;
@@ -571,8 +549,113 @@ HRESULT DXProcess::CreateViewPort()
     return S_OK;
 }
 
-HRESULT DXProcess::OnRender()
+HRESULT DXEngine::SetMatrixBuffer()
 {
+    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
+    DirectX::XMFLOAT3 eye(0.0f, 15.0f, -15.0f);
+    DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
+    DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
+
+    DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(
+        DirectX::XMLoadFloat3(&eye),
+        DirectX::XMLoadFloat3(&target),
+        DirectX::XMLoadFloat3(&up)
+    );
+
+    DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
+        DirectX::XM_PIDIV2,
+        static_cast<float>(wr.right - wr.left) / static_cast<float>((wr.bottom - wr.top)),
+        1.0f,
+        100.0f
+    );
+
+    D3D12_HEAP_PROPERTIES constantBufferHeapProperties = {};
+
+    constantBufferHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+    constantBufferHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    constantBufferHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    constantBufferHeapProperties.CreationNodeMask = 0;
+    constantBufferHeapProperties.VisibleNodeMask = 0;
+
+    D3D12_RESOURCE_DESC constantBufferResourceDesc = {};
+
+    constantBufferResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    constantBufferResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    constantBufferResourceDesc.Width = (sizeof(SceneMatrix) + 0xff) & ~0xff;  // ~0xff: 256バイト以下が0
+    constantBufferResourceDesc.Height = 1;
+    constantBufferResourceDesc.DepthOrArraySize = 1;
+    constantBufferResourceDesc.MipLevels = 1;
+    constantBufferResourceDesc.SampleDesc.Count = 1;
+    constantBufferResourceDesc.SampleDesc.Quality = 0;
+    constantBufferResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    constantBufferResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    ID3D12Resource* constantBuffer = nullptr;
+
+    HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
+        &constantBufferHeapProperties,
+        D3D12_HEAP_FLAG_NONE,
+        &constantBufferResourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&constantBuffer)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create constant buffer\n"));
+        return hr;
+    }
+
+    hr = constantBuffer->Map(0, nullptr, (void**)&m_constantBufferMap);
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to map constant buffer\n"));
+        return hr;
+    }
+
+    m_constantBufferMap->world = worldMatrix;
+    m_constantBufferMap->view = viewMatrix;
+    m_constantBufferMap->proj = projectionMatrix;
+    m_constantBufferMap->eye = eye;
+
+    D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+
+    descriptorHeapDesc.NumDescriptors = 1; // texture(SRV) and constant(CBV) buffer
+    descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    descriptorHeapDesc.NodeMask = 0;
+
+    hr = DXDevice::GetDevice()->CreateDescriptorHeap(
+        &descriptorHeapDesc,
+        IID_PPV_ARGS(&m_cbvHeap)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create texture descriptor heap\n"));
+        return hr;
+    }
+
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+
+    cbvDesc.BufferLocation = constantBuffer->GetGPUVirtualAddress();
+    cbvDesc.SizeInBytes = constantBuffer->GetDesc().Width;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle = m_cbvHeap->GetCPUDescriptorHandleForHeapStart();
+
+    DXDevice::GetDevice()->CreateConstantBufferView(
+        &cbvDesc,
+        cbvHandle
+    );
+
+    return S_OK;
+}
+
+HRESULT DXEngine::OnRender()
+{
+    angle += 0.05f;
+    m_constantBufferMap->world = DirectX::XMMatrixRotationY(angle);
+
     auto bbIdx = m_swapChain->GetCurrentBackBufferIndex();
 
     D3D12_RESOURCE_BARRIER barrier = {};
@@ -604,7 +687,13 @@ HRESULT DXProcess::OnRender()
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
-    world.SetDescriptorHeap();
+    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
+    DXCommand::GetCommandList()->SetDescriptorHeaps(1, &m_cbvHeap);
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        0,
+        m_cbvHeap->GetGPUDescriptorHandleForHeapStart()
+    );
+
     model->Render();
 
     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;

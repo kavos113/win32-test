@@ -7,7 +7,7 @@
 #include "PMDModel.h"
 #include "PMDRenderer.h"
 
-class DXProcess
+class DXEngine
 {
 public:
 
@@ -25,7 +25,7 @@ public:
 
     void SetHWND(HWND hwnd);
 
-    DXProcess(HWND hwnd, RECT wr)
+    DXEngine(HWND hwnd, RECT wr)
         : 
         display(hwnd, wr),
         displayMatrix(wr),

@@ -8,7 +8,7 @@ Application::Application()
 {
     m_hwnd_ = nullptr;
     RECT wr = { 0, 0, 1280, 720 };
-    m_dxProcess_ = std::make_unique<DXProcess>(m_hwnd_, wr);
+    m_dxProcess_ = std::make_unique<DXEngine>(m_hwnd_, wr);
 }
 
 void Application::Init(RECT wr)

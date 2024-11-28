@@ -1,5 +1,5 @@
 #pragma once
-#include "DXProcess.h"
+#include "DXEngine.h"
 
 class Application
 {
@@ -27,6 +27,6 @@ private:
     const wchar_t* m_windowClassName_ = L"WindowClass1";
     HWND m_hwnd_;
 
-    std::unique_ptr<DXProcess> m_dxProcess_; 
+    std::unique_ptr<DXEngine> m_dxProcess_; 
 };
 

@@ -44,7 +44,7 @@ void PMDModel::Read()
     if (FAILED(hr)) return;
 
     matrix_buffer_.SetGlobalHeap(globalHeap);
-    hr = SetTransformMatrix();
+    hr = SetTransformBuffer();
     if (FAILED(hr)) return;
 
     hr = SetMaterialBuffer();
@@ -471,7 +471,7 @@ HRESULT PMDModel::SetIndexBuffer()
     return S_OK;
 }
 
-HRESULT PMDModel::SetTransformMatrix()
+HRESULT PMDModel::SetTransformBuffer()
 {
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
