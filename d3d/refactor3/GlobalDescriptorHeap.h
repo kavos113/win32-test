@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include <vector>
 
 #include "DXDescriptorHeap.h"
@@ -35,7 +34,7 @@ private:
     GLOBAL_HEAP_ID last_id_ = 0; // 次に割り当てるID
     std::vector<unsigned int> sizes_; // 各IDに割り当てられたサイズ sizes_[id]でわかる
     std::vector<unsigned int> offsets_; // 各IDに割り当てられたオフセット offsets_[id]でわかる
-    std::vector<D3D12_ROOT_PARAMETER> root_parameters_; // 各IDに割り当てられたRootParameter
+    std::vector<D3D12_ROOT_PARAMETER> root_parameters_; // 各IDに割り当てられたRootParameter root_parameterの数が少ないうちはこれでも行ける
 
     constexpr static unsigned int kMaxDescriptorHeapSize = 65536;
 };

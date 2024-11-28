@@ -13,16 +13,11 @@ HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalH
 
 void DisplayMatrix::Render()
 {
-    angle += 0.05f;
-    m_matrixBuffer.GetMappedBuffer()->world = DirectX::XMMatrixRotationY(angle);
-
     globalHeap->SetGraphicsRootDescriptorTable(m_heapId);
 }
 
 HRESULT DisplayMatrix::SetMatrixBuffer()
 {
-    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
-
     DirectX::XMFLOAT3 eye(0.0f, 15.0f, -15.0f);
     DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
     DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
@@ -48,7 +43,6 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
         return hr;
     }
 
-    m_matrixBuffer.GetMappedBuffer()->world = worldMatrix;
     m_matrixBuffer.GetMappedBuffer()->view = viewMatrix;
     m_matrixBuffer.GetMappedBuffer()->proj = projectionMatrix;
     m_matrixBuffer.GetMappedBuffer()->eye = eye;

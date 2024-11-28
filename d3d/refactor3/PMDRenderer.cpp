@@ -221,7 +221,6 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
     );
     if (FAILED(hr))
     {
-        D3D12_ROOT_SIGNATURE_DESC desc;   
         OutputDebugString(_T("Failed to create pipeline state\n"));
         return hr;
     }

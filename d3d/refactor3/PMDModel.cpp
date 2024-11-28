@@ -43,14 +43,23 @@ void PMDModel::Read()
     hr = SetIndexBuffer();
     if (FAILED(hr)) return;
 
+    matrix_buffer_.SetGlobalHeap(globalHeap);
+    hr = SetTransformMatrix();
+    if (FAILED(hr)) return;
+
     hr = SetMaterialBuffer();
     if (FAILED(hr)) return;
 
 }
 
-void PMDModel::Render() const
+void PMDModel::Render()
 {
-    D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_heapId);
+    angle += 0.05f;
+    matrix_buffer_.GetMappedBuffer()->world = DirectX::XMMatrixRotationY(angle);
+
+    globalHeap->SetGraphicsRootDescriptorTable(m_matrixHeapId);
+
+    D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_materialHeapId);
 
     unsigned int indexOffset = 0;
     auto matIncSize = globalHeap->GetIncrementSize() * 5;
@@ -58,7 +67,7 @@ void PMDModel::Render() const
     for (auto& m : materials_)
     {
         DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            m_heapId, // これはrootParameterの1番目を使用していることを表す
+            m_materialHeapId, // これはrootParameterの1番目を使用していることを表す
             materialDescHandle
         );
 
@@ -314,7 +323,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     materialBuffer.UmmapBuffer();
 
-    m_heapId = globalHeap->Allocate(num_materials_ * 5);
+    m_materialHeapId = globalHeap->Allocate(num_materials_ * 5);
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
 
@@ -328,7 +337,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     materialSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     materialSrvDesc.Texture2D.MipLevels = 1;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = globalHeap->GetCPUHandle(m_heapId);
+    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = globalHeap->GetCPUHandle(m_materialHeapId);
     auto incSize = globalHeap->GetIncrementSize();
 
     ID3D12Resource* whiteTexture = CreateWhiteTexture();
@@ -399,7 +408,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     range[0].NumDescriptors = 1;
     range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    range[0].BaseShaderRegister = 1;
+    range[0].BaseShaderRegister = 2;
     range[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     range[0].RegisterSpace = 0;
 
@@ -410,7 +419,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     range[1].RegisterSpace = 0;
 
     globalHeap->SetRootParameter(
-        m_heapId, 
+        m_materialHeapId, 
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
         D3D12_SHADER_VISIBILITY_PIXEL,
         range,
@@ -458,6 +467,44 @@ HRESULT PMDModel::SetIndexBuffer()
     index_buffer_view_.BufferLocation = index_buffer_.GetGPUVirtualAddress();
     index_buffer_view_.SizeInBytes = static_cast<UINT>(indices_.size() * sizeof(indices_[0]));
     index_buffer_view_.Format = DXGI_FORMAT_R16_UINT;
+
+    return S_OK;
+}
+
+HRESULT PMDModel::SetTransformMatrix()
+{
+    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
+    matrix_buffer_.SetResourceWidth((sizeof(TransformMatrix) + 0xff) & ~0xff);
+    HRESULT hr = matrix_buffer_.CreateBuffer();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create matrix buffer\n"));
+        return hr;
+    }
+
+    matrix_buffer_.GetMappedBuffer()->world = worldMatrix;
+
+    m_matrixHeapId = globalHeap->Allocate(1);
+
+    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.CreateView();
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->NumDescriptors = 1;
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    range->BaseShaderRegister = 1;
+    range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    range->RegisterSpace = 0;
+
+    globalHeap->SetRootParameter(
+        m_matrixHeapId,
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_VERTEX,
+        range,
+        1
+    );
 
     return S_OK;
 }

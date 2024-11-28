@@ -56,6 +56,11 @@ class PMDModel
         AdditionalMaterial additional;
     };
 
+    struct TransformMatrix
+    {
+        DirectX::XMMATRIX world;
+    };
+
 public:
 
 #pragma pack(push, 1)
@@ -72,7 +77,7 @@ public:
 #pragma pack(pop)
 
     void Read();
-    void Render() const;
+    void Render();
     void SetIA() const;
 
     PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
@@ -81,7 +86,8 @@ public:
         num_indices_(0),
         num_materials_(0),
         globalHeap(globalHeap),
-        m_heapId(-1),
+        m_materialHeapId(-1),
+        m_matrixHeapId(-1),
         vertex_buffer_view_({}),
         index_buffer_view_({})
     {
@@ -96,6 +102,7 @@ private:
     HRESULT SetMaterialBuffer();
     HRESULT SetVertexBuffer();
     HRESULT SetIndexBuffer();
+    HRESULT SetTransformMatrix();
 
     std::string str_model_path_;
 
@@ -115,7 +122,8 @@ private:
     std::vector<ID3D12Resource*> toon_;
 
     std::shared_ptr<GlobalDescriptorHeap> globalHeap;
-    GLOBAL_HEAP_ID m_heapId;
+    GLOBAL_HEAP_ID m_materialHeapId;
+    GLOBAL_HEAP_ID m_matrixHeapId;
 
     const size_t pmd_vertex_size = 38;
 
@@ -124,7 +132,10 @@ private:
 
     ConstantBuffer<PMDVertex> vertex_buffer_;
     ConstantBuffer<unsigned short> index_buffer_;
+    ConstantBuffer<TransformMatrix> matrix_buffer_;
 
     std::map<std::string, ID3D12Resource*> resourceTable;
+
+    float angle = 0.0f;
 };
 

@@ -4,14 +4,12 @@
 #include <Windows.h>
 
 #include "ConstantBuffer.h"
-#include "DXDescriptorHeap.h"
 #include "GlobalDescriptorHeap.h"
 
 class DisplayMatrix
 {
     struct SceneMatrix
     {
-        DirectX::XMMATRIX world;
         DirectX::XMMATRIX view;
         DirectX::XMMATRIX proj;
         DirectX::XMFLOAT3 eye;

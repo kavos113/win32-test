@@ -7,13 +7,17 @@ SamplerState samToon : register(s1);
 
 cbuffer SceneMatrix : register(b0)
 {
-    matrix world;
     matrix view;
     matrix projection;
     float3 eye;
 }
 
-cbuffer Material : register(b1)
+cbuffer Transform : register(b1)
+{
+    matrix world;
+}
+
+cbuffer Material : register(b2)
 {
     float4 diffuse;
     float4 specular;
