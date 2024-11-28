@@ -213,8 +213,8 @@ HRESULT Display::SetDepthStencilView()
 
 HRESULT Display::CreateViewPort()
 {
-    m_viewport.Width = wr.right - wr.left;
-    m_viewport.Height = wr.bottom - wr.top;
+    m_viewport.Width = static_cast<float>(wr.right - wr.left); 
+    m_viewport.Height = static_cast<float>(wr.bottom - wr.top); 
     m_viewport.TopLeftX = 0;
     m_viewport.TopLeftY = 0;
     m_viewport.MinDepth = 0.0f;

@@ -1,14 +1,9 @@
 #pragma once
-#include <d3d12.h>
-#include <dxgi1_6.h>
 #include <memory>
-#include <vector>
 
-#include "ConstantBuffer.h"
-#include "DepthStencilBuffer.h"
 #include "Display.h"
 #include "DisplayMatrix.h"
-#include "DXDescriptorHeap.h"
+#include "GlobalDescriptorHeap.h"
 #include "PMDModel.h"
 #include "PMDRenderer.h"
 
@@ -48,6 +43,8 @@ private:
 
     Display display;
     DisplayMatrix displayMatrix;
+
+    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
 
     RECT wr;
     HWND hwnd;

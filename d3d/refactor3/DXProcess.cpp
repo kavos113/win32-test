@@ -25,28 +25,22 @@ HRESULT DXProcess::Init()
     DXCommand::Init();
     DXFence::Init();
 
+    globalHeap = std::make_shared<GlobalDescriptorHeap>();
+    globalHeap->Init();
+
     display.SetHWND(hwnd);
     HRESULT hr = display.Init();
     if (FAILED(hr)) return E_FAIL;
 
-    renderer = std::make_unique<PMDRenderer>(hwnd, wr);
+    hr = displayMatrix.Init(globalHeap);
+    if (FAILED(hr)) return E_FAIL;
+
+    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd", globalHeap);
+    model->Read();
+
+    renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
     hr = renderer->Init();
     if (FAILED(hr)) return E_FAIL;
-
-    hr = displayMatrix.Init();
-    if (FAILED(hr)) return E_FAIL;
-
-    if (DXFactory::GetDXGIFactory() != nullptr)
-    {
-        OutputDebugString(_T("DXGI Factory is created\n"));
-    }
-    else
-    {
-        OutputDebugString(_T("DXGI Factory is not created\n"));
-    }
-
-    model = std::make_unique<PMDModel>("model/初音ミクmetal.pmd");
-    model->Read();
 
     return S_OK;
 }
@@ -89,13 +83,12 @@ HRESULT DXProcess::OnRender()
     renderer->SetPipelineState();
 
     display.SetView();
-
     model->SetIA();
-
     renderer->SetRootSignature();
 
-    displayMatrix.Render();
+    globalHeap->SetToCommand();
 
+    displayMatrix.Render();
     model->Render();
 
     display.SetEndBarrier();

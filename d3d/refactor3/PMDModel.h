@@ -2,11 +2,12 @@
 #include <d3d12.h>
 #include <DirectXMath.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "ConstantBuffer.h"
-#include "DXDescriptorHeap.h"
+#include "GlobalDescriptorHeap.h"
 
 class PMDModel
 {
@@ -74,11 +75,13 @@ public:
     void Render() const;
     void SetIA() const;
 
-    PMDModel(std::string filepath)
+    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
         : str_model_path_(filepath),
         num_vertices_(0),
         num_indices_(0),
         num_materials_(0),
+        globalHeap(globalHeap),
+        m_heapId(-1),
         vertex_buffer_view_({}),
         index_buffer_view_({})
     {
@@ -111,7 +114,8 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    DXDescriptorHeap m_materialDescriptorHeap;
+    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    GLOBAL_HEAP_ID m_heapId;
 
     const size_t pmd_vertex_size = 38;
 

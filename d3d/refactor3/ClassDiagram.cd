@@ -1,18 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="Application">
-    <Position X="2.5" Y="6.75" Width="1.5" />
+    <Position X="2.5" Y="6.75" Width="2" />
     <TypeIdentifier>
       <HashCode>AAEAEAAAABAAAAAAAAAAAEBAAAAAAAAAAAICAEAAAAI=</HashCode>
       <FileName>Application.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Display">
-    <Position X="9.75" Y="4.25" Width="1.5" />
+    <Position X="9.75" Y="4.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAABAIAIAAGABIAQgAEAQAgAAkgAAAcAAACEAggAAA=</HashCode>
       <FileName>Display.h</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="m_depthStencilBuffer" />
+    </ShowAsAssociation>
   </Class>
   <Class Name="DisplayMatrix">
     <Position X="11.75" Y="4.25" Width="1.5" />
@@ -27,44 +30,48 @@
       <HashCode>AAAAAAAAAQAAAAAAAAAAAGIAAAAgAAAAABACAABAAAA=</HashCode>
       <FileName>DisplayMatrix.h</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="m_cbvHeap" />
+      <Field Name="m_matrixBuffer" />
+    </ShowAsAssociation>
   </Class>
   <Class Name="DXCommand">
-    <Position X="6.75" Y="0.5" Width="1.5" />
+    <Position X="6.75" Y="0.5" Width="2.25" />
     <TypeIdentifier>
       <HashCode>IIgAAAAAAAAAAEQAAAIAAAKIAAkAAAAAAAACAoAAAAA=</HashCode>
       <FileName>DXCommand.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXDescriptorHeap">
-    <Position X="5" Y="0.5" Width="1.5" />
+    <Position X="4.5" Y="0.5" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAAGQAAAAAAAAEAAAAAQAAAAggAAAAAAAAAAAAAAA=</HashCode>
       <FileName>DXDescriptorHeap.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXDevice">
-    <Position X="12" Y="0.5" Width="1.5" />
+    <Position X="13.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAAAAAAAAAABAAAAAAAAAAAAAAAAAAgAAAACCAAAAAA=</HashCode>
       <FileName>DXDevice.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXFactory">
-    <Position X="10.25" Y="0.5" Width="1.5" />
+    <Position X="11.5" Y="0.5" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAACAAiAAAAAAAAAAAAAAACBAAAAAA=</HashCode>
       <FileName>DXFactory.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXFence">
-    <Position X="8.5" Y="0.5" Width="1.5" />
+    <Position X="9.25" Y="0.5" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAIAAAAAAAAAAAAACAAACCIAAIBgAAAACAAAAAAA=</HashCode>
       <FileName>DXFence.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXProcess">
-    <Position X="0.75" Y="6.75" Width="1.5" />
+    <Position X="0.5" Y="6.75" Width="1.5" />
     <NestedTypes>
       <Struct Name="DXProcess::SceneMatrix" Collapsed="true">
         <TypeIdentifier>
@@ -76,9 +83,12 @@
       <HashCode>AAAAAAAAAAAAAAAIAAAAAAAwAAEiAAAAABACIAhIgAA=</HashCode>
       <FileName>DXProcess.h</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="display" />
+    </ShowAsAssociation>
   </Class>
   <Class Name="PMDModel">
-    <Position X="5.25" Y="6.75" Width="1.5" />
+    <Position X="5.25" Y="6.75" Width="2.25" />
     <NestedTypes>
       <Struct Name="PMDModel::PMDHeader" Collapsed="true">
         <TypeIdentifier>
@@ -117,7 +127,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="PMDRenderer">
-    <Position X="7" Y="6.75" Width="1.5" />
+    <Position X="7.75" Y="6.75" Width="1.75" />
     <NestedTypes>
       <Struct Name="PMDRenderer::SceneMatrix" Collapsed="true">
         <TypeIdentifier>
@@ -131,25 +141,28 @@
     </TypeIdentifier>
   </Class>
   <Class Name="ConstantBuffer&lt;T&gt;">
-    <Position X="3.25" Y="3.25" Width="1.5" />
+    <Position X="3.25" Y="3.25" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAQAAAAAAAAAAAAAEAgAIAAAAAAChACAAAAAAAAAE=</HashCode>
       <FileName>ConstantBuffer.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DepthStencilBuffer">
-    <Position X="0.5" Y="3.25" Width="1.5" />
+    <Position X="0.5" Y="3.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAgAABAAAQAAAAAAAA=</HashCode>
       <FileName>DepthStencilBuffer.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DXBuffer">
-    <Position X="1.75" Y="0.5" Width="1.5" />
+    <Position X="1.75" Y="0.5" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAACQAEAAEAAAAAAEAAAAAAAAAAABAAAAAAAAAAAI=</HashCode>
       <FileName>DXBuffer.h</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="m_descriptorHeap" />
+    </ShowAsAssociation>
   </Class>
   <Font Name="Yu Gothic UI" Size="9" />
 </ClassDiagram>

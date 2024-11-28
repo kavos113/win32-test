@@ -17,7 +17,7 @@ HRESULT PMDRenderer::Init()
         return hr;
     }
 
-    hr = SetGraphicsPipeline();
+    hr = CreateGraphicsPipeline();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to set graphics pipeline\n"));
@@ -92,7 +92,7 @@ HRESULT PMDRenderer::CompileShaders()
     return S_OK;
 }
 
-HRESULT PMDRenderer::SetGraphicsPipeline()
+HRESULT PMDRenderer::CreateGraphicsPipeline()
 {
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
         {
@@ -221,6 +221,7 @@ HRESULT PMDRenderer::SetGraphicsPipeline()
     );
     if (FAILED(hr))
     {
+        D3D12_ROOT_SIGNATURE_DESC desc;   
         OutputDebugString(_T("Failed to create pipeline state\n"));
         return hr;
     }
@@ -235,42 +236,10 @@ HRESULT PMDRenderer::CreateRootSignature()
 
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descRange[3] = {};
+    std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = globalHeap->GetRootParameters();
 
-    // descriptor range for constant buffer
-    descRange[0].NumDescriptors = 1;
-    descRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    descRange[0].BaseShaderRegister = 0;
-    descRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    // descriptor range for material buffer
-    descRange[1].NumDescriptors = 1;
-    descRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    descRange[1].BaseShaderRegister = 1;
-    descRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-    // descriptor range for texture
-    descRange[2].NumDescriptors = 4;
-    descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    descRange[2].BaseShaderRegister = 0;
-    descRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-    
-    D3D12_ROOT_PARAMETER rootParam[2] = {};
-
-    // root parameter for constant buffer
-    rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParam[0].DescriptorTable.pDescriptorRanges = &descRange[0];
-    rootParam[0].DescriptorTable.NumDescriptorRanges = 1;
-
-    // root parameter for material buffer
-    rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParam[1].DescriptorTable.pDescriptorRanges = &descRange[1];
-    rootParam[1].DescriptorTable.NumDescriptorRanges = 2;
-
-    rootSignatureDesc.NumParameters = 2;
-    rootSignatureDesc.pParameters = rootParam;
+    rootSignatureDesc.NumParameters = static_cast<UINT>(rootParams.second);
+    rootSignatureDesc.pParameters = rootParams.first;
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc[2] = {};
 

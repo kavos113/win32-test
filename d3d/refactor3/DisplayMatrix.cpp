@@ -1,9 +1,10 @@
 #include "DisplayMatrix.h"
 
-#include "DXCommand.h"
-
-HRESULT DisplayMatrix::Init()
+HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
 {
+    this->globalHeap = globalHeap;
+    m_matrixBuffer.SetGlobalHeap(globalHeap);
+
     HRESULT hr = SetMatrixBuffer();
     if (FAILED(hr)) return E_FAIL;
 
@@ -15,11 +16,7 @@ void DisplayMatrix::Render()
     angle += 0.05f;
     m_matrixBuffer.GetMappedBuffer()->world = DirectX::XMMatrixRotationY(angle);
 
-    m_cbvHeap.SetToCommand();
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        0,
-        m_cbvHeap.GetGPUHandle()
-    );
+    globalHeap->SetGraphicsRootDescriptorTable(m_heapId);
 }
 
 HRESULT DisplayMatrix::SetMatrixBuffer()
@@ -56,22 +53,26 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     m_matrixBuffer.GetMappedBuffer()->proj = projectionMatrix;
     m_matrixBuffer.GetMappedBuffer()->eye = eye;
 
-    D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+    m_heapId = globalHeap->Allocate(1);
 
-    descriptorHeapDesc.NumDescriptors = 1; // texture(SRV) and constant(CBV) buffer
-    descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    descriptorHeapDesc.NodeMask = 0;
-
-    hr = m_cbvHeap.CreateDescriptorHeap(&descriptorHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create texture descriptor heap\n"));
-        return hr;
-    }
-
-    m_matrixBuffer.SetDescriptorHeap(&m_cbvHeap);
+    m_matrixBuffer.SetHeapID(m_heapId);
     m_matrixBuffer.CreateView();
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->NumDescriptors = 1;
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    range->BaseShaderRegister = 0;
+    range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    range->RegisterSpace = 0;
+
+    globalHeap->SetRootParameter(
+        m_heapId,
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_ALL,
+        range,
+        1
+    );
 
     return S_OK;
 }

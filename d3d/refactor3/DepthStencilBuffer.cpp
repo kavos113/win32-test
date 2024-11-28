@@ -59,6 +59,11 @@ void DepthStencilBuffer::CreateView()
     DXDevice::GetDevice()->CreateDepthStencilView(
         m_buffer,
         &dsvDesc,
-        m_descriptorHeap->GetCPUHandle()
+        m_heap->GetCPUHandle()
     );
+}
+
+void DepthStencilBuffer::SetDescriptorHeap(DXDescriptorHeap* heap)
+{
+    m_heap = heap;
 }

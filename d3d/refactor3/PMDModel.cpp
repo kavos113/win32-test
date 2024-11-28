@@ -49,18 +49,16 @@ void PMDModel::Read()
 }
 
 void PMDModel::Render() const
-{1
-    m_materialDescriptorHeap.SetToCommand();
-
-    D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = m_materialDescriptorHeap.GetGPUHandle();
+{
+    D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_heapId);
 
     unsigned int indexOffset = 0;
-    auto matIncSize = m_materialDescriptorHeap.GetIncrementSize() * 5;
+    auto matIncSize = globalHeap->GetIncrementSize() * 5;
 
     for (auto& m : materials_)
     {
         DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            1,
+            m_heapId, // ‚±‚ê‚ÍrootParameter‚Ì1”Ô–Ú‚ðŽg—p‚µ‚Ä‚¢‚é‚±‚Æ‚ð•\‚·
             materialDescHandle
         );
 
@@ -316,19 +314,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     materialBuffer.UmmapBuffer();
 
-    D3D12_DESCRIPTOR_HEAP_DESC materialDescriptorHeapDesc = {};
-
-    materialDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    materialDescriptorHeapDesc.NumDescriptors = num_materials_ * 5;
-    materialDescriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    materialDescriptorHeapDesc.NodeMask = 0;
-
-    hr = m_materialDescriptorHeap.CreateDescriptorHeap(&materialDescriptorHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create material descriptor heap\n"));
-        return hr;
-    }
+    m_heapId = globalHeap->Allocate(num_materials_ * 5);
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
 
@@ -342,8 +328,8 @@ HRESULT PMDModel::SetMaterialBuffer()
     materialSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     materialSrvDesc.Texture2D.MipLevels = 1;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = m_materialDescriptorHeap.GetCPUHandle();
-    auto incSize = m_materialDescriptorHeap.GetIncrementSize();
+    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = globalHeap->GetCPUHandle(m_heapId);
+    auto incSize = globalHeap->GetIncrementSize();
 
     ID3D12Resource* whiteTexture = CreateWhiteTexture();
     ID3D12Resource* blackTexture = CreateBlackTexture();
@@ -408,6 +394,28 @@ HRESULT PMDModel::SetMaterialBuffer()
 
         materialHandle.ptr += incSize;
     }
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE[2];
+
+    range[0].NumDescriptors = 1;
+    range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    range[0].BaseShaderRegister = 1;
+    range[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    range[0].RegisterSpace = 0;
+
+    range[1].NumDescriptors = 4;
+    range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range[1].BaseShaderRegister = 0;
+    range[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    range[1].RegisterSpace = 0;
+
+    globalHeap->SetRootParameter(
+        m_heapId, 
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_PIXEL,
+        range,
+        2
+    );
 
     return S_OK;
 }

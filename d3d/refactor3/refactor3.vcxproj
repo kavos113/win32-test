@@ -142,6 +142,7 @@
     <ClInclude Include="DXFence.h" />
     <ClInclude Include="DXProcess.h" />
     <ClInclude Include="DXUtil.h" />
+    <ClInclude Include="GlobalDescriptorHeap.h" />
     <ClInclude Include="PMDModel.h" />
     <ClInclude Include="PMDRenderer.h" />
     <ClInclude Include="Util.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="DXFence.cpp" />
     <ClCompile Include="DXProcess.cpp" />
     <ClCompile Include="DXUtil.cpp" />
+    <ClCompile Include="GlobalDescriptorHeap.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PMDModel.cpp" />
     <ClCompile Include="PMDRenderer.cpp" />

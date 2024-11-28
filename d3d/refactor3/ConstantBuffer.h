@@ -1,6 +1,9 @@
 #pragma once
+#include <memory>
+
 #include "DXBuffer.h"
 #include "DXDevice.h"
+#include "GlobalDescriptorHeap.h"
 
 // vertexbuffer, indexbuffer などのサブクラスを作ってもいいかも?
 template <typename T>
@@ -13,19 +16,32 @@ public:
     {
         resource_width_ = width;
     }
+
     T* GetMappedBuffer()
     {
         return mapped_buffer_;
     }
+
     D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const
     {
         return m_buffer->GetGPUVirtualAddress();
     }
 
+    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    {
+        this->globalHeap = globalHeap;
+    }
+
+    void SetHeapID(GLOBAL_HEAP_ID id)
+    {
+        heap_id_ = id;
+    }
+
     ConstantBuffer()
         :
         mapped_buffer_(nullptr),
-        resource_width_(sizeof(T))
+        resource_width_(sizeof(T)),
+        heap_id_(-1)
     {
         
     }
@@ -86,7 +102,7 @@ public:
 
         DXDevice::GetDevice()->CreateConstantBufferView(
             &cbv_desc,
-            m_descriptorHeap->GetCPUHandle()
+            globalHeap->GetCPUHandle(heap_id_)
         );
     }
 
@@ -99,5 +115,7 @@ private:
     T* mapped_buffer_;
 
     UINT64 resource_width_;
+    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    GLOBAL_HEAP_ID heap_id_;
 };
 

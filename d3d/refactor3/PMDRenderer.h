@@ -2,7 +2,10 @@
 
 #include <d3d12.h>
 #include <DirectXMath.h>
+#include <memory>
 #include <Windows.h>
+
+#include "GlobalDescriptorHeap.h"
 
 class PMDRenderer
 {
@@ -15,12 +18,13 @@ class PMDRenderer
         DirectX::XMFLOAT3 eye;
     };
 public:
-    PMDRenderer(HWND hwnd, RECT wr)
+    PMDRenderer(HWND hwnd, RECT wr, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
         :
         m_pipelineState(nullptr),
         m_rootSignature(nullptr),
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
+        globalHeap(globalHeap),
         hwnd(hwnd),
         wr(wr)
     {
@@ -32,7 +36,7 @@ public:
 private:
     HRESULT CompileShaders();
 
-    HRESULT SetGraphicsPipeline();
+    HRESULT CreateGraphicsPipeline();
     HRESULT CreateRootSignature();
 
     ID3D12PipelineState* m_pipelineState;
@@ -40,6 +44,8 @@ private:
 
     ID3D10Blob* m_vsBlob;
     ID3D10Blob* m_psBlob;
+
+    std::shared_ptr<GlobalDescriptorHeap> globalHeap; 
 
     HWND hwnd;
     RECT wr;
