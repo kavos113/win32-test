@@ -7,6 +7,7 @@
 #include "ConstantBuffer.h"
 #include "DepthStencilBuffer.h"
 #include "Display.h"
+#include "DisplayMatrix.h"
 #include "DXDescriptorHeap.h"
 #include "PMDModel.h"
 #include "PMDRenderer.h"
@@ -31,10 +32,11 @@ public:
 
     DXProcess(HWND hwnd, RECT wr)
         : 
+        display(hwnd, wr),
+        displayMatrix(wr),
         wr(wr),
         hwnd(hwnd),
-        model(nullptr),
-        display(hwnd, wr)
+        model(nullptr)
     {
         
     }
@@ -42,13 +44,10 @@ public:
 private:
     static void EnableDebug();
 
-    HRESULT SetMatrixBuffer();
-
     HRESULT OnRender();
 
     Display display;
-
-    DXDescriptorHeap m_cbvHeap;
+    DisplayMatrix displayMatrix;
 
     RECT wr;
     HWND hwnd;
@@ -56,7 +55,6 @@ private:
     std::unique_ptr<PMDModel> model;
     std::unique_ptr<PMDRenderer> renderer; 
 
-    ConstantBuffer<SceneMatrix> m_matrixBuffer;
     float angle = 0.0f;
 };
 

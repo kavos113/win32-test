@@ -133,6 +133,7 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DepthStencilBuffer.h" />
     <ClInclude Include="Display.h" />
+    <ClInclude Include="DisplayMatrix.h" />
     <ClInclude Include="DXBuffer.h" />
     <ClInclude Include="DXCommand.h" />
     <ClInclude Include="DXDescriptorHeap.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DepthStencilBuffer.cpp" />
     <ClCompile Include="Display.cpp" />
+    <ClCompile Include="DisplayMatrix.cpp" />
     <ClCompile Include="DXBuffer.cpp" />
     <ClCompile Include="DXCommand.cpp" />
     <ClCompile Include="DXDescriptorHeap.cpp" />
@@ -177,6 +179,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="BasicShaderHeader.hlsli" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -254,7 +254,7 @@ HRESULT PMDRenderer::CreateRootSignature()
     descRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descRange[2].BaseShaderRegister = 0;
     descRange[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
+    
     D3D12_ROOT_PARAMETER rootParam[2] = {};
 
     // root parameter for constant buffer

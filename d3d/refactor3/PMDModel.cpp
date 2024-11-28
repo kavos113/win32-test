@@ -49,7 +49,7 @@ void PMDModel::Read()
 }
 
 void PMDModel::Render() const
-{
+{1
     m_materialDescriptorHeap.SetToCommand();
 
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = m_materialDescriptorHeap.GetGPUHandle();
