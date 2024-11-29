@@ -136,9 +136,9 @@ ID3D12Resource* LoadTextureFromFile(
 
     uploadResourceDesc.Format = metadata.format;
     uploadResourceDesc.Width = metadata.width;
-    uploadResourceDesc.Height = metadata.height;
-    uploadResourceDesc.DepthOrArraySize = metadata.arraySize;
-    uploadResourceDesc.MipLevels = metadata.mipLevels;
+    uploadResourceDesc.Height = static_cast<UINT>(metadata.height);
+    uploadResourceDesc.DepthOrArraySize = static_cast<UINT16>(metadata.arraySize); 
+    uploadResourceDesc.MipLevels = static_cast<UINT16>(metadata.mipLevels);
     uploadResourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
     uploadResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
@@ -206,10 +206,10 @@ ID3D12Resource* LoadTextureFromFile(
 
     src.PlacedFootprint = placedFootprint;
     src.PlacedFootprint.Offset = 0;
-    src.PlacedFootprint.Footprint.Width = metadata.width;
-    src.PlacedFootprint.Footprint.Height = metadata.height;
-    src.PlacedFootprint.Footprint.Depth = metadata.depth;
-    src.PlacedFootprint.Footprint.RowPitch = AlignmentSize(image->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+    src.PlacedFootprint.Footprint.Width = static_cast<UINT>(metadata.width);
+    src.PlacedFootprint.Footprint.Height = static_cast<UINT>(metadata.height);
+    src.PlacedFootprint.Footprint.Depth = static_cast<UINT>(metadata.depth);
+    src.PlacedFootprint.Footprint.RowPitch = static_cast<UINT>(AlignmentSize(image->rowPitch, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT));
     src.PlacedFootprint.Footprint.Format = image->format;
 
     D3D12_TEXTURE_COPY_LOCATION dst = {};
@@ -417,7 +417,7 @@ ID3D12Resource* CreateGrayGradationTexture()
         nullptr,
         data.data(),
         4 * sizeof(unsigned int),
-        sizeof(unsigned int) * data.size()
+        static_cast<UINT>(sizeof(unsigned int) * data.size())
     );
     if (FAILED(hr))
     {

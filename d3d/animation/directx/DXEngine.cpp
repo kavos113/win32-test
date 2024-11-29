@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <memory>
-#include <ratio>
 #include <tchar.h>
 
 #include "resources/DXCommand.h"
@@ -12,6 +11,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTex.lib")
+#pragma comment(lib, "winmm.lib")
 
 HRESULT DXEngine::Init()
 {
@@ -39,6 +39,8 @@ HRESULT DXEngine::Init()
     hr = renderer->Init();
     if (FAILED(hr)) return E_FAIL;
 
+    model->PlayAnimation();
+
     return S_OK;
 }
 
@@ -62,7 +64,7 @@ void DXEngine::EnableDebug()
     ID3D12Debug* debugController = nullptr;
     HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
     if (hr == S_OK)
-    {
+    { 
         debugController->EnableDebugLayer();
     }
     debugController->EnableDebugLayer();
@@ -73,7 +75,7 @@ void DXEngine::EnableDebug()
 // 重く見えていたのはWM_PAINTメッセージが呼ばれておらずペイントされていなかっただけだった T_T
 HRESULT DXEngine::OnRender()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = timeGetTime();
 
     display.SetBeginBarrier();
 
@@ -99,10 +101,11 @@ HRESULT DXEngine::OnRender()
 
     display.Present();
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = end - start;
-    OutputDebugStringA(std::to_string(elapsed.count()).c_str());
-    OutputDebugStringA("ms\n");
-
+    auto end = timeGetTime();
+    auto elapsed = end - start;
+    OutputDebugString(_T("Elapsed time: "));
+    OutputDebugString(std::to_wstring(elapsed).c_str());
+    OutputDebugString(_T("ms\n"));
+    
     return S_OK;
 }
