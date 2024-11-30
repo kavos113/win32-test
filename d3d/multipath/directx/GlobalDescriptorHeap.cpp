@@ -92,12 +92,28 @@ void GlobalDescriptorHeap::SetRootParameter(
     root_parameter.DescriptorTable.NumDescriptorRanges = num_descriptor_ranges;
     root_parameter.DescriptorTable.pDescriptorRanges = descriptor_ranges;
 
-    root_parameters_.push_back(root_parameter);
+    if (root_parameters_.size() <= id)
+    {
+        root_parameters_.resize(id + 1);
+    }
+
+    root_parameters_[id] = root_parameter;
 }
 
 void GlobalDescriptorHeap::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id) const
 {
     D3D12_GPU_DESCRIPTOR_HANDLE handle = GetGPUHandle(id);
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        id,
+        handle
+    );
+}
+
+void GlobalDescriptorHeap::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id, unsigned int offset) const
+{
+    D3D12_GPU_DESCRIPTOR_HANDLE handle = GetGPUHandle(id);
+    handle.ptr += static_cast<UINT64>(offset) * m_heap_.GetIncrementSize();
+
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
         id,
         handle

@@ -17,7 +17,7 @@ class DisplayMatrix
 
 public:
     HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
-    void Render();
+    void Render() const;
 
     DisplayMatrix(RECT wr)
         :

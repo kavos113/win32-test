@@ -213,12 +213,12 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         if (std::count(textureFileName.begin(), textureFileName.end(), '*') > 0)
         {
             auto namepair = SplitPath(textureFileName, '*');
-            if (GetExtention(namepair.first) == "sph")
+            if (GetExtension(namepair.first) == "sph")
             {
                 textureFileName = namepair.second;
                 sphFileName = namepair.first;
             }
-            else if (GetExtention(namepair.first) == "spa")
+            else if (GetExtension(namepair.first) == "spa")
             {
                 textureFileName = namepair.second;
                 spaFileName = namepair.first;
@@ -226,11 +226,11 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
             else
             {
                 textureFileName = namepair.first;
-                if (GetExtention(namepair.second) == "sph")
+                if (GetExtension(namepair.second) == "sph")
                 {
                     sphFileName = namepair.second;
                 }
-                else if (GetExtention(namepair.second) == "spa")
+                else if (GetExtension(namepair.second) == "spa")
                 {
                     spaFileName = namepair.second;
                 }
@@ -238,12 +238,12 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         }
         else
         {
-            if (GetExtention(textureFileName) == "sph")
+            if (GetExtension(textureFileName) == "sph")
             {
                 sphFileName = pmd_materials_[i].texture_file;
                 textureFileName = "";
             }
-            else if (GetExtention(textureFileName) == "spa")
+            else if (GetExtension(textureFileName) == "spa")
             {
                 spaFileName = pmd_materials_[i].texture_file;
                 textureFileName = "";

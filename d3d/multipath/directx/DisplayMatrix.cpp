@@ -11,7 +11,7 @@ HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalH
     return S_OK;
 }
 
-void DisplayMatrix::Render()
+void DisplayMatrix::Render() const
 {
     globalHeap->SetGraphicsRootDescriptorTable(m_heapId);
 }

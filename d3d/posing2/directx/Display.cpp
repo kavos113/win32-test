@@ -56,7 +56,7 @@ void Display::SetBeginBarrier()
     DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
 }
 
-void Display::SetView() const
+void Display::Draw()
 {
     auto rtvHandle = m_rtvHeap.GetCPUHandle();
     rtvHandle.ptr += static_cast<ULONG_PTR>(bbIdx) * m_rtvHeap.GetIncrementSize();

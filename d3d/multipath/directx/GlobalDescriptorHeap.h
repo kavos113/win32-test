@@ -27,6 +27,7 @@ public:
     );
 
     void SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id) const;
+    void SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id, unsigned int offset) const;
     void SetToCommand() const;
 private:
     DXDescriptorHeap m_heap_;

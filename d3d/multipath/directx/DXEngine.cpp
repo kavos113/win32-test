@@ -26,7 +26,7 @@ HRESULT DXEngine::Init()
     globalHeap->Init();
 
     display.SetHWND(hwnd);
-    HRESULT hr = display.Init();
+    HRESULT hr = display.Init(globalHeap);
     if (FAILED(hr)) return E_FAIL;
 
     hr = displayMatrix.Init(globalHeap);
@@ -79,16 +79,18 @@ HRESULT DXEngine::OnRender()
 
     display.SetBeginBarrier();
 
-    renderer->SetPipelineState();
-
-    display.SetView();
-    model->SetIA();
-    renderer->SetRootSignature();
-
     globalHeap->SetToCommand();
+    display.SetBaseBegin();
 
+    model->UpdateAnimation();
+
+    renderer->SetPipelineState();
+    renderer->SetRootSignature();
+    model->SetIA();
     displayMatrix.Render();
     model->Render();
+
+    display.Draw();
 
     display.SetEndBarrier();
 

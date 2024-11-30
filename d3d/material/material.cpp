@@ -95,7 +95,7 @@ std::wstring GetWideString(const std::string& str)
     return wstr;
 }
 
-std::string GetExtention(const std::string& path)
+std::string GetExtension(const std::string& path)
 {
     auto pos = path.find_last_of('.');
     if (pos == std::string::npos)
@@ -827,12 +827,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         if (std::count(textureFileName.begin(), textureFileName.end(), '*') > 0)
         {
             auto namepair = SplitPath(textureFileName, '*');
-            if (GetExtention(namepair.first) == "sph")
+            if (GetExtension(namepair.first) == "sph")
             {
                 textureFileName = namepair.second;
                 sphFileName = namepair.first;
             }
-            else if (GetExtention(namepair.first) == "spa")
+            else if (GetExtension(namepair.first) == "spa")
             {
                 textureFileName = namepair.second;
                 spaFileName = namepair.first;
@@ -840,11 +840,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             else
             {
                 textureFileName = namepair.first;
-                if (GetExtention(namepair.second) == "sph")
+                if (GetExtension(namepair.second) == "sph")
                 {
                     sphFileName = namepair.second;
                 }
-                else if (GetExtention(namepair.second) == "spa")
+                else if (GetExtension(namepair.second) == "spa")
                 {
                     spaFileName = namepair.second;
                 }
@@ -852,12 +852,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
         else
         {
-            if (GetExtention(textureFileName) == "sph")
+            if (GetExtension(textureFileName) == "sph")
             {
                 sphFileName = pmd_materials[i].texture_file;
                 textureFileName = "";
             }
-            else if (GetExtention(textureFileName) == "spa")
+            else if (GetExtension(textureFileName) == "spa")
             {
                 spaFileName = pmd_materials[i].texture_file;
                 textureFileName = "";

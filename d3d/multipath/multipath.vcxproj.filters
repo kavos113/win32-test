@@ -147,4 +147,20 @@
       <Filter>ソース ファイル\directx\resources</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\BasicVertexShader.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BasicPixelShader.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BasePixelShader.hlsl" />
+    <FxCompile Include="shaders\BaseVertexShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\BasicShaderHeader.hlsli">
+      <Filter>リソース ファイル</Filter>
+    </None>
+    <None Include="shaders\BaseHeader.hlsli" />
+  </ItemGroup>
 </Project>

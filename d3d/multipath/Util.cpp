@@ -43,7 +43,7 @@ std::wstring GetWideString(const std::string& str)
     return wstr;
 }
 
-std::string GetExtention(const std::string& path)
+std::string GetExtension(const std::string& path)
 {
     auto pos = path.find_last_of('.');
     if (pos == std::string::npos)
@@ -58,4 +58,27 @@ std::pair<std::string, std::string> SplitPath(const std::string& path, const cha
 {
     size_t i = path.find(splitter);
     return std::make_pair(path.substr(0, i), path.substr(i + 1));
+}
+
+std::vector<float> GetGaussianWeights(size_t count, float s)
+{
+    std::vector<float> weights(count);
+    float x = 0.0f;
+    float total = 0.0f;
+    for (float& weight : weights)
+    {
+        weight = expf(-x * x / (2.0f * s * s));
+        total += weight;
+        x += 1.0f;
+    }
+    total = total * 2.0f - 1;
+
+    for (float& weight : weights)
+    {
+        weight /= total;
+        //OutputDebugStringA((std::to_string(weight) + " ").c_str());
+    }
+    //OutputDebugStringA("\n");
+
+    return weights;
 }

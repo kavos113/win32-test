@@ -43,7 +43,7 @@ std::wstring GetWideString(const std::string& str)
     return wstr;
 }
 
-std::string GetExtention(const std::string& path)
+std::string GetExtension(const std::string& path)
 {
     auto pos = path.find_last_of('.');
     if (pos == std::string::npos)

@@ -10,7 +10,7 @@ class Display
 public:
     HRESULT Init();
     void SetBeginBarrier();
-    void SetView() const;
+    void Draw();
     void SetEndBarrier();
     void Present() const;
 

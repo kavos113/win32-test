@@ -95,14 +95,8 @@ void PMDModel::Read()
     if (FAILED(hr)) return;
 }
 
-void PMDModel::Render()
+void PMDModel::Render() const
 {
-    //angle += 0.05f;
-    //matrix_buffer_.GetMappedBuffer()[0] = DirectX::XMMatrixRotationY(angle);
-
-    UpdateMotion();
-    std::copy(bone_matrices_.begin(), bone_matrices_.end(), matrix_buffer_.GetMappedBuffer() + 1);
-
     globalHeap->SetGraphicsRootDescriptorTable(m_matrixHeapId);
 
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_materialHeapId);
@@ -122,6 +116,12 @@ void PMDModel::Render()
         indexOffset += m.indices_count;
         materialDescHandle.ptr += matIncSize;
     }
+}
+
+void PMDModel::UpdateAnimation()
+{
+    UpdateMotion();
+    std::ranges::copy(bone_matrices_, matrix_buffer_.GetMappedBuffer() + 1);
 }
 
 void PMDModel::SetIA() const
@@ -253,12 +253,12 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         if (std::count(textureFileName.begin(), textureFileName.end(), '*') > 0)
         {
             auto namepair = SplitPath(textureFileName, '*');
-            if (GetExtention(namepair.first) == "sph")
+            if (GetExtension(namepair.first) == "sph")
             {
                 textureFileName = namepair.second;
                 sphFileName = namepair.first;
             }
-            else if (GetExtention(namepair.first) == "spa")
+            else if (GetExtension(namepair.first) == "spa")
             {
                 textureFileName = namepair.second;
                 spaFileName = namepair.first;
@@ -266,11 +266,11 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
             else
             {
                 textureFileName = namepair.first;
-                if (GetExtention(namepair.second) == "sph")
+                if (GetExtension(namepair.second) == "sph")
                 {
                     sphFileName = namepair.second;
                 }
-                else if (GetExtention(namepair.second) == "spa")
+                else if (GetExtension(namepair.second) == "spa")
                 {
                     spaFileName = namepair.second;
                 }
@@ -278,12 +278,12 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         }
         else
         {
-            if (GetExtention(textureFileName) == "sph")
+            if (GetExtension(textureFileName) == "sph")
             {
                 sphFileName = pmd_materials_[i].texture_file;
                 textureFileName = "";
             }
-            else if (GetExtention(textureFileName) == "spa")
+            else if (GetExtension(textureFileName) == "spa")
             {
                 spaFileName = pmd_materials_[i].texture_file;
                 textureFileName = "";
@@ -484,7 +484,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     char* mappedBuffer = materialBuffer.GetMappedBuffer();
     for (auto& m : materials_)
     {
-        *(MaterialForHlsl*)mappedBuffer = m.material;
+        *reinterpret_cast<MaterialForHlsl*>(mappedBuffer) = m.material;
         mappedBuffer += materialBufferSize;
     }
 
@@ -606,7 +606,7 @@ HRESULT PMDModel::SetVertexBuffer()
         return hr;
     }
 
-    std::copy(vertices_.begin(), vertices_.end(), vertex_buffer_.GetMappedBuffer());
+    std::ranges::copy(vertices_, vertex_buffer_.GetMappedBuffer());
 
     vertex_buffer_.UmmapBuffer();
 

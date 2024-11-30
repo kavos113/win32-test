@@ -138,8 +138,9 @@ public:
 #pragma pack(pop)
 
     void Read();
-    void Render();
+    void Render() const;
     void SetIA() const;
+    void UpdateAnimation();
 
     void PlayAnimation();
 

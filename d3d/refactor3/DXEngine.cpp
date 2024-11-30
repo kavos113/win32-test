@@ -82,7 +82,7 @@ HRESULT DXEngine::OnRender()
 
     renderer->SetPipelineState();
 
-    display.SetView();
+    display.Draw();
     model->SetIA();
     renderer->SetRootSignature();
 
