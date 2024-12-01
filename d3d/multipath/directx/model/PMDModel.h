@@ -178,7 +178,7 @@ private:
     static float GetYFromXBezier(float x, const DirectX::XMFLOAT2& p1, const DirectX::XMFLOAT2& p2, uint8_t n = 10);
 
     void IKRotate();
-    void IKCCD(const PMDIK& ik);
+    void IKCCD(const PMDIK& ik) const;
     void IKCos(const PMDIK& ik);
     void IKLookAt(const PMDIK& ik);
 

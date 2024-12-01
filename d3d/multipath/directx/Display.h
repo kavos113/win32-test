@@ -19,12 +19,15 @@ class Display
 
 public:
     HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
-    void SetBeginBarrier();
-    void Draw();
-    void SetEndBarrier();
+    void Render() const;
     void Present() const;
 
     void SetBaseBegin();
+    void RenderToBase() const;
+    void SetBaseEnd();
+    void SetPostEffect();
+    void Clear();
+    void EndRender();
 
     void SetHWND(HWND hwnd);
 
@@ -37,12 +40,13 @@ public:
         wr(wr),
         hwnd(hwnd),
         m_barrier(),
-        bbIdx(0),
         m_renderResource(nullptr),
+        m_renderResource2(nullptr),
         m_srvHeapId(0),
         vertex_buffer_view_(),
-        m_pipelineState(nullptr),
-        m_rootSignature(nullptr)
+        m_pipelineState(nullptr), m_pipelineState2(nullptr),
+        m_rootSignature(nullptr),
+        blur_weight_heap_id_(0)
     {
     }
 
@@ -51,7 +55,7 @@ private:
     HRESULT CreateBackBuffers();
     HRESULT SetRenderTargetView();
     HRESULT SetDepthStencilView();
-    HRESULT SetRRenderTargetView();
+    HRESULT SetBaseRenderTargetView();
 
     HRESULT CreateViewPort();
 
@@ -60,6 +64,8 @@ private:
     HRESULT CreateBasePolygon();
     HRESULT CreateBasePipeline();
     HRESULT CreateBlurBuffer();
+
+    void Barrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
     IDXGISwapChain4* m_swapChain;
     DXDescriptorHeap m_rtvHeap;
@@ -75,13 +81,12 @@ private:
     HWND hwnd;
 
     D3D12_RESOURCE_BARRIER m_barrier;
-    UINT bbIdx;
 
     ID3D12Resource* m_renderResource;
     ID3D12Resource* m_renderResource2;
 
     GLOBAL_HEAP_ID m_srvHeapId;
-    DXDescriptorHeap m_rtvRHeap;
+    DXDescriptorHeap m_baseRtvHeap;
 
     std::shared_ptr<GlobalDescriptorHeap> globalHeap;
 

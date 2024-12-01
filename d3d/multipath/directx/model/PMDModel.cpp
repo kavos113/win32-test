@@ -894,7 +894,7 @@ void PMDModel::IKRotate()
     }
 }
 
-void PMDModel::IKCCD(const PMDIK& ik)
+void PMDModel::IKCCD(const PMDIK& ik) const
 {
     constexpr float eps = 0.0005f;
 

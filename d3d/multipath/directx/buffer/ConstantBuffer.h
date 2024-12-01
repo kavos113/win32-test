@@ -106,7 +106,7 @@ public:
         );
     }
 
-    void UmmapBuffer()
+    void UmmapBuffer() const
     {
         m_buffer->Unmap(0, nullptr);
     }

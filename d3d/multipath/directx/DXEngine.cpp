@@ -77,22 +77,26 @@ HRESULT DXEngine::OnRender()
 {
     auto start = timeGetTime();
 
-    display.SetBeginBarrier();
-
     globalHeap->SetToCommand();
+
     display.SetBaseBegin();
 
     model->UpdateAnimation();
 
     renderer->SetPipelineState();
     renderer->SetRootSignature();
-    model->SetIA();
     displayMatrix.Render();
+    display.RenderToBase();
+    model->SetIA();
     model->Render();
 
-    display.Draw();
+    display.SetBaseEnd();
 
-    display.SetEndBarrier();
+    display.SetPostEffect();
+
+    display.Clear();
+    display.Render();
+    display.EndRender();
 
     HRESULT hr = DXCommand::ExecuteCommands();
     if (FAILED(hr))

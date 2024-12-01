@@ -41,7 +41,7 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
         return hr;
     }
 
-    hr = SetRRenderTargetView();
+    hr = SetBaseRenderTargetView();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to set render target view\n"));
@@ -97,101 +97,45 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
     return S_OK;
 }
 
-void Display::SetBeginBarrier()
+// base polygon2–‡–Ú + blur(by pso2)‚ðback buffer‚É•`‰æ
+void Display::Render() const
 {
-    m_barrier.Transition.pResource = m_renderResource;
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
-
-    m_barrier.Transition.pResource = m_renderResource2;
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
-    
-    bbIdx = m_swapChain->GetCurrentBackBufferIndex();
-    
-    m_barrier.Transition.pResource = back_buffers_[bbIdx];
-    
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
-}
-
-void Display::Draw()
-{
-    auto rtvHandle = m_rtvHeap.GetCPUHandle();
-    rtvHandle.ptr += bbIdx * m_rtvHeap.GetIncrementSize();
-
-    auto dsvHandle = m_dsvHeap.GetCPUHandle();
-
-    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-
-    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
-
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-
-    globalHeap->SetGraphicsRootDescriptorTable(m_srvHeapId);
-    globalHeap->SetGraphicsRootDescriptorTable(blur_weight_heap_id_);
-
-    DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = globalHeap->GetGPUHandle(m_srvHeapId);
     srvHandle.ptr += globalHeap->GetIncrementSize();
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(0, srvHandle);
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(1, globalHeap->GetGPUHandle(blur_weight_heap_id_));
+
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState2);
+
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 }
 
+// base polygon1–‡–Ú‚É‘‚«ž‚Þ‚æ‚¤Ý’è
 void Display::SetBaseBegin()
 {
-    auto rtvRHandle = m_rtvRHeap.GetCPUHandle();
+    Barrier(
+        m_renderResource,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
 
+    auto baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
     auto dsvHandle = m_dsvHeap.GetCPUHandle();
-
-    rtvRHandle.ptr += m_rtvRHeap.GetIncrementSize();
 
     DXCommand::GetCommandList()->OMSetRenderTargets(
         1,
-        &rtvRHandle,
+        &baseRtvHandle,
         false,
         &dsvHandle
     );
 
     float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-    DXCommand::GetCommandList()->ClearRenderTargetView(rtvRHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, clearColor, 0, nullptr);
     DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
-    DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
-
-    m_barrier.Transition.pResource = m_renderResource2;
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-}
-
-void Display::SetEndBarrier()
-{
-    m_barrier.Transition.pResource = m_renderResource;
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
-    
-    m_barrier.Transition.pResource = back_buffers_[bbIdx];
-    m_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    m_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-    
-    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
 }
 
 void Display::Present() const
@@ -201,6 +145,106 @@ void Display::Present() const
    {
        OutputDebugString(_T("Failed to present\n"));
    }
+}
+
+void Display::RenderToBase() const
+{
+    DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
+    DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
+}
+
+void Display::SetBaseEnd()
+{
+    Barrier(
+        m_renderResource,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
+}
+
+// base polygon2–‡–Ú‚ÉC1–‡–Ú‚Ìbase polygon + blur(by pso1)‚ð•`‰æ
+void Display::SetPostEffect()
+{
+    Barrier(
+        m_renderResource2,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
+    baseRtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
+
+    DXCommand::GetCommandList()->OMSetRenderTargets(1, &baseRtvHandle, false, &dsvHandle);
+
+    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
+    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
+
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        0,
+        globalHeap->GetGPUHandle(m_srvHeapId)
+    );
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        1,
+        globalHeap->GetGPUHandle(blur_weight_heap_id_)
+    );
+
+    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
+
+    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
+
+    Barrier(
+        m_renderResource2,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
+}
+
+// back buffer‚É•`‰æ‚·‚é‚æ‚¤Ý’è
+void Display::Clear()
+{
+    UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
+
+    Barrier(
+        back_buffers_[bbIdx],
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap.GetCPUHandle();
+    rtvHandle.ptr += bbIdx * m_rtvHeap.GetIncrementSize();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
+
+    DXCommand::GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
+    DXCommand::GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+}
+
+void Display::EndRender()
+{
+    UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
+
+    Barrier(
+        back_buffers_[bbIdx],
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+}
+
+void Display::Barrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+{
+    m_barrier.Transition.pResource = resource;
+    m_barrier.Transition.StateBefore = before;
+    m_barrier.Transition.StateAfter = after;
+
+    DXCommand::GetCommandList()->ResourceBarrier(1, &m_barrier);
 }
 
 
@@ -413,7 +457,7 @@ HRESULT Display::CreateRenderResource()
     return S_OK;
 }
 
-HRESULT Display::SetRRenderTargetView()
+HRESULT Display::SetBaseRenderTargetView()
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 
@@ -422,7 +466,7 @@ HRESULT Display::SetRRenderTargetView()
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
 
-    HRESULT hr = m_rtvRHeap.CreateDescriptorHeap(&rtvHeapDesc);
+    HRESULT hr = m_baseRtvHeap.CreateDescriptorHeap(&rtvHeapDesc);
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create RTV descriptor heap\n"));
@@ -434,7 +478,7 @@ HRESULT Display::SetRRenderTargetView()
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvRHeap.GetCPUHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_baseRtvHeap.GetCPUHandle();
 
     DXDevice::GetDevice()->CreateRenderTargetView(
         m_renderResource,
@@ -442,7 +486,7 @@ HRESULT Display::SetRRenderTargetView()
         rtvHandle
     );
 
-    rtvHandle.ptr += m_rtvRHeap.GetIncrementSize();
+    rtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
     DXDevice::GetDevice()->CreateRenderTargetView(
         m_renderResource2,
         &rtvDesc,
