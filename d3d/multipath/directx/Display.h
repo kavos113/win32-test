@@ -19,7 +19,7 @@ class Display
 
 public:
     HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
-    void Render() const;
+    void RenderToBackBuffer() const;
     void Present() const;
 
     void SetBaseBegin();

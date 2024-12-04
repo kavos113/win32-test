@@ -225,6 +225,53 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
         return hr;
     }
 
+    ID3D10Blob* errorBlob = nullptr;
+    hr = D3DCompileFromFile(
+        L"shaders/BasicVertexShader.hlsl",
+        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        "shadowVS",
+        "vs_5_0",
+        D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+        0,
+        &m_psBlob,
+        &errorBlob
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to compile vertex shader\n"));
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            OutputDebugString(_T("File not found\n"));
+            return E_FAIL;
+        }
+
+        std::string errStr;
+        errStr.resize(errorBlob->GetBufferSize());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
+
+        OutputDebugStringA(errStr.c_str());
+        return E_FAIL;
+    }
+
+    graphics_pipeline.VS.pShaderBytecode = m_psBlob->GetBufferPointer();
+    graphics_pipeline.VS.BytecodeLength = m_psBlob->GetBufferSize();
+    graphics_pipeline.PS.pShaderBytecode = nullptr;
+    graphics_pipeline.PS.BytecodeLength = 0;
+    graphics_pipeline.NumRenderTargets = 0;
+    graphics_pipeline.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+
+    hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
+        &graphics_pipeline,
+        IID_PPV_ARGS(&m_shadowPipeline)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create shadow pipeline state\n"));
+        return E_FAIL;
+    }
+
     return S_OK;
 }
 
@@ -306,4 +353,9 @@ void PMDRenderer::SetPipelineState() const
 void PMDRenderer::SetRootSignature() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
+}
+
+void PMDRenderer::SetShadowPipeline() const
+{
+    DXCommand::GetCommandList()->SetPipelineState(m_shadowPipeline);
 }

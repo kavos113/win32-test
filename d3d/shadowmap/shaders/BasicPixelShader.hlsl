@@ -22,7 +22,7 @@ float4 BasicPS(Output input) : SV_TARGET
 
     float4 color = tex.Sample(sam, input.uv);
 
-    return max(saturate(toonDiffuse
+    float4 ret = max(saturate(toonDiffuse
         * diffuse
         * color
         * sph.Sample(sam, sphereMapUV))
@@ -30,4 +30,16 @@ float4 BasicPS(Output input) : SV_TARGET
         + float4(specularB * specular))
         , float4(color * ambient, 1)
     );
+
+    float3 posFromLightVP = input.tpos.xyz / input.tpos.w;
+    float2 shadowUV = (posFromLightVP + float2(1, -1)) * float2(0.5, -0.5);
+
+    float depthFromLight = lightDepthTex.Sample(sam, shadowUV);
+    float shadowWeight = 0.5f;
+    if (posFromLightVP.z > depthFromLight)
+    {
+        shadowWeight = 1.0f;
+    }
+
+    return ret * shadowWeight;
 }

@@ -19,14 +19,16 @@ class Display
 
 public:
     HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
-    void Render() const;
+    void RenderToBackBuffer() const;
     void Present() const;
 
-    void SetBaseBegin();
-    void RenderToBase() const;
+    void SetRenderToBase1();
+    void SetViewport() const;
     void SetBaseEnd();
-    void SetPostEffect();
-    void Clear();
+    void SetRenderToBackBuffer();
+    void SetRenderToLightDSV();
+    void UseLightDSV();
+    void EndRenderToLightDSV();
     void EndRender();
 
     void SetHWND(HWND hwnd);
@@ -35,16 +37,17 @@ public:
         :
         m_swapChain(nullptr),
         m_depthStencilBuffer(wr),
+        m_depthSrvHeapId(0),
+        m_lightDepthBuffer(wr),
         m_viewport(),
         m_scissorRect(),
         wr(wr),
         hwnd(hwnd),
         m_barrier(),
         m_renderResource(nullptr),
-        m_renderResource2(nullptr),
         m_srvHeapId(0),
         vertex_buffer_view_(),
-        m_pipelineState(nullptr), m_pipelineState2(nullptr),
+        m_pipelineState(nullptr),
         m_rootSignature(nullptr),
         blur_weight_heap_id_(0)
     {
@@ -73,6 +76,9 @@ private:
 
     DepthStencilBuffer m_depthStencilBuffer;
     DXDescriptorHeap m_dsvHeap;
+    GLOBAL_HEAP_ID m_depthSrvHeapId;
+
+    DepthStencilBuffer m_lightDepthBuffer;
 
     D3D12_VIEWPORT m_viewport;
     D3D12_RECT m_scissorRect;
@@ -83,7 +89,6 @@ private:
     D3D12_RESOURCE_BARRIER m_barrier;
 
     ID3D12Resource* m_renderResource;
-    ID3D12Resource* m_renderResource2;
 
     GLOBAL_HEAP_ID m_srvHeapId;
     DXDescriptorHeap m_baseRtvHeap;
@@ -94,10 +99,13 @@ private:
     D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
 
     ID3D12PipelineState* m_pipelineState;
-    ID3D12PipelineState* m_pipelineState2;
     ID3D12RootSignature* m_rootSignature;
 
     ConstantBuffer<float> blur_weight_buffer_;
     GLOBAL_HEAP_ID blur_weight_heap_id_;
+
+    float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    uint32_t shadow_definition = 1024;
 };
 

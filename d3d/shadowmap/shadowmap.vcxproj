@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{7AF6909E-DCC6-4E92-A1E4-B62659E6EC75}</ProjectGuid>
+    <ProjectGuid>{B1BE08B7-802F-460F-A91C-54E9693F3D7F}</ProjectGuid>
     <RootNamespace>animation</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

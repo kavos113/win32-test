@@ -95,8 +95,18 @@ void PMDModel::Read()
     if (FAILED(hr)) return;
 }
 
-void PMDModel::Render() const
+void PMDModel::Render(bool isShadow) const
 {
+    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
+
+    if (isShadow)
+    {
+        DXCommand::GetCommandList()->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
+        return;
+    }
+
     globalHeap->SetGraphicsRootDescriptorTable(m_matrixHeapId);
 
     D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_materialHeapId);
@@ -111,7 +121,7 @@ void PMDModel::Render() const
             materialDescHandle
         );
 
-        DXCommand::GetCommandList()->DrawIndexedInstanced(m.indices_count, 2, indexOffset, 0, 0);
+        DXCommand::GetCommandList()->DrawIndexedInstanced(m.indices_count, 1, indexOffset, 0, 0);
 
         indexOffset += m.indices_count;
         materialDescHandle.ptr += matIncSize;
@@ -122,13 +132,6 @@ void PMDModel::UpdateAnimation()
 {
     UpdateMotion();
     std::ranges::copy(bone_matrices_, matrix_buffer_.GetMappedBuffer() + 1);
-}
-
-void PMDModel::SetIA() const
-{
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
 }
 
 HRESULT PMDModel::ReadHeader(FILE* fp)

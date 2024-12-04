@@ -97,17 +97,17 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
     return S_OK;
 }
 
-// base polygon2–‡–Ú + blur(by pso2)‚ðback buffer‚É•`‰æ
-void Display::Render() const
+// base polygon1–‡–Ú + blur(by pso)‚ðback buffer‚É•`‰æ
+void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
     D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = globalHeap->GetGPUHandle(m_srvHeapId);
-    srvHandle.ptr += globalHeap->GetIncrementSize();
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(0, srvHandle);
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(1, globalHeap->GetGPUHandle(blur_weight_heap_id_));
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(2, globalHeap->GetGPUHandle(m_depthSrvHeapId));
 
-    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState2);
+    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
@@ -115,7 +115,7 @@ void Display::Render() const
 }
 
 // base polygon1–‡–Ú‚É‘‚«ž‚Þ‚æ‚¤Ý’è
-void Display::SetBaseBegin()
+void Display::SetRenderToBase1()
 {
     Barrier(
         m_renderResource,
@@ -123,8 +123,15 @@ void Display::SetBaseBegin()
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
 
+    Barrier(
+        m_lightDepthBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
+
     auto baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
     auto dsvHandle = m_dsvHeap.GetCPUHandle();
+
 
     DXCommand::GetCommandList()->OMSetRenderTargets(
         1,
@@ -133,10 +140,22 @@ void Display::SetBaseBegin()
         &dsvHandle
     );
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
     DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, clearColor, 0, nullptr);
     DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
+
+void Display::UseLightDSV()
+{
+    Barrier(
+        m_lightDepthBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
+    auto dsvHandle2 = globalHeap->GetGPUHandle(m_depthSrvHeapId);
+    dsvHandle2.ptr += globalHeap->GetIncrementSize();
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(m_depthSrvHeapId, dsvHandle2);
+}
+
 
 void Display::Present() const
 {
@@ -147,7 +166,7 @@ void Display::Present() const
    }
 }
 
-void Display::RenderToBase() const
+void Display::SetViewport() const
 {
     DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
@@ -162,51 +181,8 @@ void Display::SetBaseEnd()
     );
 }
 
-// base polygon2–‡–Ú‚ÉC1–‡–Ú‚Ìbase polygon + blur(by pso1)‚ð•`‰æ
-void Display::SetPostEffect()
-{
-    Barrier(
-        m_renderResource2,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-
-    D3D12_CPU_DESCRIPTOR_HANDLE baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
-    baseRtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
-
-    DXCommand::GetCommandList()->OMSetRenderTargets(1, &baseRtvHandle, false, &dsvHandle);
-
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, clearColor, 0, nullptr);
-    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
-
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        0,
-        globalHeap->GetGPUHandle(m_srvHeapId)
-    );
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        1,
-        globalHeap->GetGPUHandle(blur_weight_heap_id_)
-    );
-
-    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
-
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
-
-    Barrier(
-        m_renderResource2,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-    );
-}
-
 // back buffer‚É•`‰æ‚·‚é‚æ‚¤Ý’è
-void Display::Clear()
+void Display::SetRenderToBackBuffer()
 {
     UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -222,9 +198,34 @@ void Display::Clear()
 
     DXCommand::GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
     DXCommand::GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+}
+
+void Display::SetRenderToLightDSV()
+{
+    Barrier(
+        m_lightDepthBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
+    dsvHandle.ptr += m_dsvHeap.GetIncrementSize();
+
+    DXCommand::GetCommandList()->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
+
+    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+}
+
+void Display::EndRenderToLightDSV()
+{
+    Barrier(
+        m_lightDepthBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
 }
 
 void Display::EndRender()
@@ -370,7 +371,7 @@ HRESULT Display::SetDepthStencilView()
     D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 
     dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.NumDescriptors = 1;
+    dsvHeapDesc.NumDescriptors = 2;
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     dsvHeapDesc.NodeMask = 0;
 
@@ -383,6 +384,69 @@ HRESULT Display::SetDepthStencilView()
 
     m_depthStencilBuffer.SetDescriptorHeap(&m_dsvHeap);
     m_depthStencilBuffer.CreateView();
+
+    hr = m_lightDepthBuffer.CreateBuffer();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("Failed to create light depth buffer\n"));
+        return hr;
+    }
+
+    D3D12_CPU_DESCRIPTOR_HANDLE lightDsvHandle = m_dsvHeap.GetCPUHandle();
+    lightDsvHandle.ptr += m_dsvHeap.GetIncrementSize();
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC lightDsvDesc = {};
+
+    lightDsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    lightDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    lightDsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+    DXDevice::GetDevice()->CreateDepthStencilView(
+        m_lightDepthBuffer.GetBuffer(),
+        &lightDsvDesc,
+        lightDsvHandle
+    );
+
+    m_depthSrvHeapId = globalHeap->Allocate(2);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = globalHeap->GetCPUHandle(m_depthSrvHeapId);
+
+    DXDevice::GetDevice()->CreateShaderResourceView(
+        m_depthStencilBuffer.GetBuffer(),
+        &srvDesc,
+        srvHandle
+    );
+
+    srvHandle.ptr += globalHeap->GetIncrementSize();
+
+    DXDevice::GetDevice()->CreateShaderResourceView(
+        m_lightDepthBuffer.GetBuffer(),
+        &srvDesc,
+        srvHandle
+    );
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->NumDescriptors = 1;
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range->BaseShaderRegister = 4;
+    range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    range->RegisterSpace = 0;
+
+    globalHeap->SetRootParameter(
+        m_depthSrvHeapId,
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_PIXEL,
+        range,
+        1
+    );
 
     return S_OK;
 }
@@ -416,8 +480,6 @@ HRESULT Display::CreateRenderResource()
     heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
     heapProp.CreationNodeMask = 0;
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-
     D3D12_CLEAR_VALUE clearValue = {};
 
     clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -440,19 +502,6 @@ HRESULT Display::CreateRenderResource()
         return hr;
     }
 
-    hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heapProp,
-        D3D12_HEAP_FLAG_NONE,
-        &desc,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        &clearValue,
-        IID_PPV_ARGS(&m_renderResource2)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create render resource\n"));
-        return hr;
-    }
 
     return S_OK;
 }
@@ -462,7 +511,7 @@ HRESULT Display::SetBaseRenderTargetView()
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 2;
+    rtvHeapDesc.NumDescriptors = 1;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     rtvHeapDesc.NodeMask = 0;
 
@@ -486,19 +535,12 @@ HRESULT Display::SetBaseRenderTargetView()
         rtvHandle
     );
 
-    rtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
-    DXDevice::GetDevice()->CreateRenderTargetView(
-        m_renderResource2,
-        &rtvDesc,
-        rtvHandle
-    );
-
     return S_OK;
 }
 
 HRESULT Display::CreateShaderResourceView()
 {
-    m_srvHeapId = globalHeap->Allocate(2);
+    m_srvHeapId = globalHeap->Allocate(1);
     
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     
@@ -511,14 +553,6 @@ HRESULT Display::CreateShaderResourceView()
     
     DXDevice::GetDevice()->CreateShaderResourceView(
         m_renderResource,
-        &srvDesc,
-        srvHandle
-    );
-
-    srvHandle.ptr += globalHeap->GetIncrementSize();
-
-    DXDevice::GetDevice()->CreateShaderResourceView(
-        m_renderResource2,
         &srvDesc,
         srvHandle
     );
@@ -690,7 +724,7 @@ HRESULT Display::CreateBasePipeline()
     psoDesc.SampleDesc.Count = 1;
     psoDesc.SampleDesc.Quality = 0;
 
-    D3D12_DESCRIPTOR_RANGE range[2] = {};
+    D3D12_DESCRIPTOR_RANGE range[3] = {};
 
     range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     range[0].NumDescriptors = 1;
@@ -698,8 +732,11 @@ HRESULT Display::CreateBasePipeline()
     range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
     range[1].NumDescriptors = 1;
     range[1].BaseShaderRegister = 0;
+    range[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range[2].NumDescriptors = 1;
+    range[2].BaseShaderRegister = 1;
 
-    D3D12_ROOT_PARAMETER rootParameter[2] = {};
+    D3D12_ROOT_PARAMETER rootParameter[3] = {};
 
     rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -709,6 +746,10 @@ HRESULT Display::CreateBasePipeline()
     rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
     rootParameter[1].DescriptorTable.NumDescriptorRanges = 1;
     rootParameter[1].DescriptorTable.pDescriptorRanges = &range[1];
+    rootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameter[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParameter[2].DescriptorTable.pDescriptorRanges = &range[2];
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 
@@ -725,7 +766,7 @@ HRESULT Display::CreateBasePipeline()
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 
-    rootSignatureDesc.NumParameters = 2;
+    rootSignatureDesc.NumParameters = 3;
     rootSignatureDesc.pParameters = rootParameter;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = &samplerDesc;
@@ -769,32 +810,6 @@ HRESULT Display::CreateBasePipeline()
     hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
         &psoDesc,
         IID_PPV_ARGS(&m_pipelineState)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create pipeline state\n"));
-        return E_FAIL;
-    }
-
-    hr = D3DCompileFromFile(
-        L"shaders/BlurPixelShader.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        //"vertical",
-        "normal",
-        "ps_5_0",
-        D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-        0,
-        &psBlob,
-        &errorBlob
-    );
-
-    psoDesc.PS.BytecodeLength = psBlob->GetBufferSize();
-    psoDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
-
-    hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
-        &psoDesc,
-        IID_PPV_ARGS(&m_pipelineState2)
     );
     if (FAILED(hr))
     {

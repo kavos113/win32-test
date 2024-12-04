@@ -9,6 +9,7 @@ class DXBuffer
 public:
     virtual HRESULT CreateBuffer() = 0;
     virtual void CreateView() = 0;
+    ID3D12Resource* GetBuffer() const { return m_buffer; }
 
     DXBuffer()
         :

@@ -112,4 +112,7 @@ float4 vertical(Output input) : SV_TARGET
 float4 normal(Output input) : SV_TARGET
 {
     return tex.Sample(sam, input.uv);
+    // float d = depthTex.Sample(sam, input.uv);
+    // d = pow(d, 20);
+    // return float4(d, d, d, 1);
 }

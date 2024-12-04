@@ -12,23 +12,34 @@ Output BasicVS(
     float w = weight / 100.0f;
     matrix bone_matrix = bones[bone_number[0]] * w + bones[bone_number[1]] * (1.0f - w);
 
-    pos = mul(bone_matrix, pos);
-    pos = mul(world, pos);
-
-    if (instance == 1)
-    {
-        pos = mul(shadow, pos);
-    }
-
     Output output;
-    output.svpos = mul(mul(projection, view), pos);
+
+    output.pos = mul(world, mul(bone_matrix, pos));
+    output.instance = instance;
+    output.svpos = mul(projection, mul(view, output.pos));
+    output.tpos = mul(lightCamera, output.pos);
+    output.uv = uv;
     normal.w = 0;
     output.normal = mul(world, normal);
     output.vnormal = mul(view, output.normal);
-    output.pos = mul(view, pos);
-    output.uv = uv;
-    output.ray = normalize(pos.xyz - mul(view, eye));
-    output.instance = instance;
+    output.ray = normalize(output.pos.xyz - mul(view, eye));
 
     return output;
+}
+
+float4 shadowVS(
+    float4 pos : POSITION,
+    float4 normal : NORMAL,
+    float2 uv : TEXCOORD,
+    min16uint2 bone_number : BONE_NUMBER,
+    min16uint weight : WEIGHT
+) : SV_POSITION
+{
+    float w = float(weight) / 100.0f;
+
+    matrix bone_matrix = bones[bone_number[0]] * w + bones[bone_number[1]] * (1.0f - w);
+
+    pos = mul(world, mul(bone_matrix, pos));
+
+    return mul(lightCamera, pos);
 }

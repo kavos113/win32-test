@@ -98,7 +98,7 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
 }
 
 // base polygon2–‡–Ú + blur(by pso2)‚ðback buffer‚É•`‰æ
-void Display::Render() const
+void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 

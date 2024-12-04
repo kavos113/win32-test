@@ -1,6 +1,8 @@
 Texture2D<float4> tex : register(t0);
 SamplerState sam : register(s0);
 
+Texture2D<float> depthTex : register(t1);
+
 cbuffer PostEffect : register(b0)
 {
     float4 weights[2];

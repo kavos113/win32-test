@@ -2,6 +2,7 @@
 
 using DirectX::operator+;
 using DirectX::operator-;
+using DirectX::operator*;
 
 HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
 {
@@ -25,11 +26,11 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     DirectX::XMFLOAT3 target(0.0f, 10.0f, 0.0f);
     DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
 
-    DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(
-        DirectX::XMLoadFloat3(&eye),
-        DirectX::XMLoadFloat3(&target),
-        DirectX::XMLoadFloat3(&up)
-    );
+    DirectX::XMVECTOR eyeVec = DirectX::XMLoadFloat3(&eye);
+    DirectX::XMVECTOR targetVec = DirectX::XMLoadFloat3(&target);
+    DirectX::XMVECTOR upVec = DirectX::XMLoadFloat3(&up);
+
+    DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(eyeVec, targetVec, upVec);
 
     DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
         DirectX::XM_PIDIV2,
@@ -39,10 +40,12 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     );
 
     DirectX::XMFLOAT4 plane(0, 1, 0, 0);
-    DirectX::XMMATRIX shadow = DirectX::XMMatrixShadow(
-        DirectX::XMLoadFloat4(&plane),
-        -DirectX::XMLoadFloat3(&parallelLightVector)
-    );
+    DirectX::XMVECTOR planeVec = DirectX::XMLoadFloat4(&plane);
+    DirectX::XMVECTOR lightVec = DirectX::XMLoadFloat4(&parallelLightVector);
+    DirectX::XMMATRIX shadow = DirectX::XMMatrixShadow(planeVec, lightVec);
+
+    DirectX::XMVECTOR light = targetVec + DirectX::XMVector3Normalize(lightVec) * DirectX::XMVector3Length(DirectX::XMVectorSubtract(targetVec, eyeVec)).m128_f32[0];
+    DirectX::XMMATRIX lightCamera = DirectX::XMMatrixLookAtLH(light, targetVec, upVec) * DirectX::XMMatrixOrthographicLH(40, 40, 1.0f, 100.0f);
 
     m_matrixBuffer.SetResourceWidth((sizeof(SceneMatrix) + 0xff) & ~0xff);
     HRESULT hr = m_matrixBuffer.CreateBuffer();
@@ -57,6 +60,7 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     m_matrixBuffer.GetMappedBuffer()->eye = eye;
 
     m_matrixBuffer.GetMappedBuffer()->shadow = shadow;
+    m_matrixBuffer.GetMappedBuffer()->lightCamera = lightCamera;
 
     m_heapId = globalHeap->Allocate(1);
 

@@ -22,6 +22,7 @@ public:
         :
         m_pipelineState(nullptr),
         m_rootSignature(nullptr),
+        m_shadowPipeline(nullptr),
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
         globalHeap(globalHeap),
@@ -33,6 +34,7 @@ public:
     HRESULT Init();
     void SetPipelineState() const;
     void SetRootSignature() const;
+    void SetShadowPipeline() const;
 private:
     HRESULT CompileShaders();
 
@@ -41,6 +43,8 @@ private:
 
     ID3D12PipelineState* m_pipelineState;
     ID3D12RootSignature* m_rootSignature;
+
+    ID3D12PipelineState* m_shadowPipeline;
 
     ID3D10Blob* m_vsBlob;
     ID3D10Blob* m_psBlob;

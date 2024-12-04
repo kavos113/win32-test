@@ -138,8 +138,7 @@ public:
 #pragma pack(pop)
 
     void Read();
-    void Render() const;
-    void SetIA() const;
+    void Render(bool isShadow) const;
     void UpdateAnimation();
 
     void PlayAnimation();

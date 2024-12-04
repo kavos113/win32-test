@@ -95,7 +95,7 @@ HRESULT DXEngine::OnRender()
     display.SetPostEffect();
 
     display.Clear();
-    display.Render();
+    display.RenderToBackBuffer();
     display.EndRender();
 
     HRESULT hr = DXCommand::ExecuteCommands();

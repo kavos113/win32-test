@@ -79,23 +79,29 @@ HRESULT DXEngine::OnRender()
 
     globalHeap->SetToCommand();
 
-    display.SetBaseBegin();
-
     model->UpdateAnimation();
+
+    renderer->SetShadowPipeline();
+    renderer->SetRootSignature();
+    display.SetRenderToLightDSV();
+    display.SetViewport();
+    displayMatrix.Render();
+    model->Render(true);
+    display.EndRenderToLightDSV();
+
+    display.SetRenderToBase1();
 
     renderer->SetPipelineState();
     renderer->SetRootSignature();
+    display.UseLightDSV();
     displayMatrix.Render();
-    display.RenderToBase();
-    model->SetIA();
-    model->Render();
+    display.SetViewport();
+    model->Render(false);
 
     display.SetBaseEnd();
 
-    display.SetPostEffect();
-
-    display.Clear();
-    display.Render();
+    display.SetRenderToBackBuffer();
+    display.RenderToBackBuffer();
     display.EndRender();
 
     HRESULT hr = DXCommand::ExecuteCommands();

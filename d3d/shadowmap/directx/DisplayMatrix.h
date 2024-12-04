@@ -12,6 +12,7 @@ class DisplayMatrix
     {
         DirectX::XMMATRIX view;
         DirectX::XMMATRIX proj;
+        DirectX::XMMATRIX lightCamera;
         DirectX::XMMATRIX shadow;
         DirectX::XMFLOAT3 eye;
     };
@@ -24,7 +25,7 @@ public:
         :
         m_heapId(-1),
         wr(wr),
-        parallelLightVector(1.0f, -1.0f, 1.0f)
+        parallelLightVector(-1.0f, 1.0f, -1.0f, 0.0f)
     {
 
     }
@@ -40,6 +41,6 @@ private:
 
     float angle = 0.0f;
 
-    DirectX::XMFLOAT3 parallelLightVector;
+    DirectX::XMFLOAT4 parallelLightVector;
 };
 
