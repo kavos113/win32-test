@@ -5,7 +5,7 @@
 #include "directx/GlobalDescriptorHeap.h"
 #include "directx/resources/DXDevice.h"
 
-// vertexbuffer, indexbuffer ‚È‚Ç‚ÌƒTƒuƒNƒ‰ƒX‚ğì‚Á‚Ä‚à‚¢‚¢‚©‚à?
+// vertexbuffer, indexbuffer ãªã©ã®ã‚µãƒ–ã‚¯ãƒ©ã‚¹ã‚’ä½œã£ã¦ã‚‚ã„ã„ã‹ã‚‚?
 template <typename T>
 class ConstantBuffer :
     public DXBuffer

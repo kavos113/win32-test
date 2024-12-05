@@ -32,7 +32,7 @@ HRESULT DXEngine::Init()
     hr = displayMatrix.Init(globalHeap);
     if (FAILED(hr)) return E_FAIL;
 
-    model = std::make_unique<PMDModel>("model/‰‰¹ƒ~ƒN.pmd", globalHeap);
+    model = std::make_unique<PMDModel>("model/åˆéŸ³ãƒŸã‚¯.pmd", globalHeap);
     model->Read();
 
     renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
@@ -72,7 +72,7 @@ void DXEngine::EnableDebug()
     OutputDebugString(_T("Debug layer is enabled\n"));
 }
 
-// d‚­Œ©‚¦‚Ä‚¢‚½‚Ì‚ÍWM_PAINTƒƒbƒZ[ƒW‚ªŒÄ‚Î‚ê‚Ä‚¨‚ç‚¸ƒyƒCƒ“ƒg‚³‚ê‚Ä‚¢‚È‚©‚Á‚½‚¾‚¯‚¾‚Á‚½ T_T
+// é‡ãè¦‹ãˆã¦ã„ãŸã®ã¯WM_PAINTãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒå‘¼ã°ã‚Œã¦ãŠã‚‰ãšãƒšã‚¤ãƒ³ãƒˆã•ã‚Œã¦ã„ãªã‹ã£ãŸã ã‘ã ã£ãŸ T_T
 HRESULT DXEngine::OnRender()
 {
     auto start = timeGetTime();

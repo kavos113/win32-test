@@ -97,7 +97,7 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
     return S_OK;
 }
 
-// base polygon1–‡–Ú + blur(by pso)‚ðback buffer‚É•`‰æ
+// base polygon1æžšç›® + blur(by pso)ã‚’back bufferã«æç”»
 void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
@@ -114,7 +114,7 @@ void Display::RenderToBackBuffer() const
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 }
 
-// base polygon1–‡–Ú‚É‘‚«ž‚Þ‚æ‚¤Ý’è
+// base polygon1æžšç›®ã«æ›¸ãè¾¼ã‚€ã‚ˆã†è¨­å®š
 void Display::SetRenderToBase1()
 {
     Barrier(
@@ -151,9 +151,9 @@ void Display::UseLightDSV()
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
-    auto dsvHandle2 = globalHeap->GetGPUHandle(m_depthSrvHeapId);
-    dsvHandle2.ptr += globalHeap->GetIncrementSize();
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(m_depthSrvHeapId, dsvHandle2);
+    auto dsvHandle = globalHeap->GetGPUHandle(m_depthSrvHeapId);
+    dsvHandle.ptr += globalHeap->GetIncrementSize();
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(m_depthSrvHeapId, dsvHandle);
 }
 
 
@@ -181,7 +181,7 @@ void Display::SetBaseEnd()
     );
 }
 
-// back buffer‚É•`‰æ‚·‚é‚æ‚¤Ý’è
+// back bufferã«æç”»ã™ã‚‹ã‚ˆã†è¨­å®š
 void Display::SetRenderToBackBuffer()
 {
     UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
