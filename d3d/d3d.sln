@@ -39,6 +39,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadow", "shadow\shadow.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadowmap", "shadowmap\shadowmap.vcxproj", "{B1BE08B7-802F-460F-A91C-54E9693F3D7F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multipath2", "multipath2\multipath2.vcxproj", "{39D16ED8-3336-4574-9EA6-8D5A23BE294A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -191,6 +193,14 @@ Global
 		{B1BE08B7-802F-460F-A91C-54E9693F3D7F}.Release|x64.Build.0 = Release|x64
 		{B1BE08B7-802F-460F-A91C-54E9693F3D7F}.Release|x86.ActiveCfg = Release|Win32
 		{B1BE08B7-802F-460F-A91C-54E9693F3D7F}.Release|x86.Build.0 = Release|Win32
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Debug|x64.ActiveCfg = Debug|x64
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Debug|x64.Build.0 = Debug|x64
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Debug|x86.ActiveCfg = Debug|Win32
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Debug|x86.Build.0 = Debug|Win32
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x64.ActiveCfg = Release|x64
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x64.Build.0 = Release|x64
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x86.ActiveCfg = Release|Win32
+		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
