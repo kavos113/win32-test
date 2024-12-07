@@ -3,7 +3,6 @@
 
 #include "Display.h"
 #include "DisplayMatrix.h"
-#include "GlobalDescriptorHeap.h"
 #include "model/PMDModel.h"
 #include "model/PMDRenderer.h"
 
@@ -43,8 +42,6 @@ private:
 
     Display display;
     DisplayMatrix displayMatrix;
-
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
 
     RECT wr;
     HWND hwnd;

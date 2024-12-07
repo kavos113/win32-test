@@ -60,14 +60,14 @@ void PMDModel::Read()
     int ret = fclose(fp);
     if (ret != 0)
     {
-        OutputDebugString(_T("Failed to close file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to close file\n"));
         return;
     }
 
     auto err = fopen_s(&fp, "motion/motion.vmd", "rb");
     if (err != 0)
     {
-        OutputDebugString(_T("Failed to open motion file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to open motion file\n"));
         return;
     }
 
@@ -77,7 +77,7 @@ void PMDModel::Read()
     ret = fclose(fp);
     if (ret != 0)
     {
-        OutputDebugString(_T("Failed to close motion file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to close motion file\n"));
         return;
     }
 
@@ -87,7 +87,6 @@ void PMDModel::Read()
     hr = SetIndexBuffer();
     if (FAILED(hr)) return;
 
-    matrix_buffer_.SetGlobalHeap(globalHeap);
     hr = SetTransformBuffer();
     if (FAILED(hr)) return;
 
@@ -97,24 +96,16 @@ void PMDModel::Read()
 
 void PMDModel::Render() const
 {
-    globalHeap->SetGraphicsRootDescriptorTable(m_matrixHeapId);
-
-    D3D12_GPU_DESCRIPTOR_HANDLE materialDescHandle = globalHeap->GetGPUHandle(m_materialHeapId);
+    m_modelManager.SetGraphicsRootDescriptorTable(m_matrixSegment.GetID());
 
     unsigned int indexOffset = 0;
-    auto matIncSize = globalHeap->GetIncrementSize() * 5;
 
-    for (auto& m : materials_)
+    for (int i = 0; i < materials_.size(); ++i)
     {
-        DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            m_materialHeapId, // Ç±ÇÍÇÕrootParameterÇÃ1î‘ñ⁄ÇégópÇµÇƒÇ¢ÇÈÇ±Ç∆Çï\Ç∑
-            materialDescHandle
-        );
+        m_modelManager.SetGraphicsRootDescriptorTable(m_materialSegment.GetID(), i * 5);
+        DXCommand::GetCommandList()->DrawIndexedInstanced(materials_[i].indices_count, 1, indexOffset, 0, 0);
 
-        DXCommand::GetCommandList()->DrawIndexedInstanced(m.indices_count, 1, indexOffset, 0, 0);
-
-        indexOffset += m.indices_count;
-        materialDescHandle.ptr += matIncSize;
+        indexOffset += materials_[i].indices_count;
     }
 }
 
@@ -138,13 +129,13 @@ HRESULT PMDModel::ReadHeader(FILE* fp)
     size_t numRead = fread(signatures, sizeof(signatures), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read file\n"));
         return E_FAIL;
     }
     numRead = fread(&header, sizeof(header), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read pmd file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read pmd file\n"));
         return E_FAIL;
     }
 
@@ -156,7 +147,7 @@ HRESULT PMDModel::ReadVertices(FILE* fp)
     size_t numRead = fread(&num_vertices_, sizeof(num_vertices_), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read vertices\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read vertices\n"));
         return E_FAIL;
     }
 
@@ -166,7 +157,7 @@ HRESULT PMDModel::ReadVertices(FILE* fp)
         numRead = fread(&vertices_[i], pmd_vertex_size, 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read vertices\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read vertices\n"));
             return E_FAIL;
         }
     }
@@ -179,7 +170,7 @@ HRESULT PMDModel::ReadIndices(FILE* fp)
     size_t numRead = fread(&num_indices_, sizeof(num_indices_), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read indices\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read indices\n"));
         return E_FAIL;
     }
 
@@ -187,7 +178,7 @@ HRESULT PMDModel::ReadIndices(FILE* fp)
     numRead = fread(indices_.data(), indices_.size() * sizeof(indices_[0]), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read indices\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read indices\n"));
         return E_FAIL;
     }
 
@@ -199,7 +190,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
     size_t numRead = fread(&num_materials_, sizeof(num_materials_), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read materials\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read materials\n"));
         return E_FAIL;
     }
 
@@ -207,7 +198,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
     numRead = fread(pmd_materials_.data(), pmd_materials_.size() * sizeof(PMDMaterial), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read materials\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read materials\n"));
         return E_FAIL;
     }
 
@@ -240,7 +231,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         toon_[i] = LoadTextureFromFile(toonFilePath, resourceTable);
 
         OutputDebugString(GetWideString(pmd_materials_[i].texture_file).c_str());
-        OutputDebugString(_T("-\n"));
+        OutputDebugString(_T("[PMDModel.cpp] -\n"));
         if (strlen(pmd_materials_[i].texture_file) == 0)
         {
             textures_[i] = nullptr;
@@ -250,7 +241,7 @@ HRESULT PMDModel::ReadMaterials(FILE* fp)
         std::string sphFileName = "";
         std::string spaFileName = "";
 
-        if (std::count(textureFileName.begin(), textureFileName.end(), '*') > 0)
+        if (std::ranges::count(textureFileName, '*') > 0)
         {
             auto namepair = SplitPath(textureFileName, '*');
             if (GetExtension(namepair.first) == "sph")
@@ -351,7 +342,7 @@ HRESULT PMDModel::ReadBones(FILE* fp)
     size_t numRead = fread(&num_bones, sizeof(num_bones), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read bones\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read bones\n"));
         return E_FAIL;
     }
 
@@ -359,7 +350,7 @@ HRESULT PMDModel::ReadBones(FILE* fp)
     numRead = fread(bones_.data(), sizeof(PMDBone), num_bones, fp);
     if (numRead != num_bones)
     {
-        OutputDebugString(_T("Failed to read bones\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read bones\n"));
         return E_FAIL;
     }
 
@@ -393,7 +384,7 @@ HRESULT PMDModel::ReadBones(FILE* fp)
 
     bone_matrices_.resize(bones_.size());
 
-    std::fill(bone_matrices_.begin(), bone_matrices_.end(), DirectX::XMMatrixIdentity());
+    std::ranges::fill(bone_matrices_, DirectX::XMMatrixIdentity());
 
     return S_OK;
 }
@@ -404,7 +395,7 @@ HRESULT PMDModel::ReadIKs(FILE* fp)
     size_t numRead = fread(&num_iks, sizeof(num_iks), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read iks\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
         return E_FAIL;
     }
 
@@ -415,14 +406,14 @@ HRESULT PMDModel::ReadIKs(FILE* fp)
         numRead = fread(&ik.bone_index, sizeof(ik.bone_index), 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
 
         numRead = fread(&ik.target_bone_index, sizeof(ik.target_bone_index), 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
 
@@ -430,7 +421,7 @@ HRESULT PMDModel::ReadIKs(FILE* fp)
         numRead = fread(&chain_length, sizeof(chain_length), 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
 
@@ -439,14 +430,14 @@ HRESULT PMDModel::ReadIKs(FILE* fp)
         numRead = fread(&ik.iterations, sizeof(ik.iterations), 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
 
         numRead = fread(&ik.limit_angle, sizeof(ik.limit_angle), 1, fp);
         if (numRead != 1)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
 
@@ -458,7 +449,7 @@ HRESULT PMDModel::ReadIKs(FILE* fp)
         numRead = fread(ik.chain_bone_indices.data(), sizeof(ik.chain_bone_indices[0]), chain_length, fp);
         if (numRead != chain_length)
         {
-            OutputDebugString(_T("Failed to read iks\n"));
+            OutputDebugString(_T("[PMDModel.cpp] Failed to read iks\n"));
             return E_FAIL;
         }
     }
@@ -477,7 +468,7 @@ HRESULT PMDModel::SetMaterialBuffer()
     HRESULT hr = materialBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create material buffer\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to create material buffer\n"));
         return hr;
     }
 
@@ -490,7 +481,7 @@ HRESULT PMDModel::SetMaterialBuffer()
 
     materialBuffer.UmmapBuffer();
 
-    m_materialHeapId = globalHeap->Allocate(num_materials_ * 5);
+    m_materialSegment = m_modelManager.Allocate(num_materials_ * 5);
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC materialCbvDesc = {};
 
@@ -504,8 +495,8 @@ HRESULT PMDModel::SetMaterialBuffer()
     materialSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     materialSrvDesc.Texture2D.MipLevels = 1;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = globalHeap->GetCPUHandle(m_materialHeapId);
-    auto incSize = globalHeap->GetIncrementSize();
+    D3D12_CPU_DESCRIPTOR_HANDLE materialHandle = m_materialSegment.GetCPUHandle();
+    auto incSize = m_modelManager.GetIncrementSize();
 
     ID3D12Resource* whiteTexture = CreateWhiteTexture();
     ID3D12Resource* blackTexture = CreateBlackTexture();
@@ -585,10 +576,10 @@ HRESULT PMDModel::SetMaterialBuffer()
     range[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     range[1].RegisterSpace = 0;
 
-    globalHeap->SetRootParameter(
-        m_materialHeapId, 
+    m_modelManager.SetRootParameter(
+        m_materialSegment.GetID(),
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-        D3D12_SHADER_VISIBILITY_PIXEL,
+        D3D12_SHADER_VISIBILITY_ALL,
         range,
         2
     );
@@ -602,7 +593,7 @@ HRESULT PMDModel::SetVertexBuffer()
     HRESULT hr = vertex_buffer_.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create vertex buffer\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to create vertex buffer\n"));
         return hr;
     }
 
@@ -623,11 +614,11 @@ HRESULT PMDModel::SetIndexBuffer()
     HRESULT hr = index_buffer_.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create index buffer\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to create index buffer\n"));
         return hr;
     }
 
-    std::copy(indices_.begin(), indices_.end(), index_buffer_.GetMappedBuffer());
+    std::ranges::copy(indices_, index_buffer_.GetMappedBuffer());
 
     index_buffer_.UmmapBuffer();
 
@@ -654,28 +645,28 @@ HRESULT PMDModel::SetTransformBuffer()
         DirectX::XMFLOAT3& pos = node.start_position;
 
         DirectX::XMMATRIX matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0î‘ñ⁄ÇÃÉLÅ[ÉtÉåÅ[ÉÄ
+            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0Áï™ÁõÆ„ÅÆ„Ç≠„Éº„Éï„É¨„Éº„É†
             * DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
         bone_matrices_[node.bone_index] = matrix;
     }
 
-    RecursiveMatrixMultiply(&bone_nodes_table_["ÉZÉìÉ^Å["], worldMatrix);
+    RecursiveMatrixMultiply(&bone_nodes_table_["„Çª„É≥„Çø„Éº"], worldMatrix);
 
     size_t buffer_size = sizeof(DirectX::XMMATRIX) * (1 + bone_matrices_.size());
     matrix_buffer_.SetResourceWidth((buffer_size + 0xff) & ~0xff);
     HRESULT hr = matrix_buffer_.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create matrix buffer\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to create matrix buffer\n"));
         return hr;
     }
 
     matrix_buffer_.GetMappedBuffer()[0] = worldMatrix;
-    std::copy(bone_matrices_.begin(), bone_matrices_.end(), matrix_buffer_.GetMappedBuffer() + 1);
+    std::ranges::copy(bone_matrices_, matrix_buffer_.GetMappedBuffer() + 1);
 
-    m_matrixHeapId = globalHeap->Allocate(1);
+    m_matrixSegment = m_modelManager.Allocate(1);
 
-    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.SetSegment(m_matrixSegment);
     matrix_buffer_.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -686,8 +677,8 @@ HRESULT PMDModel::SetTransformBuffer()
     range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     range->RegisterSpace = 0;
 
-    globalHeap->SetRootParameter(
-        m_matrixHeapId,
+    m_modelManager.SetRootParameter(
+        m_matrixSegment.GetID(),
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
         D3D12_SHADER_VISIBILITY_VERTEX,
         range,
@@ -697,7 +688,7 @@ HRESULT PMDModel::SetTransformBuffer()
     return S_OK;
 }
 
-void PMDModel::RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix)
+void PMDModel::RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix)
 {
     bone_matrices_[node->bone_index] *= parent_matrix;
 
@@ -712,7 +703,7 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
     int ret = fseek(fp, 50, SEEK_SET);
     if (ret != 0)
     {
-        OutputDebugString(_T("Failed to seek file\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to seek file\n"));
         return E_FAIL;
     }
 
@@ -720,7 +711,7 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
     size_t numRead = fread(&num_motion_data, sizeof(num_motion_data), 1, fp);
     if (numRead != 1)
     {
-        OutputDebugString(_T("Failed to read motion data\n"));
+        OutputDebugString(_T("[PMDModel.cpp] Failed to read motion data\n"));
         return E_FAIL;
     }
 
@@ -751,7 +742,7 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
         duration = std::max<unsigned int>(duration, motion.frame_number);
 
         std::string bone_name = motion.bone_name;
-        if (bone_name.find("Ç–Ç¥") != std::string::npos)
+        if (bone_name.find("„Å≤„Åñ") != std::string::npos)
         {
             knee_indices.emplace_back(i);
         }
@@ -759,12 +750,11 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
 
     for (auto& data : motion_data_)
     {
-        std::sort(
-            data.second.begin(), data.second.end(),
-            [](const KeyFrame& a, const KeyFrame& b)
-            {
-                return a.frame_number <= b.frame_number;
-            }
+        std::ranges::sort(data.second,
+                          [](const KeyFrame& a, const KeyFrame& b)
+                          {
+                              return a.frame_number <= b.frame_number;
+                          }
         );
     }
 
@@ -788,7 +778,7 @@ void PMDModel::UpdateMotion()
     OutputDebugStringA(std::to_string(frame_number).c_str());
     OutputDebugStringA("\n");
 
-    std::fill(bone_matrices_.begin(), bone_matrices_.end(), DirectX::XMMatrixIdentity());
+    std::ranges::fill(bone_matrices_, DirectX::XMMatrixIdentity());
 
     for (const auto & motion_data : motion_data_)
     {
@@ -832,7 +822,7 @@ void PMDModel::UpdateMotion()
         bone_matrices_[node.bone_index] = matrix;
     }
 
-    RecursiveMatrixMultiply(&bone_nodes_table_["ÉZÉìÉ^Å["], bone_matrices_[0]);
+    RecursiveMatrixMultiply(&bone_nodes_table_["„Çª„É≥„Çø„Éº"], bone_matrices_[0]);
 }
 
 float PMDModel::GetYFromXBezier(float x, const DirectX::XMFLOAT2& p1, const DirectX::XMFLOAT2& p2, uint8_t n)
@@ -896,8 +886,6 @@ void PMDModel::IKRotate()
 
 void PMDModel::IKCCD(const PMDIK& ik) const
 {
-    constexpr float eps = 0.0005f;
-
     BoneNode* target = bone_nodes_[ik.target_bone_index];
     DirectX::XMVECTOR target_pos = DirectX::XMLoadFloat3(&target->start_position);
 
@@ -921,6 +909,7 @@ void PMDModel::IKCCD(const PMDIK& ik) const
 
     for (int c = 0; c < ik.iterations; ++c)
     {
+        constexpr float eps = 0.0005f;
         if (DirectX::XMVector3Length(DirectX::XMVectorSubtract(end_pos, target_next_pos)).m128_f32[0] <= eps)
         {
             break;
@@ -1051,7 +1040,7 @@ void PMDModel::IKLookAt(const PMDIK& ik)
     bone_matrices_[ik.chain_bone_indices[0]] = GetLookAtMatrix(origin_vec, target_vec, DirectX::XMFLOAT3(0, 1, 0), DirectX::XMFLOAT3(1, 0, 0));
 }
 
-// zé≤ÇÃâÒì]
+// zËª∏„ÅÆÂõûËª¢
 DirectX::XMMATRIX PMDModel::GetLookAtMatrix(
     const DirectX::XMVECTOR& look_at,
     const DirectX::XMFLOAT3& up,

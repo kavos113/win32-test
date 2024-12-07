@@ -13,14 +13,14 @@ HRESULT PMDRenderer::Init()
     HRESULT hr = CompileShaders();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to compile shaders\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to compile shaders\n"));
         return hr;
     }
 
     hr = CreateGraphicsPipeline();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to set graphics pipeline\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to set graphics pipeline\n"));
         return hr;
     }
 
@@ -44,11 +44,11 @@ HRESULT PMDRenderer::CompileShaders()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to compile vertex shader\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to compile vertex shader\n"));
 
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            OutputDebugString(_T("File not found\n"));
+            OutputDebugString(_T("[PMDRenderer.cpp] File not found\n"));
             return E_FAIL;
         }
 
@@ -73,11 +73,11 @@ HRESULT PMDRenderer::CompileShaders()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to compile pixel shader\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to compile pixel shader\n"));
 
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            OutputDebugString(_T("File not found\n"));
+            OutputDebugString(_T("[PMDRenderer.cpp] File not found\n"));
             return E_FAIL;
         }
 
@@ -209,7 +209,7 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
     HRESULT hr = CreateRootSignature();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create root signature\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to create root signature\n"));
         return hr;
     }
 
@@ -221,7 +221,7 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create pipeline state\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to create pipeline state\n"));
         return hr;
     }
 
@@ -235,7 +235,7 @@ HRESULT PMDRenderer::CreateRootSignature()
 
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = globalHeap->GetRootParameters();
+    std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = m_modelManager.GetRootParameters();
 
     rootSignatureDesc.NumParameters = static_cast<UINT>(rootParams.second);
     rootSignatureDesc.pParameters = rootParams.first;
@@ -271,7 +271,7 @@ HRESULT PMDRenderer::CreateRootSignature()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to serialize root signature\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to serialize root signature\n"));
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
@@ -289,7 +289,7 @@ HRESULT PMDRenderer::CreateRootSignature()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create root signature\n"));
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to create root signature\n"));
         return hr;
     }
 

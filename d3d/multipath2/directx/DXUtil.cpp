@@ -16,7 +16,7 @@ ID3D12Resource* LoadTextureFromFile(
     std::map<std::string, ID3D12Resource*>& _resourceTable
 )
 {
-    if (_resourceTable.find(texturePath) != _resourceTable.end())
+    if (_resourceTable.contains(texturePath))
     {
         return _resourceTable[texturePath];
     }
@@ -408,7 +408,7 @@ ID3D12Resource* CreateGrayGradationTexture()
     for (auto it = data.begin(); it != data.end(); it += 4)
     {
         auto col = (0xff << 24) | RGB(c, c, c);
-        std::fill(it, it + 4, col);
+        std::fill_n(it, 4, col);
         c -= 1;
     }
 

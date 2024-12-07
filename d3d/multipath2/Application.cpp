@@ -30,7 +30,7 @@ void Application::Init(RECT wr)
     }
 }
 
-HWND Application::InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)
+HWND Application::InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr) const
 {
     WNDCLASSEX wc = {};
 
@@ -62,7 +62,7 @@ HWND Application::InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr)
     return hwnd;
 }
 
-void Application::Run()
+void Application::Run() const
 {
     ShowWindow(m_hwnd_, SW_SHOW);
 
@@ -84,7 +84,7 @@ void Application::Run()
     }
 }
 
-void Application::Cleanup()
+void Application::Cleanup() const
 {
     UnregisterClass(m_windowClassName_, GetModuleHandle(nullptr));
 }

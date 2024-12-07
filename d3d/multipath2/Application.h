@@ -17,12 +17,12 @@ public:
 
     Application();
 
-    void Run();
+    void Run() const;
     void Init(RECT wr);
-    void Cleanup();
+    void Cleanup() const;
 
 private:
-    HWND InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr);
+    HWND InitWindows(HINSTANCE hInstance, int nCmdShow, RECT wr) const;
 
     const wchar_t* m_windowClassName_ = L"WindowClass1";
     HWND m_hwnd_;

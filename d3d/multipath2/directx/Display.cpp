@@ -4,89 +4,92 @@
 #include <tchar.h>
 
 #include "Util.h"
+#include "descriptor_heap/GlobalDescriptorHeapManager.h"
 #include "resources/DXCommand.h"
 #include "resources/DXDevice.h"
 #include "resources/DXFactory.h"
 
 
-HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+HRESULT Display::Init(DescriptorHeapSegmentManager& model_manager)
 {
-    this->globalHeap = globalHeap;
+    m_basePolyManager = &model_manager;
+    m_rtvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
     HRESULT hr = CreateSwapChain();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create swap chain\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create swap chain\n"));
         return hr;
     }
 
     hr = CreateBackBuffers();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create back buffers\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create back buffers\n"));
         return hr;
     }
 
     hr = CreateRenderResource();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create render resource\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create render resource\n"));
         return hr;
     }
 
     hr = SetRenderTargetView();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to set render target view\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to set render target view\n"));
         return hr;
     }
 
     hr = SetBaseRenderTargetView();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to set render target view\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to set render target view\n"));
         return hr;
     }
 
     hr = CreateShaderResourceView();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create shader resource view\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create shader resource view\n"));
         return hr;
     }
 
     hr = SetDepthStencilView();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to set depth stencil view\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to set depth stencil view\n"));
         return hr;
     }
 
     hr = CreateViewPort();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create view port\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create view port\n"));
         return hr;
     }
 
     hr = CreateBasePolygon();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create base polygon\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create base polygon\n"));
         return hr;
     }
 
     hr = CreateBlurBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create blur buffer\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create blur buffer\n"));
         return hr;
     }
 
     hr = CreateBasePipeline();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create base pipeline\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create base pipeline\n"));
         return hr;
     }
 
@@ -97,25 +100,22 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
     return S_OK;
 }
 
-// base polygon2–‡–Ú + blur(by pso2)‚ðback buffer‚É•`‰æ
 void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
-    D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = globalHeap->GetGPUHandle(m_srvHeapId);
-    srvHandle.ptr += globalHeap->GetIncrementSize();
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(0, srvHandle);
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(1, globalHeap->GetGPUHandle(blur_weight_heap_id_));
+    // base polygon2æžšç›®ã‚’ãƒ†ã‚¯ã‚¹ãƒãƒ£ã¨ã—ã¦ä½¿ã†
+    m_basePolyManager->SetGraphicsRootDescriptorTable(m_baseSRVsSegment.GetID(), 1);
+    m_basePolyManager->SetGraphicsRootDescriptorTable(m_blurWeightSegment.GetID());
 
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState2);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 }
 
-// base polygon1–‡–Ú‚É‘‚«ž‚Þ‚æ‚¤Ý’è
-void Display::SetBaseBegin()
+void Display::SetRenderToBase1Begin()
 {
     Barrier(
         m_renderResource,
@@ -123,8 +123,8 @@ void Display::SetBaseBegin()
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
 
-    auto baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
-    auto dsvHandle = m_dsvHeap.GetCPUHandle();
+    auto baseRtvHandle = m_baseRTVsSegment.GetCPUHandle();
+    auto dsvHandle = m_depthStencilBuffer.GetCPUHandle();
 
     DXCommand::GetCommandList()->OMSetRenderTargets(
         1,
@@ -143,17 +143,17 @@ void Display::Present() const
    HRESULT hr = m_swapChain->Present(1, 0);
    if (FAILED(hr))
    {
-       OutputDebugString(_T("Failed to present\n"));
+       OutputDebugString(_T("[Display.cpp] Failed to present\n"));
    }
 }
 
-void Display::RenderToBase() const
+void Display::SetViewports() const
 {
     DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
 }
 
-void Display::SetBaseEnd()
+void Display::SetRenderToBase1End()
 {
     Barrier(
         m_renderResource,
@@ -162,8 +162,7 @@ void Display::SetBaseEnd()
     );
 }
 
-// base polygon2–‡–Ú‚ÉC1–‡–Ú‚Ìbase polygon + blur(by pso1)‚ð•`‰æ
-void Display::SetPostEffect()
+void Display::RenderToBase2()
 {
     Barrier(
         m_renderResource2,
@@ -171,31 +170,23 @@ void Display::SetPostEffect()
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
 
-    D3D12_CPU_DESCRIPTOR_HANDLE baseRtvHandle = m_baseRtvHeap.GetCPUHandle();
-    baseRtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE baseRtvHandle = m_baseRTVsSegment.GetCPUHandle(1);
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_depthStencilBuffer.GetCPUHandle();
 
     DXCommand::GetCommandList()->OMSetRenderTargets(1, &baseRtvHandle, false, &dsvHandle);
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, m_clearColor, 0, nullptr);
     DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        0,
-        globalHeap->GetGPUHandle(m_srvHeapId)
-    );
-    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-        1,
-        globalHeap->GetGPUHandle(blur_weight_heap_id_)
-    );
+    m_basePolyManager->SetGraphicsRootDescriptorTable(m_baseSRVsSegment.GetID(), 0);
+    m_basePolyManager->SetGraphicsRootDescriptorTable(m_blurWeightSegment.GetID());
 
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 
     Barrier(
@@ -205,8 +196,7 @@ void Display::SetPostEffect()
     );
 }
 
-// back buffer‚É•`‰æ‚·‚é‚æ‚¤Ý’è
-void Display::Clear()
+void Display::SetRenderToBackBuffer()
 {
     UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -216,14 +206,12 @@ void Display::Clear()
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap.GetCPUHandle();
-    rtvHandle.ptr += bbIdx * m_rtvHeap.GetIncrementSize();
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_dsvHeap.GetCPUHandle();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_backBufferSegment.GetCPUHandle(bbIdx);
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_depthStencilBuffer.GetCPUHandle();
 
     DXCommand::GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-    DXCommand::GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    DXCommand::GetCommandList()->ClearRenderTargetView(rtvHandle, m_clearColor, 0, nullptr);
     DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
@@ -255,7 +243,7 @@ void Display::SetHWND(HWND hwnd)
 
 HRESULT Display::CreateSwapChain()
 {
-    DXGI_SWAP_CHAIN_DESC1 desc = {};
+    DXGI_SWAP_CHAIN_DESC1 desc;
 
     desc.Width = wr.right - wr.left;
     desc.Height = wr.bottom - wr.top;
@@ -280,7 +268,7 @@ HRESULT Display::CreateSwapChain()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("failed to create swap chain\n"));
+        OutputDebugString(_T("[Display.cpp] failed to create swap chain\n"));
     }
 
     return hr;
@@ -292,7 +280,7 @@ HRESULT Display::CreateBackBuffers()
     HRESULT hr = m_swapChain->GetDesc(&swapChainDesc);
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to get swap chain description\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to get swap chain description\n"));
         return hr;
     }
 
@@ -303,7 +291,7 @@ HRESULT Display::CreateBackBuffers()
         hr = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&back_buffers_[i]));
         if (FAILED(hr))
         {
-            OutputDebugString(_T("Failed to get buffer from swap chain\n"));
+            OutputDebugString(_T("[Display.cpp] Failed to get buffer from swap chain\n"));
             return hr;
         }
     }
@@ -314,25 +302,11 @@ HRESULT Display::CreateBackBuffers()
 
 HRESULT Display::SetRenderTargetView()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 2;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    rtvHeapDesc.NodeMask = 0;
-
-    HRESULT hr = m_rtvHeap.CreateDescriptorHeap(&rtvHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create RTV descriptor heap\n"));
-        return hr;
-    }
-
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    hr = m_swapChain->GetDesc(&swapChainDesc);
+    HRESULT hr = m_swapChain->GetDesc(&swapChainDesc);
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to get swap chain description\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to get swap chain description\n"));
         return hr;
     }
 
@@ -341,7 +315,8 @@ HRESULT Display::SetRenderTargetView()
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_rtvHeap.GetCPUHandle();
+    m_backBufferSegment = m_rtvManager->Allocate(swapChainDesc.BufferCount);
+
     for (UINT i = 0; i < swapChainDesc.BufferCount; ++i)
     {
         rtvDesc.Format = back_buffers_[i]->GetDesc().Format;
@@ -349,10 +324,8 @@ HRESULT Display::SetRenderTargetView()
         DXDevice::GetDevice()->CreateRenderTargetView(
             back_buffers_[i],
             &rtvDesc,
-            rtvHandle
+            m_backBufferSegment.GetCPUHandle(i)
         );
-
-        rtvHandle.ptr += m_rtvHeap.GetIncrementSize();
     }
 
     return S_OK;
@@ -363,25 +336,10 @@ HRESULT Display::SetDepthStencilView()
     HRESULT hr = m_depthStencilBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create depth buffer\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create depth buffer\n"));
         return hr;
     }
 
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-
-    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.NumDescriptors = 1;
-    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    dsvHeapDesc.NodeMask = 0;
-
-    hr = m_dsvHeap.CreateDescriptorHeap(&dsvHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create DSV descriptor heap\n"));
-        return hr;
-    }
-
-    m_depthStencilBuffer.SetDescriptorHeap(&m_dsvHeap);
     m_depthStencilBuffer.CreateView();
 
     return S_OK;
@@ -416,14 +374,12 @@ HRESULT Display::CreateRenderResource()
     heapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
     heapProp.CreationNodeMask = 0;
 
-    float clearColor[] = { 0.7f, 0.8f, 0.6f, 1.0f };
-
     D3D12_CLEAR_VALUE clearValue = {};
 
     clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     for (int i = 0; i < 4; ++i)
     {
-        clearValue.Color[i] = clearColor[i];
+        clearValue.Color[i] = m_clearColor[i];
     }
 
     HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
@@ -436,7 +392,7 @@ HRESULT Display::CreateRenderResource()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create render resource\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create render resource\n"));
         return hr;
     }
 
@@ -450,7 +406,7 @@ HRESULT Display::CreateRenderResource()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create render resource\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create render resource\n"));
         return hr;
     }
 
@@ -459,38 +415,23 @@ HRESULT Display::CreateRenderResource()
 
 HRESULT Display::SetBaseRenderTargetView()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.NumDescriptors = 2;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    rtvHeapDesc.NodeMask = 0;
-
-    HRESULT hr = m_baseRtvHeap.CreateDescriptorHeap(&rtvHeapDesc);
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("Failed to create RTV descriptor heap\n"));
-        return hr;
-    }
+    m_baseRTVsSegment = m_rtvManager->Allocate(2);
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 
     rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_baseRtvHeap.GetCPUHandle();
-
     DXDevice::GetDevice()->CreateRenderTargetView(
         m_renderResource,
         &rtvDesc,
-        rtvHandle
+        m_baseRTVsSegment.GetCPUHandle(0)
     );
 
-    rtvHandle.ptr += m_baseRtvHeap.GetIncrementSize();
     DXDevice::GetDevice()->CreateRenderTargetView(
         m_renderResource2,
         &rtvDesc,
-        rtvHandle
+        m_baseRTVsSegment.GetCPUHandle(1)
     );
 
     return S_OK;
@@ -498,7 +439,7 @@ HRESULT Display::SetBaseRenderTargetView()
 
 HRESULT Display::CreateShaderResourceView()
 {
-    m_srvHeapId = globalHeap->Allocate(2);
+    m_baseSRVsSegment = m_basePolyManager->Allocate(2);
     
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     
@@ -507,20 +448,30 @@ HRESULT Display::CreateShaderResourceView()
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = globalHeap->GetCPUHandle(m_srvHeapId);
-    
     DXDevice::GetDevice()->CreateShaderResourceView(
         m_renderResource,
         &srvDesc,
-        srvHandle
+        m_baseSRVsSegment.GetCPUHandle(0)
     );
-
-    srvHandle.ptr += globalHeap->GetIncrementSize();
 
     DXDevice::GetDevice()->CreateShaderResourceView(
         m_renderResource2,
         &srvDesc,
-        srvHandle
+        m_baseSRVsSegment.GetCPUHandle(1)
+    );
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range->NumDescriptors = 1;
+    range->BaseShaderRegister = 0;
+
+    m_basePolyManager->SetRootParameter(
+        m_baseSRVsSegment.GetID(),
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_PIXEL,
+        range,
+        1
     );
 
     return S_OK;
@@ -533,21 +484,21 @@ HRESULT Display::CreateBasePolygon()
                                 {{ 1, -1, 0.1}, {1, 1}},
                                 {{ 1,  1, 0.1}, {1, 0}} };
 
-    vertex_buffer_.SetResourceWidth(sizeof(vertices));
-    HRESULT hr = vertex_buffer_.CreateBuffer();
+    m_vertexBuffer.SetResourceWidth(sizeof(vertices));
+    HRESULT hr = m_vertexBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create vertex buffer\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create vertex buffer\n"));
         return hr;
     }
 
-    std::ranges::copy(vertices, vertex_buffer_.GetMappedBuffer());
+    std::ranges::copy(vertices, m_vertexBuffer.GetMappedBuffer());
 
-    vertex_buffer_.UmmapBuffer();
+    m_vertexBuffer.UmmapBuffer();
 
-    vertex_buffer_view_.BufferLocation = vertex_buffer_.GetGPUVirtualAddress();
-    vertex_buffer_view_.SizeInBytes = sizeof(vertices);
-    vertex_buffer_view_.StrideInBytes = sizeof(BaseVertex);
+    m_vertexBufferView.BufferLocation = m_vertexBuffer.GetGPUVirtualAddress();
+    m_vertexBufferView.SizeInBytes = sizeof(vertices);
+    m_vertexBufferView.StrideInBytes = sizeof(BaseVertex);
 
     return S_OK;
 }
@@ -592,11 +543,11 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to compile vertex shader\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to compile vertex shader\n"));
 
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            OutputDebugString(_T("File not found\n"));
+            OutputDebugString(_T("[Display.cpp] File not found\n"));
             return E_FAIL;
         }
 
@@ -621,11 +572,11 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to compile pixel shader\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to compile pixel shader\n"));
 
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
-            OutputDebugString(_T("File not found\n"));
+            OutputDebugString(_T("[Display.cpp] File not found\n"));
             return E_FAIL;
         }
 
@@ -689,25 +640,7 @@ HRESULT Display::CreateBasePipeline()
     psoDesc.SampleDesc.Count = 1;
     psoDesc.SampleDesc.Quality = 0;
 
-    D3D12_DESCRIPTOR_RANGE range[2] = {};
-
-    range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    range[0].NumDescriptors = 1;
-    range[0].BaseShaderRegister = 0;
-    range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    range[1].NumDescriptors = 1;
-    range[1].BaseShaderRegister = 0;
-
-    D3D12_ROOT_PARAMETER rootParameter[2] = {};
-
-    rootParameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameter[0].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameter[0].DescriptorTable.pDescriptorRanges = &range[0];
-    rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-    rootParameter[1].DescriptorTable.NumDescriptorRanges = 1;
-    rootParameter[1].DescriptorTable.pDescriptorRanges = &range[1];
+    std::pair<D3D12_ROOT_PARAMETER*, size_t> params = m_basePolyManager->GetRootParameters();
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 
@@ -724,8 +657,8 @@ HRESULT Display::CreateBasePipeline()
 
     D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 
-    rootSignatureDesc.NumParameters = 2;
-    rootSignatureDesc.pParameters = rootParameter;
+    rootSignatureDesc.NumParameters = params.second;
+    rootSignatureDesc.pParameters = params.first;
     rootSignatureDesc.NumStaticSamplers = 1;
     rootSignatureDesc.pStaticSamplers = &samplerDesc;
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -739,7 +672,7 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to serialize root signature\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to serialize root signature\n"));
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
@@ -757,7 +690,7 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create root signature\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create root signature\n"));
         return E_FAIL;
     }
 
@@ -771,7 +704,7 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create pipeline state\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create pipeline state\n"));
         return E_FAIL;
     }
 
@@ -796,7 +729,7 @@ HRESULT Display::CreateBasePipeline()
     );
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create pipeline state\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create pipeline state\n"));
         return E_FAIL;
     }
 
@@ -807,23 +740,36 @@ HRESULT Display::CreateBlurBuffer()
 {
     std::vector<float> weights = GetGaussianWeights(8, 5.0f);
 
-    blur_weight_buffer_.SetResourceWidth((sizeof(weights[0]) * weights.size() + 0xff) & ~0xff);
-    HRESULT hr = blur_weight_buffer_.CreateBuffer();
+    m_blurWeightBuffer.SetResourceWidth((sizeof(weights[0]) * weights.size() + 0xff) & ~0xff);
+    HRESULT hr = m_blurWeightBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create blur weight buffer\n"));
+        OutputDebugString(_T("[Display.cpp] Failed to create blur weight buffer\n"));
         return hr;
     }
 
-    std::ranges::copy(weights, blur_weight_buffer_.GetMappedBuffer());
+    std::ranges::copy(weights, m_blurWeightBuffer.GetMappedBuffer());
 
-    blur_weight_buffer_.UmmapBuffer();
+    m_blurWeightBuffer.UmmapBuffer();
 
-    blur_weight_heap_id_ = globalHeap->Allocate(1);
+    m_blurWeightSegment = m_basePolyManager->Allocate(1);
 
-    blur_weight_buffer_.SetGlobalHeap(globalHeap);
-    blur_weight_buffer_.SetHeapID(blur_weight_heap_id_);
-    blur_weight_buffer_.CreateView();
+    m_blurWeightBuffer.SetSegment(m_blurWeightSegment);
+    m_blurWeightBuffer.CreateView();
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    range->NumDescriptors = 1;
+    range->BaseShaderRegister = 0;
+
+    m_basePolyManager->SetRootParameter(
+        m_blurWeightSegment.GetID(),
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_ALL,
+        range,
+        1
+    );
 
     return S_OK;
 }

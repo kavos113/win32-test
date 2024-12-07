@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "directx/GlobalDescriptorHeap.h"
+#include "../descriptor_heap/DescriptorHeapSegmentManager.h"
 #include "directx/buffer/ConstantBuffer.h"
 
 
@@ -144,14 +144,14 @@ public:
 
     void PlayAnimation();
 
-    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    PMDModel(const std::string filepath, DescriptorHeapSegmentManager& model_manager)
         : str_model_path_(filepath),
         num_vertices_(0),
         num_indices_(0),
         num_materials_(0),
-        globalHeap(globalHeap),
-        m_materialHeapId(-1),
-        m_matrixHeapId(-1),
+        m_modelManager(model_manager),
+        m_materialSegment(),
+        m_matrixSegment(),
         vertex_buffer_view_({}),
         index_buffer_view_({})
     {
@@ -172,7 +172,7 @@ private:
     HRESULT SetIndexBuffer();
     HRESULT SetTransformBuffer();
 
-    void RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix);
+    void RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix);
 
     void UpdateMotion();
     static float GetYFromXBezier(float x, const DirectX::XMFLOAT2& p1, const DirectX::XMFLOAT2& p2, uint8_t n = 10);
@@ -215,9 +215,10 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
-    GLOBAL_HEAP_ID m_materialHeapId;
-    GLOBAL_HEAP_ID m_matrixHeapId;
+    DescriptorHeapSegmentManager& m_modelManager;
+
+    DescriptorHeapSegment m_materialSegment;
+    DescriptorHeapSegment m_matrixSegment;
 
     constexpr static size_t pmd_vertex_size = 38;
 

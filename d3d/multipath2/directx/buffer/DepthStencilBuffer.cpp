@@ -6,7 +6,7 @@
 
 HRESULT DepthStencilBuffer::CreateBuffer()
 {
-    D3D12_RESOURCE_DESC resource_desc = {};
+    D3D12_RESOURCE_DESC resource_desc;
 
     resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     resource_desc.Width = wr.right - wr.left;
@@ -50,6 +50,8 @@ HRESULT DepthStencilBuffer::CreateBuffer()
 
 void DepthStencilBuffer::CreateView()
 {
+    m_segment = m_dsvManager.Allocate(1);
+
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 
     dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -59,11 +61,6 @@ void DepthStencilBuffer::CreateView()
     DXDevice::GetDevice()->CreateDepthStencilView(
         m_buffer,
         &dsvDesc,
-        m_heap->GetCPUHandle()
+        m_segment.GetCPUHandle()
     );
-}
-
-void DepthStencilBuffer::SetDescriptorHeap(DXDescriptorHeap* heap)
-{
-    m_heap = heap;
 }

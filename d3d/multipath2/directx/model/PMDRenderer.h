@@ -5,7 +5,8 @@
 #include <memory>
 #include <Windows.h>
 
-#include "directx/GlobalDescriptorHeap.h"
+#include "../descriptor_heap/DescriptorHeapSegmentManager.h"
+
 
 class PMDRenderer
 {
@@ -18,13 +19,12 @@ class PMDRenderer
         DirectX::XMFLOAT3 eye;
     };
 public:
-    PMDRenderer(HWND hwnd, RECT wr, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    PMDRenderer(HWND hwnd, RECT wr, const DescriptorHeapSegmentManager& model_manager)
         :
         m_pipelineState(nullptr),
         m_rootSignature(nullptr),
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
-        globalHeap(globalHeap),
         hwnd(hwnd),
         wr(wr)
     {
@@ -45,7 +45,7 @@ private:
     ID3D10Blob* m_vsBlob;
     ID3D10Blob* m_psBlob;
 
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap; 
+    DescriptorHeapSegmentManager m_modelManager;
 
     HWND hwnd;
     RECT wr;

@@ -1,9 +1,8 @@
 #include "DisplayMatrix.h"
 
-HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+HRESULT DisplayMatrix::Init(DescriptorHeapSegmentManager& model_heap)
 {
-    this->globalHeap = globalHeap;
-    m_matrixBuffer.SetGlobalHeap(globalHeap);
+    m_modelHeap = &model_heap;
 
     HRESULT hr = SetMatrixBuffer();
     if (FAILED(hr)) return E_FAIL;
@@ -13,7 +12,7 @@ HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalH
 
 void DisplayMatrix::Render() const
 {
-    globalHeap->SetGraphicsRootDescriptorTable(m_heapId);
+    m_modelHeap->SetGraphicsRootDescriptorTable(m_segment.GetID());
 }
 
 HRESULT DisplayMatrix::SetMatrixBuffer()
@@ -23,9 +22,9 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     DirectX::XMFLOAT3 up(0.0f, 1.0f, 0.0f);
 
     DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(
-        DirectX::XMLoadFloat3(&eye),
-        DirectX::XMLoadFloat3(&target),
-        DirectX::XMLoadFloat3(&up)
+        XMLoadFloat3(&eye),
+        XMLoadFloat3(&target),
+        XMLoadFloat3(&up)
     );
 
     DirectX::XMMATRIX projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(
@@ -39,7 +38,7 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     HRESULT hr = m_matrixBuffer.CreateBuffer();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to create matrix buffer\n"));
+        OutputDebugString(_T("[DisplayMatrix.cpp] Failed to create matrix buffer\n"));
         return hr;
     }
 
@@ -47,9 +46,9 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     m_matrixBuffer.GetMappedBuffer()->proj = projectionMatrix;
     m_matrixBuffer.GetMappedBuffer()->eye = eye;
 
-    m_heapId = globalHeap->Allocate(1);
+    m_segment = m_modelHeap->Allocate(1);
 
-    m_matrixBuffer.SetHeapID(m_heapId);
+    m_matrixBuffer.SetSegment(m_segment);
     m_matrixBuffer.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -60,10 +59,10 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     range->OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     range->RegisterSpace = 0;
 
-    globalHeap->SetRootParameter(
-        m_heapId,
+    m_modelHeap->SetRootParameter(
+        m_segment.GetID(),
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-        D3D12_SHADER_VISIBILITY_ALL,
+        D3D12_SHADER_VISIBILITY_VERTEX,
         range,
         1
     );

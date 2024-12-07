@@ -1,10 +1,10 @@
 #pragma once
 #include <DirectXMath.h>
-#include <memory>
 #include <Windows.h>
 
-#include "GlobalDescriptorHeap.h"
 #include "buffer/ConstantBuffer.h"
+#include "descriptor_heap/DescriptorHeapSegment.h"
+#include "descriptor_heap/DescriptorHeapSegmentManager.h"
 
 class DisplayMatrix
 {
@@ -16,13 +16,14 @@ class DisplayMatrix
     };
 
 public:
-    HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
+    HRESULT Init(DescriptorHeapSegmentManager& model_heap);
     void Render() const;
 
     DisplayMatrix(RECT wr)
         :
-        m_heapId(-1),
-        wr(wr)
+        m_segment(),
+        wr(wr),
+        m_modelHeap(nullptr)
     {
 
     }
@@ -31,10 +32,11 @@ private:
     HRESULT SetMatrixBuffer();
 
     ConstantBuffer<SceneMatrix> m_matrixBuffer;
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
-    GLOBAL_HEAP_ID m_heapId;
 
+    DescriptorHeapSegment m_segment;
     RECT wr;
+
+    DescriptorHeapSegmentManager* m_modelHeap;
 
     float angle = 0.0f;
 };

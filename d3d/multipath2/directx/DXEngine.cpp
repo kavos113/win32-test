@@ -4,8 +4,11 @@
 #include <memory>
 #include <tchar.h>
 
+#include "descriptor_heap/GlobalDescriptorHeapManager.h"
 #include "resources/DXCommand.h"
 #include "resources/DXFence.h"
+#include "resources/DXFactory.h"
+#include "resources/DXDevice.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -22,20 +25,29 @@ HRESULT DXEngine::Init()
     DXCommand::Init();
     DXFence::Init();
 
-    globalHeap = std::make_shared<GlobalDescriptorHeap>();
-    globalHeap->Init();
+    GlobalDescriptorHeapManager::Init();
+
+    DescriptorHeapSegmentManager& base_poly_manager = GlobalDescriptorHeapManager::CreateShaderManager(
+        "base_poly",
+        512,
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     display.SetHWND(hwnd);
-    HRESULT hr = display.Init(globalHeap);
+    HRESULT hr = display.Init(base_poly_manager);
     if (FAILED(hr)) return E_FAIL;
 
-    hr = displayMatrix.Init(globalHeap);
+    DescriptorHeapSegmentManager& model_manager = GlobalDescriptorHeapManager::CreateShaderManager(
+        "model",
+        512,
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    hr = displayMatrix.Init(model_manager);
     if (FAILED(hr)) return E_FAIL;
 
-    model = std::make_unique<PMDModel>("model/初音ミク.pmd", globalHeap);
+    model = std::make_unique<PMDModel>("model/蛻晞浹繝溘け.pmd", model_manager);
     model->Read();
 
-    renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
+    renderer = std::make_unique<PMDRenderer>(hwnd, wr, model_manager);
     hr = renderer->Init();
     if (FAILED(hr)) return E_FAIL;
 
@@ -49,7 +61,7 @@ void DXEngine::Render()
     HRESULT hr = OnRender();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to render\n"));
+        OutputDebugString(_T("[DXEngine.cpp] Failed to render\n"));
         return;
     }
 }
@@ -69,39 +81,38 @@ void DXEngine::EnableDebug()
     }
     debugController->EnableDebugLayer();
     debugController->Release();
-    OutputDebugString(_T("Debug layer is enabled\n"));
+    OutputDebugString(_T("[DXEngine.cpp] Debug layer is enabled\n"));
 }
 
-// 重く見えていたのはWM_PAINTメッセージが呼ばれておらずペイントされていなかっただけだった T_T
 HRESULT DXEngine::OnRender()
 {
     auto start = timeGetTime();
 
-    globalHeap->SetToCommand();
+    GlobalDescriptorHeapManager::SetToCommand();
 
-    display.SetBaseBegin();
+    display.SetRenderToBase1Begin();
 
     model->UpdateAnimation();
 
     renderer->SetPipelineState();
     renderer->SetRootSignature();
     displayMatrix.Render();
-    display.RenderToBase();
+    display.SetViewports();
     model->SetIA();
     model->Render();
 
-    display.SetBaseEnd();
+    display.SetRenderToBase1End();
 
-    display.SetPostEffect();
+    display.RenderToBase2();
 
-    display.Clear();
+    display.SetRenderToBackBuffer();
     display.RenderToBackBuffer();
     display.EndRender();
 
     HRESULT hr = DXCommand::ExecuteCommands();
     if (FAILED(hr))
     {
-        OutputDebugString(_T("Failed to execute commands\n"));
+        OutputDebugString(_T("[DXEngine.cpp] Failed to execute commands\n"));
         return hr;
     }
 
@@ -111,7 +122,7 @@ HRESULT DXEngine::OnRender()
     auto elapsed = end - start;
     OutputDebugString(_T("Elapsed time: "));
     OutputDebugString(std::to_wstring(elapsed).c_str());
-    OutputDebugString(_T("ms\n"));
+    OutputDebugString(_T("[DXEngine.cpp] ms\n"));
     
     return S_OK;
 }

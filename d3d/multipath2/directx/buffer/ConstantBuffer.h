@@ -2,10 +2,10 @@
 #include <memory>
 
 #include "DXBuffer.h"
-#include "directx/GlobalDescriptorHeap.h"
+#include "../descriptor_heap/DescriptorHeapSegment.h"
 #include "directx/resources/DXDevice.h"
 
-// vertexbuffer, indexbuffer ‚È‚Ç‚ÌƒTƒuƒNƒ‰ƒX‚ğì‚Á‚Ä‚à‚¢‚¢‚©‚à?
+// vertexbuffer, indexbuffer ãªã©ã®ã‚µãƒ–ã‚¯ãƒ©ã‚¹ã‚’ä½œã£ã¦ã‚‚ã„ã„ã‹ã‚‚?
 template <typename T>
 class ConstantBuffer :
     public DXBuffer
@@ -27,21 +27,16 @@ public:
         return m_buffer->GetGPUVirtualAddress();
     }
 
-    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    void SetSegment(DescriptorHeapSegment& segment)
     {
-        this->globalHeap = globalHeap;
-    }
-
-    void SetHeapID(GLOBAL_HEAP_ID id)
-    {
-        heap_id_ = id;
+        m_segment = std::move(segment);
     }
 
     ConstantBuffer()
         :
         mapped_buffer_(nullptr),
         resource_width_(sizeof(T)),
-        heap_id_(-1)
+        m_segment()
     {
         
     }
@@ -102,7 +97,7 @@ public:
 
         DXDevice::GetDevice()->CreateConstantBufferView(
             &cbv_desc,
-            globalHeap->GetCPUHandle(heap_id_)
+            m_segment.GetCPUHandle()
         );
     }
 
@@ -111,11 +106,16 @@ public:
         m_buffer->Unmap(0, nullptr);
     }
 
+    GLOBAL_HEAP_ID GetSegmentID() const
+    {
+        return m_segment.GetID();
+    }
+
 private:
     T* mapped_buffer_;
 
     UINT64 resource_width_;
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
-    GLOBAL_HEAP_ID heap_id_;
+
+    DescriptorHeapSegment m_segment;
 };
 
