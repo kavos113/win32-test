@@ -14,10 +14,11 @@ public:
 
     DepthStencilBuffer(RECT wr)
         :
-        m_dsvManager(GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV)),
+        m_dsvManager(),
         m_segment(),
         wr(wr)
     {
+        m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const
@@ -26,7 +27,7 @@ public:
     }
 
 private:
-    DescriptorHeapSegmentManager& m_dsvManager;
+    DescriptorHeapSegmentManager* m_dsvManager;
     DescriptorHeapSegment m_segment;
 
     RECT wr;

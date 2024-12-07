@@ -9,11 +9,29 @@ ide: QDNET
 
 #Specify inspection profile for code analysis
 profile:
-  name: empty
-include:
+  name: qodana.recommended
+
+exclude:
   - name: All
     paths:
-      - multipath2
+      - animation
+      - hellod3d
+      - ik
+      - iktest
+      - material
+      - multipath
+      - pmd
+      - pmd2
+      - Polygon
+      - posing
+      - posing2
+      - refactor
+      - refactor2
+      - refactor3
+      - shadow
+      - shadowmap
+      - texture
+      - transform
 
 #Enable inspections
 #include:

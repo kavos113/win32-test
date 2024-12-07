@@ -6,7 +6,7 @@
 
 void ShaderGlobalDescriptorHeap::Init(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
-    D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+    D3D12_DESCRIPTOR_HEAP_DESC desc;
 
     desc.Type = type;
     desc.NodeMask = 0;

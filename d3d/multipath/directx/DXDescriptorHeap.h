@@ -6,7 +6,7 @@
 class DXDescriptorHeap
 {
 public:
-    HRESULT CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_DESC* desc);
+    HRESULT CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC* desc);
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const;
     D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const;
     UINT GetIncrementSize() const;

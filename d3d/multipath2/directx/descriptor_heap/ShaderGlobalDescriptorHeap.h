@@ -4,13 +4,13 @@
 
 #include "DescriptorHeapSegmentManager.h"
 #include "GlobalDescriptorHeap.h"
-#include "../DXDescriptorHeap.h"
 
 class ShaderGlobalDescriptorHeap : public GlobalDescriptorHeap
 {
 public:
     void Init(D3D12_DESCRIPTOR_HEAP_TYPE type) override;
     ShaderGlobalDescriptorHeap();
+    ~ShaderGlobalDescriptorHeap() override = default;
 
     DescriptorHeapSegmentManager& GetHeapManager(const std::string &name);
     void CreateManager(const std::string &name, unsigned int size);

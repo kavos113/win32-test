@@ -43,7 +43,7 @@ public:
 
     HRESULT CreateBuffer() override
     {
-        D3D12_HEAP_PROPERTIES heap_properties = {};
+        D3D12_HEAP_PROPERTIES heap_properties;
 
         heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;
         heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -90,7 +90,7 @@ public:
 
     void CreateView() override
     {
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc = {};
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc;
 
         cbv_desc.BufferLocation = m_buffer->GetGPUVirtualAddress();
         cbv_desc.SizeInBytes = static_cast<UINT>(m_buffer->GetDesc().Width);

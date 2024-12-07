@@ -159,7 +159,7 @@ ID3D12Resource* LoadTextureFromFile(
     }
 
     uint8_t* mapForImage = nullptr;
-    hr = uploadBuffer->Map(0, nullptr, (void**)&mapForImage);
+    hr = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapForImage));
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to map upload buffer\n"));
@@ -250,13 +250,13 @@ ID3D12Resource* LoadTextureFromFile(
 
 ID3D12Resource* CreateWhiteTexture()
 {
-    D3D12_HEAP_PROPERTIES heapProperties = {};
+    D3D12_HEAP_PROPERTIES heap_properties;
 
-    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-    heapProperties.CreationNodeMask = 0;
-    heapProperties.VisibleNodeMask = 0;
+    heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;
+    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    heap_properties.CreationNodeMask = 0;
+    heap_properties.VisibleNodeMask = 0;
 
     D3D12_RESOURCE_DESC resourceDesc = {};
 
@@ -274,7 +274,7 @@ ID3D12Resource* CreateWhiteTexture()
     ID3D12Resource* texture = nullptr;
 
     HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heapProperties,
+        &heap_properties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -308,13 +308,13 @@ ID3D12Resource* CreateWhiteTexture()
 
 ID3D12Resource* CreateBlackTexture()
 {
-    D3D12_HEAP_PROPERTIES heapProperties = {};
+    D3D12_HEAP_PROPERTIES heap_properties;
 
-    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-    heapProperties.CreationNodeMask = 0;
-    heapProperties.VisibleNodeMask = 0;
+    heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;
+    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    heap_properties.CreationNodeMask = 0;
+    heap_properties.VisibleNodeMask = 0;
 
     D3D12_RESOURCE_DESC resourceDesc = {};
 
@@ -332,7 +332,7 @@ ID3D12Resource* CreateBlackTexture()
     ID3D12Resource* texture = nullptr;
 
     HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heapProperties,
+        &heap_properties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
@@ -366,13 +366,13 @@ ID3D12Resource* CreateBlackTexture()
 
 ID3D12Resource* CreateGrayGradationTexture()
 {
-    D3D12_HEAP_PROPERTIES heapProperties = {};
+    D3D12_HEAP_PROPERTIES heap_properties;
 
-    heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-    heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-    heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-    heapProperties.CreationNodeMask = 0;
-    heapProperties.VisibleNodeMask = 0;
+    heap_properties.Type = D3D12_HEAP_TYPE_CUSTOM;
+    heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+    heap_properties.CreationNodeMask = 0;
+    heap_properties.VisibleNodeMask = 0;
 
     D3D12_RESOURCE_DESC resourceDesc = {};
 
@@ -390,7 +390,7 @@ ID3D12Resource* CreateGrayGradationTexture()
     ID3D12Resource* texture = nullptr;
 
     HRESULT hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heapProperties,
+        &heap_properties,
         D3D12_HEAP_FLAG_NONE,
         &resourceDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,

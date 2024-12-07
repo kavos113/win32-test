@@ -98,14 +98,14 @@ void DescriptorHeapSegmentManager::SetRootParameter(
     const D3D12_DESCRIPTOR_RANGE* descriptor_ranges,
     const int num_descriptor_ranges)
 {
-    D3D12_ROOT_PARAMETER root_parameter = {};
+    D3D12_ROOT_PARAMETER root_parameter;
 
     root_parameter.ParameterType = type;
     root_parameter.ShaderVisibility = visibility;
     root_parameter.DescriptorTable.NumDescriptorRanges = num_descriptor_ranges;
     root_parameter.DescriptorTable.pDescriptorRanges = descriptor_ranges;
 
-    if (m_rootParameters.size() <= id)
+    if (static_cast<GLOBAL_HEAP_ID>(m_rootParameters.size()) <= id)
     {
         m_rootParameters.resize(id + 1);
     }

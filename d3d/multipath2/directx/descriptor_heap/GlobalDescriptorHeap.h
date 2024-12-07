@@ -9,6 +9,7 @@ class GlobalDescriptorHeap
 public:
     virtual void Init(D3D12_DESCRIPTOR_HEAP_TYPE type);
     GlobalDescriptorHeap();
+    virtual ~GlobalDescriptorHeap() = default;
 
     DescriptorHeapSegmentManager& GetHeapManager() { return m_heapManager; }
 

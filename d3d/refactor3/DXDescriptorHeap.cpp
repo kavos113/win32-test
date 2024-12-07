@@ -3,7 +3,7 @@
 #include "DXCommand.h"
 #include "DXDevice.h"
 
-HRESULT DXDescriptorHeap::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_DESC* desc)
+HRESULT DXDescriptorHeap::CreateDescriptorHeap(const D3D12_DESCRIPTOR_HEAP_DESC* desc)
 {
     HRESULT hr = DXDevice::GetDevice()->CreateDescriptorHeap(
         desc, 

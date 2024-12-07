@@ -16,7 +16,9 @@ void Application::Init(RECT wr)
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr))
     {
-        exit(1);
+        MessageBox(nullptr, _T("Failed to initialize COM"), _T("Error"), MB_OK);
+        OutputDebugString(_T("Failed to initialize COM\n"));
+        return;
     }
 
     HWND hwnd = InitWindows(GetModuleHandle(nullptr), SW_SHOW, wr);
@@ -26,7 +28,8 @@ void Application::Init(RECT wr)
     hr = m_dxProcess_->Init();
     if (FAILED(hr))
     {
-        exit(1);
+        MessageBox(nullptr, _T("Failed to initialize DXEngine"), _T("Error"), MB_OK);
+        OutputDebugString(_T("Failed to initialize DXEngine\n"));
     }
 }
 

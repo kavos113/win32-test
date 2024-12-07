@@ -6,9 +6,8 @@ class Application
 public:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        switch (uMsg)
+        if (uMsg == WM_DESTROY)
         {
-        case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
         }

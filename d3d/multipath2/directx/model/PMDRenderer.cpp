@@ -231,14 +231,14 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
 HRESULT PMDRenderer::CreateRootSignature()
 {
     ID3DBlob* errorBlob = nullptr;
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+    D3D12_ROOT_SIGNATURE_DESC root_signature_desc;
 
-    rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
     std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = m_modelManager.GetRootParameters();
 
-    rootSignatureDesc.NumParameters = static_cast<UINT>(rootParams.second);
-    rootSignatureDesc.pParameters = rootParams.first;
+    root_signature_desc.NumParameters = static_cast<UINT>(rootParams.second);
+    root_signature_desc.pParameters = rootParams.first;
 
     D3D12_STATIC_SAMPLER_DESC samplerDesc[2] = {};
 
@@ -258,13 +258,13 @@ HRESULT PMDRenderer::CreateRootSignature()
     samplerDesc[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     samplerDesc[1].ShaderRegister = 1;
 
-    rootSignatureDesc.NumStaticSamplers = 2;
-    rootSignatureDesc.pStaticSamplers = samplerDesc;
+    root_signature_desc.NumStaticSamplers = 2;
+    root_signature_desc.pStaticSamplers = samplerDesc;
 
     ID3DBlob* signatureBlob = nullptr;
 
     HRESULT hr = D3D12SerializeRootSignature(
-        &rootSignatureDesc,
+        &root_signature_desc,
         D3D_ROOT_SIGNATURE_VERSION_1_0,
         &signatureBlob,
         &errorBlob

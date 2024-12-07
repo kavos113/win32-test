@@ -2,11 +2,9 @@
 
 #include <d3d12.h>
 #include <DirectXMath.h>
-#include <memory>
 #include <Windows.h>
 
-#include "../descriptor_heap/DescriptorHeapSegmentManager.h"
-
+#include "directx/descriptor_heap/DescriptorHeapSegmentManager.h"
 
 class PMDRenderer
 {
@@ -25,9 +23,9 @@ public:
         m_rootSignature(nullptr),
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
+        m_modelManager(model_manager),
         hwnd(hwnd),
-        wr(wr),
-        m_modelManager(model_manager)
+        wr(wr)
     {
     }
 

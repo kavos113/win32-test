@@ -144,7 +144,7 @@ public:
 
     void PlayAnimation();
 
-    PMDModel(const std::string filepath, DescriptorHeapSegmentManager& model_manager)
+    PMDModel(const std::string& filepath, DescriptorHeapSegmentManager& model_manager)
         : str_model_path_(filepath),
         num_vertices_(0),
         num_indices_(0),

@@ -38,7 +38,7 @@ std::wstring GetWideString(const std::string& str)
         num1
     );
 
-    assert(wstr.size() == num1);
+    assert(wstr.size() == static_cast<size_t>(num1));
 
     return wstr;
 }
