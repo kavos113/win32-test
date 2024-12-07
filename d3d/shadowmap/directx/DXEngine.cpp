@@ -22,7 +22,7 @@ HRESULT DXEngine::Init()
     DXCommand::Init();
     DXFence::Init();
 
-    globalHeap = std::make_shared<GlobalDescriptorHeap>();
+    globalHeap = std::make_shared<GlobalDescriptorHeap1>();
     globalHeap->Init();
 
     display.SetHWND(hwnd);
@@ -98,7 +98,7 @@ HRESULT DXEngine::OnRender()
     display.SetViewport();
     model->Render(false);
 
-    display.SetBaseEnd();
+    display.SetRenderToBase1End();
 
     display.SetRenderToBackBuffer();
     display.RenderToBackBuffer();

@@ -107,7 +107,7 @@ void PMDModel::Render() const
     for (auto& m : materials_)
     {
         DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            m_materialHeapId, // Ç±ÇÍÇÕrootParameterÇÃ1î‘ñ⁄ÇégópÇµÇƒÇ¢ÇÈÇ±Ç∆Çï\Ç∑
+            m_materialHeapId, // ÔøΩÔøΩÔøΩÔøΩÔøΩrootParameterÔøΩÔøΩ1ÔøΩ‘ñ⁄ÇÔøΩÔøΩgÔøΩpÔøΩÔøΩÔøΩƒÇÔøΩÔøΩÈÇ±ÔøΩ∆ÇÔøΩ\ÔøΩÔøΩ
             materialDescHandle
         );
 
@@ -654,12 +654,12 @@ HRESULT PMDModel::SetTransformBuffer()
         DirectX::XMFLOAT3& pos = node.start_position;
 
         DirectX::XMMATRIX matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0î‘ñ⁄ÇÃÉLÅ[ÉtÉåÅ[ÉÄ
+            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0ÔøΩ‘ñ⁄ÇÃÉLÔøΩ[ÔøΩtÔøΩÔøΩÔøΩ[ÔøΩÔøΩ
             * DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
         bone_matrices_[node.bone_index] = matrix;
     }
 
-    RecursiveMatrixMultiply(&bone_nodes_table_["ÉZÉìÉ^Å["], worldMatrix);
+    RecursiveMatrixMultiply(&bone_nodes_table_["ÔøΩZÔøΩÔøΩÔøΩ^ÔøΩ["], worldMatrix);
 
     size_t buffer_size = sizeof(DirectX::XMMATRIX) * (1 + bone_matrices_.size());
     matrix_buffer_.SetResourceWidth((buffer_size + 0xff) & ~0xff);
@@ -675,7 +675,7 @@ HRESULT PMDModel::SetTransformBuffer()
 
     m_matrixHeapId = globalHeap->Allocate(1);
 
-    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.SetSegment(m_matrixHeapId);
     matrix_buffer_.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -697,7 +697,7 @@ HRESULT PMDModel::SetTransformBuffer()
     return S_OK;
 }
 
-void PMDModel::RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix)
+void PMDModel::RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix)
 {
     bone_matrices_[node->bone_index] *= parent_matrix;
 
@@ -751,7 +751,7 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
         duration = std::max<unsigned int>(duration, motion.frame_number);
 
         std::string bone_name = motion.bone_name;
-        if (bone_name.find("Ç–Ç¥") != std::string::npos)
+        if (bone_name.find("ÔøΩ–ÇÔøΩ") != std::string::npos)
         {
             knee_indices.emplace_back(i);
         }
@@ -832,7 +832,7 @@ void PMDModel::UpdateMotion()
         bone_matrices_[node.bone_index] = matrix;
     }
 
-    RecursiveMatrixMultiply(&bone_nodes_table_["ÉZÉìÉ^Å["], bone_matrices_[0]);
+    RecursiveMatrixMultiply(&bone_nodes_table_["ÔøΩZÔøΩÔøΩÔøΩ^ÔøΩ["], bone_matrices_[0]);
 }
 
 float PMDModel::GetYFromXBezier(float x, const DirectX::XMFLOAT2& p1, const DirectX::XMFLOAT2& p2, uint8_t n)
@@ -1051,7 +1051,7 @@ void PMDModel::IKLookAt(const PMDIK& ik)
     bone_matrices_[ik.chain_bone_indices[0]] = GetLookAtMatrix(origin_vec, target_vec, DirectX::XMFLOAT3(0, 1, 0), DirectX::XMFLOAT3(1, 0, 0));
 }
 
-// zé≤ÇÃâÒì]
+// zÔøΩÔøΩÔøΩÃâÔøΩ]
 DirectX::XMMATRIX PMDModel::GetLookAtMatrix(
     const DirectX::XMVECTOR& look_at,
     const DirectX::XMFLOAT3& up,

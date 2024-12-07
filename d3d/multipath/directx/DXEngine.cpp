@@ -22,7 +22,7 @@ HRESULT DXEngine::Init()
     DXCommand::Init();
     DXFence::Init();
 
-    globalHeap = std::make_shared<GlobalDescriptorHeap>();
+    globalHeap = std::make_shared<GlobalDescriptorHeap1>();
     globalHeap->Init();
 
     display.SetHWND(hwnd);
@@ -32,7 +32,7 @@ HRESULT DXEngine::Init()
     hr = displayMatrix.Init(globalHeap);
     if (FAILED(hr)) return E_FAIL;
 
-    model = std::make_unique<PMDModel>("model/èââπÉ~ÉN.pmd", globalHeap);
+    model = std::make_unique<PMDModel>("model/ÔøΩÔøΩÔøΩÔøΩÔøΩ~ÔøΩN.pmd", globalHeap);
     model->Read();
 
     renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
@@ -72,29 +72,29 @@ void DXEngine::EnableDebug()
     OutputDebugString(_T("Debug layer is enabled\n"));
 }
 
-// èdÇ≠å©Ç¶ÇƒÇ¢ÇΩÇÃÇÕWM_PAINTÉÅÉbÉZÅ[ÉWÇ™åƒÇŒÇÍÇƒÇ®ÇÁÇ∏ÉyÉCÉìÉgÇ≥ÇÍÇƒÇ¢Ç»Ç©Ç¡ÇΩÇæÇØÇæÇ¡ÇΩ T_T
+// ÔøΩdÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩƒÇÔøΩÔøΩÔøΩÔøΩÃÇÔøΩWM_PAINTÔøΩÔøΩÔøΩbÔøΩZÔøΩ[ÔøΩWÔøΩÔøΩÔøΩƒÇŒÇÔøΩƒÇÔøΩÔøΩÁÇ∏ÔøΩyÔøΩCÔøΩÔøΩÔøΩgÔøΩÔøΩÔøΩÔøΩƒÇÔøΩÔøΩ»ÇÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ T_T
 HRESULT DXEngine::OnRender()
 {
     auto start = timeGetTime();
 
     globalHeap->SetToCommand();
 
-    display.SetBaseBegin();
+    display.SetRenderToBase1Begin();
 
     model->UpdateAnimation();
 
     renderer->SetPipelineState();
     renderer->SetRootSignature();
     displayMatrix.Render();
-    display.RenderToBase();
+    display.SetViewports();
     model->SetIA();
     model->Render();
 
-    display.SetBaseEnd();
+    display.SetRenderToBase1End();
 
-    display.SetPostEffect();
+    display.RenderToBase2();
 
-    display.Clear();
+    display.SetRenderToBackBuffer();
     display.RenderToBackBuffer();
     display.EndRender();
 

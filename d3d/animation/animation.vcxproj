@@ -138,7 +138,7 @@
     <ClInclude Include="directx\DXDescriptorHeap.h" />
     <ClInclude Include="directx\DXEngine.h" />
     <ClInclude Include="directx\DXUtil.h" />
-    <ClInclude Include="directx\GlobalDescriptorHeap.h" />
+    <ClInclude Include="directx\GlobalDescriptorHeap1.h" />
     <ClInclude Include="directx\model\PMDModel.h" />
     <ClInclude Include="directx\model\PMDRenderer.h" />
     <ClInclude Include="directx\resources\DXCommand.h" />
@@ -157,7 +157,7 @@
     <ClCompile Include="directx\DXDescriptorHeap.cpp" />
     <ClCompile Include="directx\DXEngine.cpp" />
     <ClCompile Include="directx\DXUtil.cpp" />
-    <ClCompile Include="directx\GlobalDescriptorHeap.cpp" />
+    <ClCompile Include="directx\GlobalDescriptorHeap1.cpp" />
     <ClCompile Include="directx\model\PMDModel.cpp" />
     <ClCompile Include="directx\model\PMDRenderer.cpp" />
     <ClCompile Include="directx\resources\DXCommand.cpp" />

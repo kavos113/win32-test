@@ -54,7 +54,7 @@ HRESULT PMDRenderer::CompileShaders()
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
 
         OutputDebugStringA(errStr.c_str());
         return E_FAIL;
@@ -83,7 +83,7 @@ HRESULT PMDRenderer::CompileShaders()
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
 
         OutputDebugStringA(errStr.c_str());
         return E_FAIL;
@@ -231,7 +231,7 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
 HRESULT PMDRenderer::CreateRootSignature()
 {
     ID3DBlob* errorBlob = nullptr;
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 
     rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -275,7 +275,7 @@ HRESULT PMDRenderer::CreateRootSignature()
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
 
         OutputDebugStringA(errStr.c_str());
         return hr;

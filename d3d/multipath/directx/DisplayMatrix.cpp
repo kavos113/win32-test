@@ -1,6 +1,6 @@
 #include "DisplayMatrix.h"
 
-HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+HRESULT DisplayMatrix::Init(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
 {
     this->globalHeap = globalHeap;
     m_matrixBuffer.SetGlobalHeap(globalHeap);
@@ -49,7 +49,7 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
 
     m_heapId = globalHeap->Allocate(1);
 
-    m_matrixBuffer.SetHeapID(m_heapId);
+    m_matrixBuffer.SetSegment(m_heapId);
     m_matrixBuffer.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();

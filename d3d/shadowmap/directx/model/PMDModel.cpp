@@ -678,7 +678,7 @@ HRESULT PMDModel::SetTransformBuffer()
 
     m_matrixHeapId = globalHeap->Allocate(1);
 
-    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.SetSegment(m_matrixHeapId);
     matrix_buffer_.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -700,7 +700,7 @@ HRESULT PMDModel::SetTransformBuffer()
     return S_OK;
 }
 
-void PMDModel::RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix)
+void PMDModel::RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix)
 {
     bone_matrices_[node->bone_index] *= parent_matrix;
 

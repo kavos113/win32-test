@@ -5,8 +5,8 @@
 
 typedef int GLOBAL_HEAP_ID;
 
-// GlobalDescriptorHeap for CBV_SRV_UAV Engine‚É‚Á‚Ä‚à‚ç‚Á‚½•û‚ª‚¢‚¢‚©‚ÈH
-class GlobalDescriptorHeap
+// GlobalDescriptorHeap for CBV_SRV_UAV Engineï¿½Éï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÈH
+class GlobalDescriptorHeap1
 {
 public:
     void Init();
@@ -31,10 +31,10 @@ public:
 private:
     DXDescriptorHeap m_heap_;
 
-    GLOBAL_HEAP_ID last_id_ = 0; // Ÿ‚ÉŠ„‚è“–‚Ä‚éID
-    std::vector<unsigned int> sizes_; // ŠeID‚ÉŠ„‚è“–‚Ä‚ç‚ê‚½ƒTƒCƒY sizes_[id]‚Å‚í‚©‚é
-    std::vector<unsigned int> offsets_; // ŠeID‚ÉŠ„‚è“–‚Ä‚ç‚ê‚½ƒIƒtƒZƒbƒg offsets_[id]‚Å‚í‚©‚é
-    std::vector<D3D12_ROOT_PARAMETER> root_parameters_; // ŠeID‚ÉŠ„‚è“–‚Ä‚ç‚ê‚½RootParameter root_parameter‚Ì”‚ª­‚È‚¢‚¤‚¿‚Í‚±‚ê‚Å‚às‚¯‚é
+    GLOBAL_HEAP_ID last_id_ = 0; // ï¿½ï¿½ï¿½ÉŠï¿½ï¿½è“–ï¿½Ä‚ï¿½ID
+    std::vector<unsigned int> sizes_; // ï¿½eIDï¿½ÉŠï¿½ï¿½è“–ï¿½Ä‚ï¿½ê‚½ï¿½Tï¿½Cï¿½Y sizes_[id]ï¿½Å‚í‚©ï¿½ï¿½
+    std::vector<unsigned int> offsets_; // ï¿½eIDï¿½ÉŠï¿½ï¿½è“–ï¿½Ä‚ï¿½ê‚½ï¿½Iï¿½tï¿½Zï¿½bï¿½g offsets_[id]ï¿½Å‚í‚©ï¿½ï¿½
+    std::vector<D3D12_ROOT_PARAMETER> root_parameters_; // ï¿½eIDï¿½ÉŠï¿½ï¿½è“–ï¿½Ä‚ï¿½ê‚½RootParameter root_parameterï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½sï¿½ï¿½ï¿½ï¿½
 
     constexpr static unsigned int kMaxDescriptorHeapSize = 65536;
 };

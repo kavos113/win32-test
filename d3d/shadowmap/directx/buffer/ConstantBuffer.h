@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "DXBuffer.h"
-#include "directx/GlobalDescriptorHeap.h"
+#include "directx/GlobalDescriptorHeap1.h"
 #include "directx/resources/DXDevice.h"
 
 // vertexbuffer, indexbuffer などのサブクラスを作ってもいいかも?
@@ -27,12 +27,12 @@ public:
         return m_buffer->GetGPUVirtualAddress();
     }
 
-    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
     {
         this->globalHeap = globalHeap;
     }
 
-    void SetHeapID(GLOBAL_HEAP_ID id)
+    void SetSegment(GLOBAL_HEAP_ID id)
     {
         heap_id_ = id;
     }
@@ -115,7 +115,7 @@ private:
     T* mapped_buffer_;
 
     UINT64 resource_width_;
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
     GLOBAL_HEAP_ID heap_id_;
 };
 

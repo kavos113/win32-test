@@ -67,7 +67,7 @@ void PMDModel::Render()
     for (auto& m : materials_)
     {
         DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            m_materialHeapId, // ‚±‚ê‚ÍrootParameter‚Ì1”Ô–Ú‚ðŽg—p‚µ‚Ä‚¢‚é‚±‚Æ‚ð•\‚·
+            m_materialHeapId, // ï¿½ï¿½ï¿½ï¿½ï¿½rootParameterï¿½ï¿½1ï¿½Ô–Ú‚ï¿½ï¿½gï¿½pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚±ï¿½Æ‚ï¿½\ï¿½ï¿½
             materialDescHandle
         );
 
@@ -487,7 +487,7 @@ HRESULT PMDModel::SetTransformBuffer()
 
     m_matrixHeapId = globalHeap->Allocate(1);
 
-    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.SetSegment(m_matrixHeapId);
     matrix_buffer_.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();

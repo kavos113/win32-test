@@ -4,7 +4,7 @@
 #include <Windows.h>
 
 #include "ConstantBuffer.h"
-#include "GlobalDescriptorHeap.h"
+#include "GlobalDescriptorHeap1.h"
 
 class DisplayMatrix
 {
@@ -16,7 +16,7 @@ class DisplayMatrix
     };
 
 public:
-    HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
+    HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap);
     void Render();
 
     DisplayMatrix(RECT wr)
@@ -31,7 +31,7 @@ private:
     HRESULT SetMatrixBuffer();
 
     ConstantBuffer<SceneMatrix> m_matrixBuffer;
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
     GLOBAL_HEAP_ID m_heapId;
 
     RECT wr;

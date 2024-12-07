@@ -1,11 +1,11 @@
-#include "GlobalDescriptorHeap.h"
+#include "GlobalDescriptorHeap1.h"
 
 #include <tchar.h>
 
 #include "resources/DXCommand.h"
 
 
-void GlobalDescriptorHeap::Init()
+void GlobalDescriptorHeap1::Init()
 {
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 
@@ -21,7 +21,7 @@ void GlobalDescriptorHeap::Init()
     }
 }
 
-GLOBAL_HEAP_ID GlobalDescriptorHeap::Allocate(unsigned int num_descriptor)
+GLOBAL_HEAP_ID GlobalDescriptorHeap1::Allocate(unsigned int num_descriptor)
 {
     sizes_.push_back(num_descriptor);
 
@@ -40,7 +40,7 @@ GLOBAL_HEAP_ID GlobalDescriptorHeap::Allocate(unsigned int num_descriptor)
     return id;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap::GetCPUHandle(GLOBAL_HEAP_ID id) const
+D3D12_CPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap1::GetCPUHandle(GLOBAL_HEAP_ID id) const
 {
     D3D12_CPU_DESCRIPTOR_HANDLE handle = m_heap_.GetCPUHandle();
     handle.ptr += static_cast<UINT64>(offsets_[id]) * m_heap_.GetIncrementSize(); 
@@ -48,7 +48,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap::GetCPUHandle(GLOBAL_HEAP_ID id
     return handle;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap::GetGPUHandle(GLOBAL_HEAP_ID id) const
+D3D12_GPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap1::GetGPUHandle(GLOBAL_HEAP_ID id) const
 {
     D3D12_GPU_DESCRIPTOR_HANDLE handle = m_heap_.GetGPUHandle();
     handle.ptr += static_cast<UINT64>(offsets_[id]) * m_heap_.GetIncrementSize();
@@ -56,17 +56,17 @@ D3D12_GPU_DESCRIPTOR_HANDLE GlobalDescriptorHeap::GetGPUHandle(GLOBAL_HEAP_ID id
     return handle;
 }
 
-unsigned int GlobalDescriptorHeap::GetSize(GLOBAL_HEAP_ID id) const
+unsigned int GlobalDescriptorHeap1::GetSize(GLOBAL_HEAP_ID id) const
 {
     return sizes_[id];
 }
 
-UINT GlobalDescriptorHeap::GetIncrementSize() const
+UINT GlobalDescriptorHeap1::GetIncrementSize() const
 {
     return m_heap_.GetIncrementSize();
 }
 
-std::pair<D3D12_ROOT_PARAMETER*, size_t> GlobalDescriptorHeap::GetRootParameters() const
+std::pair<D3D12_ROOT_PARAMETER*, size_t> GlobalDescriptorHeap1::GetRootParameters() const
 {
     D3D12_ROOT_PARAMETER* root_parameters = new D3D12_ROOT_PARAMETER[root_parameters_.size()];
     for (size_t i = 0; i < root_parameters_.size(); i++)
@@ -77,7 +77,7 @@ std::pair<D3D12_ROOT_PARAMETER*, size_t> GlobalDescriptorHeap::GetRootParameters
     return std::make_pair(root_parameters, root_parameters_.size());
 }
 
-void GlobalDescriptorHeap::SetRootParameter(
+void GlobalDescriptorHeap1::SetRootParameter(
     GLOBAL_HEAP_ID id,
     D3D12_ROOT_PARAMETER_TYPE type,
     D3D12_SHADER_VISIBILITY visibility,
@@ -92,10 +92,15 @@ void GlobalDescriptorHeap::SetRootParameter(
     root_parameter.DescriptorTable.NumDescriptorRanges = num_descriptor_ranges;
     root_parameter.DescriptorTable.pDescriptorRanges = descriptor_ranges;
 
-    root_parameters_.push_back(root_parameter);
+    if (root_parameters_.size() <= id)
+    {
+        root_parameters_.resize(id + 1);
+    }
+
+    root_parameters_[id] = root_parameter;
 }
 
-void GlobalDescriptorHeap::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id) const
+void GlobalDescriptorHeap1::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id) const
 {
     D3D12_GPU_DESCRIPTOR_HANDLE handle = GetGPUHandle(id);
     DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
@@ -104,7 +109,18 @@ void GlobalDescriptorHeap::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id) con
     );
 }
 
-void GlobalDescriptorHeap::SetToCommand() const
+void GlobalDescriptorHeap1::SetGraphicsRootDescriptorTable(GLOBAL_HEAP_ID id, unsigned int offset) const
+{
+    D3D12_GPU_DESCRIPTOR_HANDLE handle = GetGPUHandle(id);
+    handle.ptr += static_cast<UINT64>(offset) * m_heap_.GetIncrementSize();
+
+    DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
+        id,
+        handle
+    );
+}
+
+void GlobalDescriptorHeap1::SetToCommand() const
 {
     m_heap_.SetToCommand();
 }

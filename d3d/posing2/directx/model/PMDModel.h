@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "directx/GlobalDescriptorHeap.h"
+#include "directx/GlobalDescriptorHeap1.h"
 #include "directx/buffer/ConstantBuffer.h"
 
 
@@ -126,7 +126,7 @@ public:
     void Render();
     void SetIA() const;
 
-    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
         : str_model_path_(filepath),
         num_vertices_(0),
         num_indices_(0),
@@ -153,7 +153,7 @@ private:
     HRESULT SetIndexBuffer();
     HRESULT SetTransformBuffer();
 
-    void RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix);
+    void RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix);
 
     std::string str_model_path_;
 
@@ -178,7 +178,7 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
     GLOBAL_HEAP_ID m_materialHeapId;
     GLOBAL_HEAP_ID m_matrixHeapId;
 

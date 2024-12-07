@@ -6,7 +6,7 @@
 typedef int GLOBAL_HEAP_ID;
 
 // GlobalDescriptorHeap for CBV_SRV_UAV Engineに持ってもらった方がいいかな？
-class GlobalDescriptorHeap
+class GlobalDescriptorHeap1
 {
 public:
     void Init();

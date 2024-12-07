@@ -9,7 +9,7 @@
 #include "resources/DXFactory.h"
 
 
-HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
 {
     this->globalHeap = globalHeap;
 
@@ -97,7 +97,7 @@ HRESULT Display::Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
     return S_OK;
 }
 
-// base polygon2–‡–Ú + blur(by pso2)‚ðback buffer‚É•`‰æ
+// base polygon2ï¿½ï¿½ï¿½ï¿½ + blur(by pso2)ï¿½ï¿½back bufferï¿½É•`ï¿½ï¿½
 void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
@@ -110,12 +110,12 @@ void Display::RenderToBackBuffer() const
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState2);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 }
 
-// base polygon1–‡–Ú‚É‘‚«ž‚Þ‚æ‚¤Ý’è
-void Display::SetBaseBegin()
+// base polygon1ï¿½ï¿½ï¿½Ú‚Éï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ‚æ‚¤ï¿½Ý’ï¿½
+void Display::SetRenderToBase1Begin()
 {
     Barrier(
         m_renderResource,
@@ -147,13 +147,13 @@ void Display::Present() const
    }
 }
 
-void Display::RenderToBase() const
+void Display::SetViewports() const
 {
     DXCommand::GetCommandList()->RSSetViewports(1, &m_viewport);
     DXCommand::GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
 }
 
-void Display::SetBaseEnd()
+void Display::SetRenderToBase1End()
 {
     Barrier(
         m_renderResource,
@@ -162,8 +162,8 @@ void Display::SetBaseEnd()
     );
 }
 
-// base polygon2–‡–Ú‚ÉC1–‡–Ú‚Ìbase polygon + blur(by pso1)‚ð•`‰æ
-void Display::SetPostEffect()
+// base polygon2ï¿½ï¿½ï¿½Ú‚ÉC1ï¿½ï¿½ï¿½Ú‚ï¿½base polygon + blur(by pso1)ï¿½ï¿½`ï¿½ï¿½
+void Display::RenderToBase2()
 {
     Barrier(
         m_renderResource2,
@@ -195,7 +195,7 @@ void Display::SetPostEffect()
     DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
     DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
 
     Barrier(
@@ -205,8 +205,8 @@ void Display::SetPostEffect()
     );
 }
 
-// back buffer‚É•`‰æ‚·‚é‚æ‚¤Ý’è
-void Display::Clear()
+// back bufferï¿½É•`ï¿½æ‚·ï¿½ï¿½æ‚¤ï¿½Ý’ï¿½
+void Display::SetRenderToBackBuffer()
 {
     UINT bbIdx = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -533,21 +533,21 @@ HRESULT Display::CreateBasePolygon()
                                 {{ 1, -1, 0.1}, {1, 1}},
                                 {{ 1,  1, 0.1}, {1, 0}} };
 
-    vertex_buffer_.SetResourceWidth(sizeof(vertices));
-    HRESULT hr = vertex_buffer_.CreateBuffer();
+    m_vertexBuffer.SetResourceWidth(sizeof(vertices));
+    HRESULT hr = m_vertexBuffer.CreateBuffer();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create vertex buffer\n"));
         return hr;
     }
 
-    std::ranges::copy(vertices, vertex_buffer_.GetMappedBuffer());
+    std::ranges::copy(vertices, m_vertexBuffer.GetMappedBuffer());
 
-    vertex_buffer_.UmmapBuffer();
+    m_vertexBuffer.UmmapBuffer();
 
-    vertex_buffer_view_.BufferLocation = vertex_buffer_.GetGPUVirtualAddress();
-    vertex_buffer_view_.SizeInBytes = sizeof(vertices);
-    vertex_buffer_view_.StrideInBytes = sizeof(BaseVertex);
+    m_vertexBufferView.BufferLocation = m_vertexBuffer.GetGPUVirtualAddress();
+    m_vertexBufferView.SizeInBytes = sizeof(vertices);
+    m_vertexBufferView.StrideInBytes = sizeof(BaseVertex);
 
     return S_OK;
 }
@@ -807,23 +807,23 @@ HRESULT Display::CreateBlurBuffer()
 {
     std::vector<float> weights = GetGaussianWeights(8, 5.0f);
 
-    blur_weight_buffer_.SetResourceWidth((sizeof(weights[0]) * weights.size() + 0xff) & ~0xff);
-    HRESULT hr = blur_weight_buffer_.CreateBuffer();
+    m_blurWeightBuffer.SetResourceWidth((sizeof(weights[0]) * weights.size() + 0xff) & ~0xff);
+    HRESULT hr = m_blurWeightBuffer.CreateBuffer();
     if (FAILED(hr))
     {
         OutputDebugString(_T("Failed to create blur weight buffer\n"));
         return hr;
     }
 
-    std::ranges::copy(weights, blur_weight_buffer_.GetMappedBuffer());
+    std::ranges::copy(weights, m_blurWeightBuffer.GetMappedBuffer());
 
-    blur_weight_buffer_.UmmapBuffer();
+    m_blurWeightBuffer.UmmapBuffer();
 
     blur_weight_heap_id_ = globalHeap->Allocate(1);
 
-    blur_weight_buffer_.SetGlobalHeap(globalHeap);
-    blur_weight_buffer_.SetHeapID(blur_weight_heap_id_);
-    blur_weight_buffer_.CreateView();
+    m_blurWeightBuffer.SetGlobalHeap(globalHeap);
+    m_blurWeightBuffer.SetSegment(blur_weight_heap_id_);
+    m_blurWeightBuffer.CreateView();
 
     return S_OK;
 }

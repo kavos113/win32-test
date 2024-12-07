@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "ConstantBuffer.h"
-#include "GlobalDescriptorHeap.h"
+#include "GlobalDescriptorHeap1.h"
 
 class PMDModel
 {
@@ -80,7 +80,7 @@ public:
     void Render();
     void SetIA() const;
 
-    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    PMDModel(std::string filepath, const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
         : str_model_path_(filepath),
         num_vertices_(0),
         num_indices_(0),
@@ -121,7 +121,7 @@ private:
     std::vector<ID3D12Resource*> spa_;
     std::vector<ID3D12Resource*> toon_;
 
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
     GLOBAL_HEAP_ID m_materialHeapId;
     GLOBAL_HEAP_ID m_matrixHeapId;
 

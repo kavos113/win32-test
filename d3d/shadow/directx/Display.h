@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "DXDescriptorHeap.h"
-#include "GlobalDescriptorHeap.h"
+#include "GlobalDescriptorHeap1.h"
 #include "buffer/ConstantBuffer.h"
 #include "buffer/DepthStencilBuffer.h"
 
@@ -18,15 +18,15 @@ class Display
     };
 
 public:
-    HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap);
+    HRESULT Init(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap);
     void RenderToBackBuffer() const;
     void Present() const;
 
-    void SetBaseBegin();
-    void RenderToBase() const;
-    void SetBaseEnd();
-    void SetPostEffect();
-    void Clear();
+    void SetRenderToBase1Begin();
+    void SetViewports() const;
+    void SetRenderToBase1End();
+    void RenderToBase2();
+    void SetRenderToBackBuffer();
     void EndRender();
 
     void SetHWND(HWND hwnd);
@@ -43,7 +43,7 @@ public:
         m_renderResource(nullptr),
         m_renderResource2(nullptr),
         m_srvHeapId(0),
-        vertex_buffer_view_(),
+        m_vertexBufferView(),
         m_pipelineState(nullptr), m_pipelineState2(nullptr),
         m_rootSignature(nullptr),
         blur_weight_heap_id_(0)
@@ -88,16 +88,16 @@ private:
     GLOBAL_HEAP_ID m_srvHeapId;
     DXDescriptorHeap m_baseRtvHeap;
 
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
 
-    ConstantBuffer<BaseVertex> vertex_buffer_;
-    D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
+    ConstantBuffer<BaseVertex> m_vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
     ID3D12PipelineState* m_pipelineState;
     ID3D12PipelineState* m_pipelineState2;
     ID3D12RootSignature* m_rootSignature;
 
-    ConstantBuffer<float> blur_weight_buffer_;
+    ConstantBuffer<float> m_blurWeightBuffer;
     GLOBAL_HEAP_ID blur_weight_heap_id_;
 };
 

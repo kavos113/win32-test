@@ -3,9 +3,9 @@
 
 #include "DXBuffer.h"
 #include "DXDevice.h"
-#include "GlobalDescriptorHeap.h"
+#include "GlobalDescriptorHeap1.h"
 
-// vertexbuffer, indexbuffer ‚È‚Ç‚ÌƒTƒuƒNƒ‰ƒX‚ğì‚Á‚Ä‚à‚¢‚¢‚©‚à?
+// vertexbuffer, indexbuffer ï¿½È‚Ç‚ÌƒTï¿½uï¿½Nï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?
 template <typename T>
 class ConstantBuffer :
     public DXBuffer
@@ -27,12 +27,12 @@ public:
         return m_buffer->GetGPUVirtualAddress();
     }
 
-    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap>& globalHeap)
+    void SetGlobalHeap(const std::shared_ptr<GlobalDescriptorHeap1>& globalHeap)
     {
         this->globalHeap = globalHeap;
     }
 
-    void SetHeapID(GLOBAL_HEAP_ID id)
+    void SetSegment(GLOBAL_HEAP_ID id)
     {
         heap_id_ = id;
     }
@@ -115,7 +115,7 @@ private:
     T* mapped_buffer_;
 
     UINT64 resource_width_;
-    std::shared_ptr<GlobalDescriptorHeap> globalHeap;
+    std::shared_ptr<GlobalDescriptorHeap1> globalHeap;
     GLOBAL_HEAP_ID heap_id_;
 };
 

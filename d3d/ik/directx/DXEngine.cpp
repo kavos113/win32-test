@@ -22,7 +22,7 @@ HRESULT DXEngine::Init()
     DXCommand::Init();
     DXFence::Init();
 
-    globalHeap = std::make_shared<GlobalDescriptorHeap>();
+    globalHeap = std::make_shared<GlobalDescriptorHeap1>();
     globalHeap->Init();
 
     display.SetHWND(hwnd);
@@ -32,7 +32,7 @@ HRESULT DXEngine::Init()
     hr = displayMatrix.Init(globalHeap);
     if (FAILED(hr)) return E_FAIL;
 
-    model = std::make_unique<PMDModel>("model/‰‰¹ƒ~ƒN.pmd", globalHeap);
+    model = std::make_unique<PMDModel>("model/ï¿½ï¿½ï¿½ï¿½ï¿½~ï¿½N.pmd", globalHeap);
     model->Read();
 
     renderer = std::make_unique<PMDRenderer>(hwnd, wr, globalHeap);
@@ -72,7 +72,7 @@ void DXEngine::EnableDebug()
     OutputDebugString(_T("Debug layer is enabled\n"));
 }
 
-// d‚­Œ©‚¦‚Ä‚¢‚½‚Ì‚ÍWM_PAINTƒƒbƒZ[ƒW‚ªŒÄ‚Î‚ê‚Ä‚¨‚ç‚¸ƒyƒCƒ“ƒg‚³‚ê‚Ä‚¢‚È‚©‚Á‚½‚¾‚¯‚¾‚Á‚½ T_T
+// ï¿½dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½WM_PAINTï¿½ï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½ï¿½ï¿½Ä‚Î‚ï¿½Ä‚ï¿½ï¿½ç‚¸ï¿½yï¿½Cï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ T_T
 HRESULT DXEngine::OnRender()
 {
     auto start = timeGetTime();

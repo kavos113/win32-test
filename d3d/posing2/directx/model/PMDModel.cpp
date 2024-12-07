@@ -80,7 +80,7 @@ void PMDModel::Render()
     for (auto& m : materials_)
     {
         DXCommand::GetCommandList()->SetGraphicsRootDescriptorTable(
-            m_materialHeapId, // ‚±‚ê‚ÍrootParameter‚Ì1”Ô–Ú‚ðŽg—p‚µ‚Ä‚¢‚é‚±‚Æ‚ð•\‚·
+            m_materialHeapId, // ï¿½ï¿½ï¿½ï¿½ï¿½rootParameterï¿½ï¿½1ï¿½Ô–Ú‚ï¿½ï¿½gï¿½pï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚±ï¿½Æ‚ï¿½\ï¿½ï¿½
             materialDescHandle
         );
 
@@ -542,12 +542,12 @@ HRESULT PMDModel::SetTransformBuffer()
         DirectX::XMFLOAT3& pos = node.start_position;
 
         DirectX::XMMATRIX matrix = DirectX::XMMatrixTranslation(-pos.x, -pos.y, -pos.z)
-            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0”Ô–Ú‚ÌƒL[ƒtƒŒ[ƒ€
+            * DirectX::XMMatrixRotationQuaternion(data.second[0].quaternion) // 0ï¿½Ô–Ú‚ÌƒLï¿½[ï¿½tï¿½ï¿½ï¿½[ï¿½ï¿½
             * DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
         bone_matrices_[node.bone_index] = matrix;
     }
 
-    RecursiveMatrixMultiply(&bone_nodes_table_["ƒZƒ“ƒ^["], worldMatrix);
+    RecursiveMatrixMultiply(&bone_nodes_table_["ï¿½Zï¿½ï¿½ï¿½^ï¿½["], worldMatrix);
 
     size_t buffer_size = sizeof(DirectX::XMMATRIX) * (1 + bone_matrices_.size());
     matrix_buffer_.SetResourceWidth((buffer_size + 0xff) & ~0xff);
@@ -563,7 +563,7 @@ HRESULT PMDModel::SetTransformBuffer()
 
     m_matrixHeapId = globalHeap->Allocate(1);
 
-    matrix_buffer_.SetHeapID(m_matrixHeapId);
+    matrix_buffer_.SetSegment(m_matrixHeapId);
     matrix_buffer_.CreateView();
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -585,7 +585,7 @@ HRESULT PMDModel::SetTransformBuffer()
     return S_OK;
 }
 
-void PMDModel::RecursiveMatrixMultiply(BoneNode* node, DirectX::XMMATRIX& parent_matrix)
+void PMDModel::RecursiveMatrixMultiply(const BoneNode* node, const DirectX::XMMATRIX& parent_matrix)
 {
     bone_matrices_[node->bone_index] *= parent_matrix;
 
