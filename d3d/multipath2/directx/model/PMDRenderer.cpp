@@ -54,7 +54,7 @@ HRESULT PMDRenderer::CompileShaders()
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
 
         OutputDebugStringA(errStr.c_str());
         return E_FAIL;
@@ -83,7 +83,7 @@ HRESULT PMDRenderer::CompileShaders()
 
         std::string errStr;
         errStr.resize(errorBlob->GetBufferSize());
-        std::copy_n((char*)errorBlob->GetBufferPointer(), errorBlob->GetBufferSize(), errStr.begin());
+        std::copy_n(static_cast<char*>(errorBlob->GetBufferPointer()), errorBlob->GetBufferSize(), errStr.begin());
 
         OutputDebugStringA(errStr.c_str());
         return E_FAIL;

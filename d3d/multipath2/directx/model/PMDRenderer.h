@@ -26,7 +26,8 @@ public:
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
         hwnd(hwnd),
-        wr(wr)
+        wr(wr),
+        m_modelManager(model_manager)
     {
     }
 
@@ -45,7 +46,7 @@ private:
     ID3D10Blob* m_vsBlob;
     ID3D10Blob* m_psBlob;
 
-    DescriptorHeapSegmentManager m_modelManager;
+    const DescriptorHeapSegmentManager& m_modelManager;
 
     HWND hwnd;
     RECT wr;
