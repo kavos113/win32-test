@@ -41,6 +41,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadowmap", "shadowmap\shad
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "multipath2", "multipath2\multipath2.vcxproj", "{39D16ED8-3336-4574-9EA6-8D5A23BE294A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadowmap2", "shadowmap2\shadowmap2.vcxproj", "{E4F41B5A-3031-4207-B465-8AE14945146C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -201,6 +203,14 @@ Global
 		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x64.Build.0 = Release|x64
 		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x86.ActiveCfg = Release|Win32
 		{39D16ED8-3336-4574-9EA6-8D5A23BE294A}.Release|x86.Build.0 = Release|Win32
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Debug|x64.ActiveCfg = Debug|x64
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Debug|x64.Build.0 = Debug|x64
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Debug|x86.ActiveCfg = Debug|Win32
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Debug|x86.Build.0 = Debug|Win32
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Release|x64.ActiveCfg = Release|x64
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Release|x64.Build.0 = Release|x64
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Release|x86.ActiveCfg = Release|Win32
+		{E4F41B5A-3031-4207-B465-8AE14945146C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
