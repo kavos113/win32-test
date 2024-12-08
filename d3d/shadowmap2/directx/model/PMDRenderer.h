@@ -17,13 +17,14 @@ class PMDRenderer
         DirectX::XMFLOAT3 eye;
     };
 public:
-    PMDRenderer(HWND hwnd, RECT wr, const DescriptorHeapSegmentManager& model_manager)
+    PMDRenderer(HWND hwnd, RECT wr, DescriptorHeapSegmentManager& model_manager)
         :
         m_pipelineState(nullptr),
         m_rootSignature(nullptr),
         m_vsBlob(nullptr),
         m_psBlob(nullptr),
-        m_modelManager(model_manager),
+        m_shadowPipelineState(nullptr),
+        m_modelManager(&model_manager),
         hwnd(hwnd),
         wr(wr)
     {
@@ -31,6 +32,7 @@ public:
 
     HRESULT Init();
     void SetPipelineState() const;
+    void SetShadowPipelineState() const;
     void SetRootSignature() const;
 private:
     HRESULT CompileShaders();
@@ -44,7 +46,9 @@ private:
     ID3D10Blob* m_vsBlob;
     ID3D10Blob* m_psBlob;
 
-    const DescriptorHeapSegmentManager& m_modelManager;
+    ID3D12PipelineState* m_shadowPipelineState;
+
+    DescriptorHeapSegmentManager* m_modelManager;
 
     HWND hwnd;
     RECT wr;

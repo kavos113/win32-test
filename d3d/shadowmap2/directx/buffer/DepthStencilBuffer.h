@@ -16,9 +16,20 @@ public:
         :
         m_dsvManager(),
         m_segment(),
-        wr(wr)
+        m_width(wr.right - wr.left),
+        m_height(wr.bottom - wr.top)
     {
-        m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        m_dsvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    }
+
+    DepthStencilBuffer(UINT64 width, UINT64 height)
+        :
+        m_dsvManager(),
+        m_segment(),
+        m_width(width),
+        m_height(height)
+    {
+        m_dsvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const
@@ -30,6 +41,7 @@ private:
     DescriptorHeapSegmentManager* m_dsvManager;
     DescriptorHeapSegment m_segment;
 
-    RECT wr;
+    UINT64 m_width;
+    UINT64 m_height;
 };
 

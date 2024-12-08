@@ -22,6 +22,23 @@ Output BasicVS(
     output.pos = mul(view, pos);
     output.uv = uv;
     output.ray = normalize(pos.xyz - mul(view, eye));
+    output.shadowPos = mul(lightView, pos);
 
     return output;
+}
+
+float4 ShadowVS(
+    float4 pos : POSITION,
+    float4 normal : NORMAL,
+    float2 uv : TEXCOORD,
+    min16uint2 bone_number : BONE_NUMBER,
+    min16uint weight : WEIGHT) : SV_POSITION
+{
+    float w = weight / 100.0f;
+    matrix bone_matrix = bones[bone_number[0]] * w + bones[bone_number[1]] * (1.0f - w);
+
+    pos = mul(bone_matrix, pos);
+    pos = mul(world, pos);
+
+    return mul(lightView, pos);
 }

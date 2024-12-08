@@ -41,7 +41,7 @@ DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::CreateShaderManager(
     return m_shaderHeaps[0].GetHeapManager(name); // unsafe
 }
 
-DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type)
+DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     switch (type)
     {

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <tchar.h>
 #include <valarray>
 
@@ -94,9 +95,18 @@ void PMDModel::Read()
     if (FAILED(hr)) return;
 }
 
-void PMDModel::Render() const
+void PMDModel::Render(bool is_shadow) const
 {
+    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
+
     m_modelManager.SetGraphicsRootDescriptorTable(m_matrixSegment.GetID());
+
+    if (is_shadow)
+    {
+        DXCommand::GetCommandList()->DrawIndexedInstanced(num_indices_, 1, 0, 0, 0);
+    }
 
     unsigned int indexOffset = 0;
 
@@ -113,13 +123,6 @@ void PMDModel::UpdateAnimation()
 {
     UpdateMotion();
     std::ranges::copy(bone_matrices_, matrix_buffer_.GetMappedBuffer() + 1);
-}
-
-void PMDModel::SetIA() const
-{
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    DXCommand::GetCommandList()->IASetIndexBuffer(&index_buffer_view_);
 }
 
 HRESULT PMDModel::ReadHeader(FILE* fp)
@@ -748,9 +751,9 @@ HRESULT PMDModel::ReadVMD(FILE* fp)
         }
     }
 
-    for (auto& data : motion_data_)
+    for (auto& val : motion_data_ | std::views::values)
     {
-        std::ranges::sort(data.second,
+        std::ranges::sort(val,
                           [](const KeyFrame& a, const KeyFrame& b)
                           {
                               return a.frame_number <= b.frame_number;

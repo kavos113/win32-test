@@ -32,14 +32,14 @@ HRESULT DXEngine::Init()
         512,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    display.SetHWND(hwnd);
-    HRESULT hr = display.Init(base_poly_manager);
-    if (FAILED(hr)) return E_FAIL;
-
     DescriptorHeapSegmentManager& model_manager = GlobalDescriptorHeapManager::CreateShaderManager(
         "model",
         512,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    display.SetHWND(hwnd);
+    HRESULT hr = display.Init(base_poly_manager, model_manager);
+    if (FAILED(hr)) return E_FAIL;
 
     hr = displayMatrix.Init(model_manager);
     if (FAILED(hr)) return E_FAIL;
@@ -90,6 +90,13 @@ HRESULT DXEngine::OnRender()
 
     GlobalDescriptorHeapManager::SetToCommand();
 
+    display.SetRenderToShadowMapBegin();
+    display.SetViewports();
+    renderer->SetShadowPipelineState();
+    renderer->SetRootSignature();
+    model->Render(true);
+    display.SetRenderToShadowMapEnd();
+
     display.SetRenderToBase1Begin();
 
     model->UpdateAnimation();
@@ -98,8 +105,7 @@ HRESULT DXEngine::OnRender()
     renderer->SetRootSignature();
     displayMatrix.Render();
     display.SetViewports();
-    model->SetIA();
-    model->Render();
+    model->Render(false);
 
     display.SetRenderToBase1End();
 

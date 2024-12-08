@@ -41,20 +41,20 @@ DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::CreateShaderManager(
     return m_shaderHeaps[0].GetHeapManager(name); // unsafe
 }
 
-DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type)
+DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
     switch (type)
     {
-    case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
-        return m_heaps[0].GetHeapManager();
+        case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
+            return m_heaps[0].GetHeapManager();
 
-    case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:
-        return m_heaps[1].GetHeapManager();
+        case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:
+            return m_heaps[1].GetHeapManager();
 
-    case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
-    case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
-    case D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES:
-        OutputDebugString(_T("Invalid descriptor heap type\n"));
+        case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+        case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+        case D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES:
+            OutputDebugString(_T("Invalid descriptor heap type\n"));
     }
 
     return m_heaps[0].GetHeapManager(); // unsafe
@@ -64,4 +64,23 @@ DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetCpuHeapManager(D3D
 void GlobalDescriptorHeapManager::SetToCommand()
 {
     m_shaderHeaps[0].SetToCommand();
+}
+
+DescriptorHeapSegmentManager& GlobalDescriptorHeapManager::GetShaderHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type, const std::string& name)
+{
+    switch (type)
+    {
+        case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+            return m_shaderHeaps[0].GetHeapManager(name);
+
+        case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+            return m_shaderHeaps[1].GetHeapManager(name);
+
+        case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
+        case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:
+        case D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES:
+            OutputDebugString(_T("Invalid descriptor heap type\n"));
+    }
+
+    return m_shaderHeaps[0].GetHeapManager(name); // unsafe
 }

@@ -16,14 +16,17 @@ class Display
     };
 
 public:
-    HRESULT Init(DescriptorHeapSegmentManager& base_poly_manager);
+    HRESULT Init(DescriptorHeapSegmentManager& base_poly_manager, DescriptorHeapSegmentManager& model_manager);
     void Present() const;
+
+    void SetRenderToShadowMapBegin();
+    void SetRenderToShadowMapEnd();
 
     void SetRenderToBase1Begin();    // base polygon1枚目に書き込むよう設定
     void SetViewports() const;
     void SetRenderToBase1End();      // base polygon1枚目への書き込み終了
     void SetRenderToBackBuffer();    // back bufferに描画するよう設定
-    void RenderToBackBuffer() const; // base polygon1枚目 + blur(by pso2)をback bufferに描画
+    void RenderToBackBuffer() const; // base polygon1枚目 + blur(by pso)をback bufferに描画
     void EndRender();
 
     void SetHWND(HWND hwnd);
@@ -42,11 +45,14 @@ public:
         m_baseRTVsSegment(),
         m_baseSRVsSegment(),
         m_basePolyManager(nullptr),
+        m_modelManager(nullptr),
         m_rtvManager(nullptr),
         m_dsvManager(nullptr),
         m_vertexBufferView(),
         m_pipelineState(nullptr),
-        m_rootSignature(nullptr)
+        m_rootSignature(nullptr),
+        m_shadowMapBuffer(m_shadowMapWidth, m_shadowMapWidth),
+        m_shadowMapSRVSegment()
     {
     }
 
@@ -63,6 +69,8 @@ private:
     HRESULT CreateShaderResourceView();
     HRESULT CreateBasePolygon();
     HRESULT CreateBasePipeline();
+
+    HRESULT CreateShadowMapBuffer();
 
     void Barrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
@@ -86,6 +94,7 @@ private:
     DescriptorHeapSegment m_baseSRVsSegment;
 
     DescriptorHeapSegmentManager* m_basePolyManager;
+    DescriptorHeapSegmentManager* m_modelManager;
     DescriptorHeapSegmentManager* m_rtvManager;
     DescriptorHeapSegmentManager* m_dsvManager;
 
@@ -95,6 +104,11 @@ private:
     ID3D12PipelineState* m_pipelineState;
     ID3D12RootSignature* m_rootSignature;
 
+    DepthStencilBuffer m_shadowMapBuffer;
+    DescriptorHeapSegment m_shadowMapSRVSegment;
+
     const float m_clearColor[4] = { 0.7f, 0.8f, 0.6f, 1.0f };
+
+    constexpr static uint32_t m_shadowMapWidth = 1024;
 };
 

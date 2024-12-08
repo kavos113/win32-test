@@ -13,8 +13,8 @@
 HRESULT Display::Init(DescriptorHeapSegmentManager& model_manager)
 {
     m_basePolyManager = &model_manager;
-    m_rtvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    m_rtvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_dsvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
     HRESULT hr = CreateSwapChain();
     if (FAILED(hr))

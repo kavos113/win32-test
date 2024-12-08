@@ -9,10 +9,10 @@ HRESULT DepthStencilBuffer::CreateBuffer()
     D3D12_RESOURCE_DESC resource_desc;
 
     resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    resource_desc.Width = wr.right - wr.left;
-    resource_desc.Height = wr.bottom - wr.top;
+    resource_desc.Width = m_width;
+    resource_desc.Height = m_height;
     resource_desc.DepthOrArraySize = 1;
-    resource_desc.Format = DXGI_FORMAT_D32_FLOAT;
+    resource_desc.Format = DXGI_FORMAT_R32_TYPELESS;
     resource_desc.SampleDesc.Count = 1;
     resource_desc.SampleDesc.Quality = 0;
     resource_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;

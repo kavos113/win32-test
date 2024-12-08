@@ -1,14 +1,18 @@
-Texture2D<float4> tex : register(t0);
-Texture2D<float4> sph : register(t1);
-Texture2D<float4> spa : register(t2);
-Texture2D<float4> toon : register(t3);
+Texture2D tex : register(t0);
+Texture2D sph : register(t1);
+Texture2D spa : register(t2);
+Texture2D toon : register(t3);
 SamplerState sam : register(s0);
 SamplerState samToon : register(s1);
+
+Texture2D<float> shadowMap : register(t4);
 
 cbuffer SceneMatrix : register(b0)
 {
     matrix view;
     matrix projection;
+    matrix lightView;
+    matrix shadow;
     float3 eye;
 }
 
@@ -33,4 +37,5 @@ struct Output
     float4 vnormal : NORMAL1;
     float2 uv : TEXCOORD;
     float3 ray : VECTOR;
+    float4 shadowPos : SHADOWPOS;
 };

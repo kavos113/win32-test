@@ -10,7 +10,7 @@ public:
     static void Init();
 
     static DescriptorHeapSegmentManager& CreateShaderManager(const std::string& name, unsigned int size, D3D12_DESCRIPTOR_HEAP_TYPE type);
-    static DescriptorHeapSegmentManager& GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type);
+    static DescriptorHeapSegmentManager& GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE type);
 
     static void SetToCommand();
 private:

@@ -11,11 +11,12 @@
 #include "resources/DXFactory.h"
 
 
-HRESULT Display::Init(DescriptorHeapSegmentManager& model_manager)
+HRESULT Display::Init(DescriptorHeapSegmentManager& base_poly_manager, DescriptorHeapSegmentManager& model_manager)
 {
-    m_basePolyManager = &model_manager;
-    m_rtvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+    m_basePolyManager = &base_poly_manager;
+    m_modelManager = &model_manager;
+    m_rtvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    m_dsvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
     HRESULT hr = CreateSwapChain();
     if (FAILED(hr))
@@ -66,6 +67,15 @@ HRESULT Display::Init(DescriptorHeapSegmentManager& model_manager)
         return hr;
     }
 
+    hr = CreateShadowMapBuffer();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("[Display.cpp] Failed to create shadow map buffer\n"));
+        return hr;
+    }
+
+
+
     hr = CreateViewPort();
     if (FAILED(hr))
     {
@@ -115,6 +125,8 @@ void Display::SetRenderToBase1Begin()
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
+
+    m_modelManager->SetGraphicsRootDescriptorTable(m_shadowMapSRVSegment.GetID());
 
     auto baseRtvHandle = m_baseRTVsSegment.GetCPUHandle();
     auto dsvHandle = m_depthStencilBuffer.GetCPUHandle();
@@ -182,6 +194,29 @@ void Display::EndRender()
         back_buffers_[bbIdx],
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT
+    );
+}
+
+void Display::SetRenderToShadowMapBegin()
+{
+    Barrier(
+        m_shadowMapBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
+
+    auto dsvHandle = m_shadowMapBuffer.GetCPUHandle();
+
+    DXCommand::GetCommandList()->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
+    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+}
+
+void Display::SetRenderToShadowMapEnd()
+{
+    Barrier(
+        m_shadowMapBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
 }
 
@@ -640,6 +675,53 @@ HRESULT Display::CreateBasePipeline()
         OutputDebugString(_T("[Display.cpp] Failed to create pipeline state\n"));
         return E_FAIL;
     }
+
+    return S_OK;
+}
+
+HRESULT Display::CreateShadowMapBuffer()
+{
+    HRESULT hr = m_shadowMapBuffer.CreateBuffer();
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("[Display.cpp] Failed to create shadow map buffer\n"));
+        return hr;
+    }
+
+    m_shadowMapBuffer.CreateView();
+
+    // srv
+    m_shadowMapSRVSegment = m_modelManager->Allocate(1);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC desc;
+
+    desc.Format = DXGI_FORMAT_R32_FLOAT;
+    desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    desc.Texture2D.MipLevels = 1;
+    desc.Texture2D.PlaneSlice = 0;
+    desc.Texture2D.MostDetailedMip = 0;
+
+    DXDevice::GetDevice()->CreateShaderResourceView(
+        m_shadowMapBuffer.GetBuffer(),
+        &desc,
+        m_shadowMapSRVSegment.GetCPUHandle(0)
+    );
+
+    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
+
+    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    range->NumDescriptors = 1;
+    range->BaseShaderRegister = 4;
+    range->RegisterSpace = 0;
+
+    m_modelManager->SetRootParameter(
+        m_shadowMapSRVSegment.GetID(),
+        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
+        D3D12_SHADER_VISIBILITY_PIXEL,
+        range,
+        1
+    );
 
     return S_OK;
 }

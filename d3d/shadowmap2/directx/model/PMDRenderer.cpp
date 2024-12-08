@@ -225,6 +225,52 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
         return hr;
     }
 
+    ID3D10Blob* error_blob = nullptr;
+    hr = D3DCompileFromFile(
+        L"shaders/BasicVertexShader.hlsl",
+        nullptr,
+        D3D_COMPILE_STANDARD_FILE_INCLUDE,
+        "ShadowVS",
+        "vs_5_0",
+        D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_DEBUG,
+        0,
+        &m_vsBlob,
+        &error_blob
+        );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to compile shadow vertex shader\n"));
+
+        if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+        {
+            OutputDebugString(_T("[PMDRenderer.cpp] File not found\n"));
+            return E_FAIL;
+        }
+
+        std::string err_str;
+        err_str.resize(error_blob->GetBufferSize());
+        std::copy_n(static_cast<char*>(error_blob->GetBufferPointer()), error_blob->GetBufferSize(), err_str.begin());
+
+        OutputDebugStringA(err_str.c_str());
+        return E_FAIL;
+    }
+
+    graphics_pipeline.VS.pShaderBytecode = m_vsBlob->GetBufferPointer();
+    graphics_pipeline.VS.BytecodeLength = m_vsBlob->GetBufferSize();
+    graphics_pipeline.PS.pShaderBytecode = nullptr;
+    graphics_pipeline.PS.BytecodeLength = 0;
+    graphics_pipeline.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+
+    hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
+        &graphics_pipeline,
+        IID_PPV_ARGS(&m_shadowPipelineState)
+    );
+    if (FAILED(hr))
+    {
+        OutputDebugString(_T("[PMDRenderer.cpp] Failed to create shadow pipeline state\n"));
+        return hr;
+    }
+
     return S_OK;
 }
 
@@ -235,7 +281,7 @@ HRESULT PMDRenderer::CreateRootSignature()
 
     root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = m_modelManager.GetRootParameters();
+    std::pair<D3D12_ROOT_PARAMETER*, size_t> rootParams = m_modelManager->GetRootParameters();
 
     root_signature_desc.NumParameters = static_cast<UINT>(rootParams.second);
     root_signature_desc.pParameters = rootParams.first;
@@ -306,4 +352,9 @@ void PMDRenderer::SetPipelineState() const
 void PMDRenderer::SetRootSignature() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
+}
+
+void PMDRenderer::SetShadowPipelineState() const
+{
+    DXCommand::GetCommandList()->SetPipelineState(m_shadowPipelineState);
 }

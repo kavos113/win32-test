@@ -18,7 +18,7 @@ public:
         m_segment(),
         wr(wr)
     {
-        m_dsvManager = &GlobalDescriptorHeapManager::GetCpuHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        m_dsvManager = &GlobalDescriptorHeapManager::GetCPUHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle() const

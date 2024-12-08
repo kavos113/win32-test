@@ -12,6 +12,8 @@ class DisplayMatrix
     {
         DirectX::XMMATRIX view;
         DirectX::XMMATRIX proj;
+        DirectX::XMMATRIX lightView;
+        DirectX::XMMATRIX shadow;
         DirectX::XMFLOAT3 eye;
     };
 
