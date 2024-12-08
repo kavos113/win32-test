@@ -22,9 +22,8 @@ public:
     void SetRenderToBase1Begin();    // base polygon1枚目に書き込むよう設定
     void SetViewports() const;
     void SetRenderToBase1End();      // base polygon1枚目への書き込み終了
-    void RenderToBase2();            // base polygon2枚目に，1枚目のbase polygon + blur(by pso1)を描画
     void SetRenderToBackBuffer();    // back bufferに描画するよう設定
-    void RenderToBackBuffer() const; // base polygon2枚目 + blur(by pso2)をback bufferに描画
+    void RenderToBackBuffer() const; // base polygon1枚目 + blur(by pso2)をback bufferに描画
     void EndRender();
 
     void SetHWND(HWND hwnd);
@@ -40,7 +39,6 @@ public:
         hwnd(hwnd),
         m_barrier(),
         m_renderResource(nullptr),
-        m_renderResource2(nullptr),
         m_baseRTVsSegment(),
         m_baseSRVsSegment(),
         m_basePolyManager(nullptr),
@@ -48,9 +46,7 @@ public:
         m_dsvManager(nullptr),
         m_vertexBufferView(),
         m_pipelineState(nullptr),
-        m_pipelineState2(nullptr),
-        m_rootSignature(nullptr),
-        m_blurWeightSegment()
+        m_rootSignature(nullptr)
     {
     }
 
@@ -67,7 +63,6 @@ private:
     HRESULT CreateShaderResourceView();
     HRESULT CreateBasePolygon();
     HRESULT CreateBasePipeline();
-    HRESULT CreateBlurBuffer();
 
     void Barrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
@@ -86,7 +81,6 @@ private:
     D3D12_RESOURCE_BARRIER m_barrier;
 
     ID3D12Resource* m_renderResource;  // base polygon 1   rtv+srv
-    ID3D12Resource* m_renderResource2; // base polygon 2   rtv+srv
 
     DescriptorHeapSegment m_baseRTVsSegment;
     DescriptorHeapSegment m_baseSRVsSegment;
@@ -99,11 +93,7 @@ private:
     D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 
     ID3D12PipelineState* m_pipelineState;
-    ID3D12PipelineState* m_pipelineState2;
     ID3D12RootSignature* m_rootSignature;
-
-    ConstantBuffer<float> m_blurWeightBuffer;
-    DescriptorHeapSegment m_blurWeightSegment;
 
     const float m_clearColor[4] = { 0.7f, 0.8f, 0.6f, 1.0f };
 };

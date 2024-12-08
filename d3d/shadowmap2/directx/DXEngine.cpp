@@ -103,8 +103,6 @@ HRESULT DXEngine::OnRender()
 
     display.SetRenderToBase1End();
 
-    display.RenderToBase2();
-
     display.SetRenderToBackBuffer();
     display.RenderToBackBuffer();
     display.EndRender();

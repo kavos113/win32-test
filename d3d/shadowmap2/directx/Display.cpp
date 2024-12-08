@@ -80,13 +80,6 @@ HRESULT Display::Init(DescriptorHeapSegmentManager& model_manager)
         return hr;
     }
 
-    hr = CreateBlurBuffer();
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("[Display.cpp] Failed to create blur buffer\n"));
-        return hr;
-    }
-
     hr = CreateBasePipeline();
     if (FAILED(hr))
     {
@@ -105,11 +98,10 @@ void Display::RenderToBackBuffer() const
 {
     DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
 
-    // base polygon2枚目をテクスチャとして使う
-    m_basePolyManager->SetGraphicsRootDescriptorTable(m_baseSRVsSegment.GetID(), 1);
-    m_basePolyManager->SetGraphicsRootDescriptorTable(m_blurWeightSegment.GetID());
+    // base polygon1枚目をテクスチャとして使う
+    m_basePolyManager->SetGraphicsRootDescriptorTable(m_baseSRVsSegment.GetID());
 
-    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState2);
+    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
 
     DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
@@ -158,40 +150,6 @@ void Display::SetRenderToBase1End()
 {
     Barrier(
         m_renderResource,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-    );
-}
-
-void Display::RenderToBase2()
-{
-    Barrier(
-        m_renderResource2,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-
-    D3D12_CPU_DESCRIPTOR_HANDLE baseRtvHandle = m_baseRTVsSegment.GetCPUHandle(1);
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_depthStencilBuffer.GetCPUHandle();
-
-    DXCommand::GetCommandList()->OMSetRenderTargets(1, &baseRtvHandle, false, &dsvHandle);
-
-    DXCommand::GetCommandList()->ClearRenderTargetView(baseRtvHandle, m_clearColor, 0, nullptr);
-    DXCommand::GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-    DXCommand::GetCommandList()->SetGraphicsRootSignature(m_rootSignature);
-
-    m_basePolyManager->SetGraphicsRootDescriptorTable(m_baseSRVsSegment.GetID(), 0);
-    m_basePolyManager->SetGraphicsRootDescriptorTable(m_blurWeightSegment.GetID());
-
-    DXCommand::GetCommandList()->SetPipelineState(m_pipelineState);
-
-    DXCommand::GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-    DXCommand::GetCommandList()->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    DXCommand::GetCommandList()->DrawInstanced(4, 1, 0, 0);
-
-    Barrier(
-        m_renderResource2,
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
@@ -397,26 +355,12 @@ HRESULT Display::CreateRenderResource()
         return hr;
     }
 
-    hr = DXDevice::GetDevice()->CreateCommittedResource(
-        &heapProp,
-        D3D12_HEAP_FLAG_NONE,
-        &desc,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        &clearValue,
-        IID_PPV_ARGS(&m_renderResource2)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("[Display.cpp] Failed to create render resource\n"));
-        return hr;
-    }
-
     return S_OK;
 }
 
 HRESULT Display::SetBaseRenderTargetView()
 {
-    m_baseRTVsSegment = m_rtvManager->Allocate(2);
+    m_baseRTVsSegment = m_rtvManager->Allocate(1);
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 
@@ -429,18 +373,12 @@ HRESULT Display::SetBaseRenderTargetView()
         m_baseRTVsSegment.GetCPUHandle(0)
     );
 
-    DXDevice::GetDevice()->CreateRenderTargetView(
-        m_renderResource2,
-        &rtvDesc,
-        m_baseRTVsSegment.GetCPUHandle(1)
-    );
-
     return S_OK;
 }
 
 HRESULT Display::CreateShaderResourceView()
 {
-    m_baseSRVsSegment = m_basePolyManager->Allocate(2);
+    m_baseSRVsSegment = m_basePolyManager->Allocate(1);
     
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     
@@ -453,12 +391,6 @@ HRESULT Display::CreateShaderResourceView()
         m_renderResource,
         &srvDesc,
         m_baseSRVsSegment.GetCPUHandle(0)
-    );
-
-    DXDevice::GetDevice()->CreateShaderResourceView(
-        m_renderResource2,
-        &srvDesc,
-        m_baseSRVsSegment.GetCPUHandle(1)
     );
 
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
@@ -708,69 +640,6 @@ HRESULT Display::CreateBasePipeline()
         OutputDebugString(_T("[Display.cpp] Failed to create pipeline state\n"));
         return E_FAIL;
     }
-
-    hr = D3DCompileFromFile(
-        L"shaders/BlurPixelShader.hlsl",
-        nullptr,
-        D3D_COMPILE_STANDARD_FILE_INCLUDE,
-        "vertical",
-        "ps_5_0",
-        D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
-        0,
-        &psBlob,
-        &errorBlob
-    );
-
-    psoDesc.PS.BytecodeLength = psBlob->GetBufferSize();
-    psoDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
-
-    hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(
-        &psoDesc,
-        IID_PPV_ARGS(&m_pipelineState2)
-    );
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("[Display.cpp] Failed to create pipeline state\n"));
-        return E_FAIL;
-    }
-
-    return S_OK;
-}
-
-HRESULT Display::CreateBlurBuffer()
-{
-    std::vector<float> weights = GetGaussianWeights(8, 5.0f);
-
-    m_blurWeightBuffer.SetResourceWidth((sizeof(weights[0]) * weights.size() + 0xff) & ~0xff);
-    HRESULT hr = m_blurWeightBuffer.CreateBuffer();
-    if (FAILED(hr))
-    {
-        OutputDebugString(_T("[Display.cpp] Failed to create blur weight buffer\n"));
-        return hr;
-    }
-
-    std::ranges::copy(weights, m_blurWeightBuffer.GetMappedBuffer());
-
-    m_blurWeightBuffer.UmmapBuffer();
-
-    m_blurWeightSegment = m_basePolyManager->Allocate(1);
-
-    m_blurWeightBuffer.SetSegment(m_blurWeightSegment);
-    m_blurWeightBuffer.CreateView();
-
-    D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
-
-    range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-    range->NumDescriptors = 1;
-    range->BaseShaderRegister = 0;
-
-    m_basePolyManager->SetRootParameter(
-        m_blurWeightSegment.GetID(),
-        D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-        D3D12_SHADER_VISIBILITY_ALL,
-        range,
-        1
-    );
 
     return S_OK;
 }
