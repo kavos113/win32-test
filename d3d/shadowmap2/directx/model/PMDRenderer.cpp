@@ -259,6 +259,7 @@ HRESULT PMDRenderer::CreateGraphicsPipeline()
     graphics_pipeline.VS.BytecodeLength = m_vsBlob->GetBufferSize();
     graphics_pipeline.PS.pShaderBytecode = nullptr;
     graphics_pipeline.PS.BytecodeLength = 0;
+    graphics_pipeline.NumRenderTargets = 0;
     graphics_pipeline.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 
     hr = DXDevice::GetDevice()->CreateGraphicsPipelineState(

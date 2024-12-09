@@ -73,13 +73,13 @@ void DXEngine::SetHWND(HWND hwnd)
 
 void DXEngine::EnableDebug()
 {
-    ID3D12Debug* debugController = nullptr;
+    ID3D12Debug1* debugController = nullptr;
     HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
     if (hr == S_OK)
     { 
         debugController->EnableDebugLayer();
+        debugController->SetEnableGPUBasedValidation(true);
     }
-    debugController->EnableDebugLayer();
     debugController->Release();
     OutputDebugString(_T("[DXEngine.cpp] Debug layer is enabled\n"));
 }
@@ -90,23 +90,21 @@ HRESULT DXEngine::OnRender()
 
     GlobalDescriptorHeapManager::SetToCommand();
 
-    display.SetRenderToShadowMapBegin();
-    display.SetViewports();
     renderer->SetShadowPipelineState();
     renderer->SetRootSignature();
+    display.SetRenderToShadowMapBegin();
+    display.SetViewports();
+    displayMatrix.Render();
     model->Render(true);
     display.SetRenderToShadowMapEnd();
 
-    display.SetRenderToBase1Begin();
-
-    model->UpdateAnimation();
-
     renderer->SetPipelineState();
     renderer->SetRootSignature();
+    display.SetRenderToBase1Begin();
+    model->UpdateAnimation();
     displayMatrix.Render();
     display.SetViewports();
     model->Render(false);
-
     display.SetRenderToBase1End();
 
     display.SetRenderToBackBuffer();

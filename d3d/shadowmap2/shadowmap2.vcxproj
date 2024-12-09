@@ -80,6 +80,7 @@
       <DisableOptimizations>true</DisableOptimizations>
       <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="shaders\BaseVertexShader.hlsl">
       <ObjectFileOutput>C:\Users\kouhe\Documents\program_files\GitHub\win32-test\d3d\x64\Debug\BaseVertexShader.cso</ObjectFileOutput>
@@ -91,6 +92,7 @@
       <DisableOptimizations>true</DisableOptimizations>
       <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="shaders\BasicPixelShader.hlsl">
       <ObjectFileOutput>C:\Users\kouhe\Documents\program_files\GitHub\win32-test\d3d\x64\Debug\BasicPixelShader.cso</ObjectFileOutput>
@@ -102,6 +104,7 @@
       <DisableOptimizations>true</DisableOptimizations>
       <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="shaders\BasicVertexShader.hlsl">
       <ObjectFileOutput>C:\Users\kouhe\Documents\program_files\GitHub\win32-test\d3d\x64\Debug\BasicVertexShader.cso</ObjectFileOutput>
@@ -113,6 +116,7 @@
       <DisableOptimizations>true</DisableOptimizations>
       <EnableDebuggingInformation>true</EnableDebuggingInformation>
       <ShaderType>Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">

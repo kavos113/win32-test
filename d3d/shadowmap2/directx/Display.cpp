@@ -165,6 +165,12 @@ void Display::SetRenderToBase1End()
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
     );
+
+    Barrier(
+        m_shadowMapBuffer.GetBuffer(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE
+    );
 }
 
 void Display::SetRenderToBackBuffer()
@@ -199,12 +205,6 @@ void Display::EndRender()
 
 void Display::SetRenderToShadowMapBegin()
 {
-    Barrier(
-        m_shadowMapBuffer.GetBuffer(),
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        D3D12_RESOURCE_STATE_DEPTH_WRITE
-    );
-
     auto dsvHandle = m_shadowMapBuffer.GetCPUHandle();
 
     DXCommand::GetCommandList()->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
@@ -718,7 +718,7 @@ HRESULT Display::CreateShadowMapBuffer()
     m_modelManager->SetRootParameter(
         m_shadowMapSRVSegment.GetID(),
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-        D3D12_SHADER_VISIBILITY_PIXEL,
+        D3D12_SHADER_VISIBILITY_ALL,
         range,
         1
     );
