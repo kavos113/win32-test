@@ -428,6 +428,8 @@ HRESULT Display::CreateShaderResourceView()
         m_baseSRVsSegment.GetCPUHandle(0)
     );
 
+    m_renderResource->SetName(L"RenderResource");
+
     D3D12_DESCRIPTOR_RANGE* range = new D3D12_DESCRIPTOR_RANGE();
 
     range->RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -722,6 +724,8 @@ HRESULT Display::CreateShadowMapBuffer()
         range,
         1
     );
+
+    m_shadowMapBuffer.GetBuffer()->SetName(L"ShadowMapBuffer");
 
     return S_OK;
 }

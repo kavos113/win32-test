@@ -482,6 +482,8 @@ HRESULT PMDModel::SetMaterialBuffer()
         mappedBuffer += materialBufferSize;
     }
 
+    materialBuffer.GetBuffer()->SetName(L"material buffer");
+
     materialBuffer.UmmapBuffer();
 
     m_materialSegment = m_modelManager.Allocate(num_materials_ * 5);
