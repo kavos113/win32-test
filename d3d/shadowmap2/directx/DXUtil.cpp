@@ -11,6 +11,7 @@
 
 #pragma comment(lib, "DirectXTex.lib")
 
+// 関数化したいなあ
 ID3D12Resource* LoadTextureFromFile(
     const std::string& texturePath,
     std::map<std::string, ID3D12Resource*>& _resourceTable
