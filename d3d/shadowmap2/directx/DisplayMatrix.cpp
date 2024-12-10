@@ -75,7 +75,7 @@ HRESULT DisplayMatrix::SetMatrixBuffer()
     m_modelHeap->SetRootParameter(
         m_segment.GetID(),
         D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE,
-        D3D12_SHADER_VISIBILITY_VERTEX,
+        D3D12_SHADER_VISIBILITY_ALL,
         range,
         1
     );

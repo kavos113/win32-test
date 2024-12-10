@@ -597,18 +597,7 @@ ID3D12Resource* CreateBlackTexture()
         return nullptr;
     }
 
-    unsigned char* srcAddr = data.data();
-    for (size_t i = 0; i < 4; ++i)
-    {
-        std::copy_n(
-            srcAddr,
-            4 * 4,
-            mapForImage
-        );
-
-        srcAddr += 4 * 4;
-        mapForImage += 4 * 4;
-    }
+    std::ranges::copy(data, mapForImage);
 
     uploadBuffer->Unmap(0, nullptr);
 
@@ -813,18 +802,7 @@ ID3D12Resource* CreateGrayGradationTexture()
         return nullptr;
     }
 
-    unsigned int* srcAddr = data.data();
-    for (size_t i = 0; i < 256; ++i)
-    {
-        std::copy_n(
-            srcAddr,
-            4 * sizeof(unsigned int),
-            mapForImage
-        );
-
-        srcAddr += 4 * sizeof(unsigned int);
-        mapForImage += 4 * sizeof(unsigned int);
-    }
+    std::ranges::copy(data, mapForImage);
 
     uploadBuffer->Unmap(0, nullptr);
 
