@@ -21,12 +21,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    SOCKET serverSocket = INVALID_SOCKET;
+    auto serverSocket = INVALID_SOCKET;
     serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (serverSocket == INVALID_SOCKET)
     {
         std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
+        return 1;
     }
 
     sockaddr_in serverAddr;

@@ -21,6 +21,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto clientSocket = INVALID_SOCKET;
+    clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (clientSocket == INVALID_SOCKET)
+    {
+        std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return 1;
+    }
+
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(DEFAULT_PORT);
@@ -32,7 +41,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    SOCKET clientSocket = INVALID_SOCKET;
     r = bind(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
     if (r == SOCKET_ERROR)
     {
