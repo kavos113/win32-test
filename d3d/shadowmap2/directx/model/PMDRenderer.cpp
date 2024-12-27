@@ -328,6 +328,9 @@ HRESULT PMDRenderer::CreateRootSignature()
         return hr;
     }
 
+    auto p = signatureBlob->GetBufferPointer();
+    auto s = signatureBlob->GetBufferSize();
+
     hr = DXDevice::GetDevice()->CreateRootSignature(
         0,
         signatureBlob->GetBufferPointer(),

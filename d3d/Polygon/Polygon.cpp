@@ -235,17 +235,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
     // copy vertex data to GPU
+	// DirectX::XMFLOAT3 vertices[] = {
+	// 	{-0.5f, -0.5f, 0.0f}, // index 0
+ //        {-0.5f,  0.5f, 0.0f}, // index 1
+ //        { 0.5f, -0.5f, 0.0f}, // index 2
+ //        { 0.5f,  0.5f, 0.0f}  // index 3
+ //    };
+ //
+	// unsigned short indices[] = {
+	// 	0, 1, 2,
+	// 	2, 1, 3
+ //    };
+
 	DirectX::XMFLOAT3 vertices[] = {
-		{-0.5f, -0.5f, 0.0f}, // index 0
-        {-0.5f,  0.5f, 0.0f}, // index 1
-        { 0.5f, -0.5f, 0.0f}, // index 2
-        { 0.5f,  0.5f, 0.0f}  // index 3
-    };
+		{-0.5f, 0.5f, 0.0f},
+		{-0.5f, -0.5f, 0.0f},
+		{0.5f, 0.5f, 0.0f}
+	};
 
 	unsigned short indices[] = {
-		0, 1, 2,
-		2, 1, 3
-    };
+		0, 1, 2
+	};
 
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 
@@ -572,7 +582,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         _cmdList->IASetVertexBuffers(0, 1, &vbv);
         _cmdList->IASetIndexBuffer(&ibv);
 
-        _cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+        _cmdList->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

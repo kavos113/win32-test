@@ -91,10 +91,137 @@ void DisplayIndex(FbxMesh* pMesh)
 
     for (int p = 0; p < polygon_count; ++p)
     {
-        std::println("Polygon {}: ({}, {}, {})", 
-            p, pMesh->GetPolygonVertex(p, 0), 
-            pMesh->GetPolygonVertex(p, 1), 
-            pMesh->GetPolygonVertex(p, 2));
+
+        int polygon_size = pMesh->GetPolygonSize(p);
+
+        std::print("Polygon {}: (", p);
+
+        for (int i = 0; i < polygon_size; ++i)
+        {
+            int index = pMesh->GetPolygonVertex(p, i);
+            std::print("{}, ", index);
+        }
+        std::println(")");
+
+        for (int i = 0; i < polygon_size; ++i)
+        {
+            for (int j = 0; j < pMesh->GetElementUVCount(); ++j)
+            {
+                auto* elementUV = pMesh->GetElementUV(j);
+
+                switch (elementUV->GetMappingMode())
+                {
+                case FbxGeometryElement::eByControlPoint:
+                    std::print("    UV by control point  ");
+                    switch (elementUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            std::print("UV {}: ({}, {}), ", pMesh->GetTextureUVIndex(p, i), uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("index to direct  ");
+                            int id = elementUV->GetIndexArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(id);
+                            std::print("UV {}: ({}, {}), ", pMesh->GetTextureUVIndex(p, i), uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygonVertex:
+                    std::print("    UV by polygon vertex  ");
+                    switch (elementUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            std::print("UV {}: ({}, {}), ", pMesh->GetTextureUVIndex(p, i), uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygon:
+                case FbxGeometryElement::eByEdge:
+                case FbxGeometryElement::eAllSame:
+                case FbxGeometryElement::eNone:
+                    std::print("UV none");
+                    break;
+                }
+
+                std::println();
+            }
+        }
+
+        for (int i = 0; i < polygon_size; ++i)
+        {
+            for (int j = 0; j < pMesh->GetElementNormalCount(); j++)
+            {
+                auto* normal = pMesh->GetElementNormal(j);
+
+                switch (normal->GetMappingMode())
+                {
+                case FbxGeometryElement::eByControlPoint:
+                    std::print("    Normal by control point  ");
+                    switch (normal->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector4 norm = normal->GetDirectArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            std::print("Normal {}: ({}, {}, {}, {}), ", pMesh->GetTextureUVIndex(p, i),  norm[0], norm[1], norm[2], norm[3]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("index to direct  ");
+                            int id = normal->GetIndexArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            FbxVector4 norm = normal->GetDirectArray().GetAt(id);
+                            std::print("Normal {}: ({}, {}, {}, {}), ", pMesh->GetTextureUVIndex(p, i), norm[0], norm[1], norm[2], norm[3]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygonVertex:
+                    std::print("    Normal by polygon vertex  ");
+                    switch (normal->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector4 norm = normal->GetDirectArray().GetAt(pMesh->GetTextureUVIndex(p, i));
+                            std::print("Normal {}: ({}, {}, {}, {}), ", pMesh->GetTextureUVIndex(p, i), norm[0], norm[1], norm[2], norm[3]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygon:
+                case FbxGeometryElement::eByEdge:
+                case FbxGeometryElement::eAllSame:
+                case FbxGeometryElement::eNone:
+                    std::print("Normal none");
+                    break;
+                }
+
+                std::println();
+            }
+        }
+
+
     }
 }
 
@@ -107,6 +234,62 @@ void DisplayPosition(FbxMesh* pMesh)
     {
         std::println("Vertex {}: ({}, {}, {})",
             i, position[i][0], position[i][1], position[i][2], position[i][3]);
+
+        for (int j = 0; j < pMesh->GetElementUVCount(); ++j)
+            {
+                auto* elementUV = pMesh->GetElementUV(j);
+
+                switch (elementUV->GetMappingMode())
+                {
+                case FbxGeometryElement::eByControlPoint:
+                    std::print("    UV by control point  ");
+                    switch (elementUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(i);
+                            std::print("UV: ({}, {}), ", uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("index to direct  ");
+                            int id = elementUV->GetIndexArray().GetAt(i);
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(id);
+                            std::print("UV: ({}, {}), ", uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygonVertex:
+                    std::print("    UV by polygon vertex  ");
+                    switch (elementUV->GetReferenceMode())
+                    {
+                    case FbxGeometryElement::eDirect:
+                    case FbxGeometryElement::eIndexToDirect:
+                        {
+                            std::print("direct  ");
+                            FbxVector2 uv = elementUV->GetDirectArray().GetAt(i);
+                            std::print("UV {}: ({}, {}), ", i, uv[0], uv[1]);
+                        }
+                        break;
+                    case FbxGeometryElement::eIndex:
+                        break;
+                    }
+                    break;
+                case FbxGeometryElement::eByPolygon:
+                case FbxGeometryElement::eByEdge:
+                case FbxGeometryElement::eAllSame:
+                case FbxGeometryElement::eNone:
+                    std::print("UV none");
+                    break;
+                }
+
+                std::println();
+            }
     }
 }
 
@@ -117,7 +300,7 @@ void DisplayMesh(FbxNode* pNode)
     std::println("Mesh name: {}", pNode->GetName());
 
     DisplayIndex(mesh);
-    DisplayPosition(mesh);
+    //DisplayPosition(mesh);
 }
 
 void DisplayContent(FbxNode* pNode)
@@ -141,6 +324,7 @@ int main(int argc, char** argv)
     if (!FbxFileUtils::Exist(lFilename))
     {
         std::println("file not found: {}", lFilename);
+        system("dir");
         exit(-1);
     }
 

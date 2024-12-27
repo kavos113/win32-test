@@ -279,10 +279,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// copy vertex data to GPU
 	Vertex vertices[] = {
-		{{-1.0f,-1.0f,0.0f},{0.0f,1.0f} },//ç∂â∫
-		{{-1.0f,1.0f,0.0f} ,{0.0f,0.0f}},//ç∂è„
-		{{1.0f,-1.0f,0.0f} ,{1.0f,1.0f}},//âEâ∫
-		{{1.0f,1.0f,0.0f} ,{1.0f,0.0f}},//âEè„ 
+		{{-1.0f,-1.0f,0.0f},{0.0f,1.0f} },//Â∑¶‰∏ã
+		{{-1.0f,1.0f,0.0f} ,{0.0f,0.0f}},//Â∑¶‰∏ä
+		{{1.0f,-1.0f,0.0f} ,{1.0f,1.0f}},//Âè≥‰∏ã
+		{{1.0f,1.0f,0.0f} ,{1.0f,0.0f}},//Âè≥‰∏ä 
 	};
 
 	unsigned short indices[] = {
@@ -544,7 +544,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     rootParam[1].DescriptorTable.pDescriptorRanges = &descRange[1];
     rootParam[1].DescriptorTable.NumDescriptorRanges = 1;
 
-    // D3D12_SHADER_VISIBILITY_ALLÇ≈Ç‡ÇÊÇ¢
+    // D3D12_SHADER_VISIBILITY_ALL„Åß„ÇÇ„Çà„ÅÑ
 
 	rootSignatureDesc.NumParameters = 2;
 	rootSignatureDesc.pParameters = rootParam;
@@ -937,7 +937,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     constantBufferResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
     constantBufferResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    constantBufferResourceDesc.Width = (sizeof(worldMatrix) + 0xff) & ~0xff;  // ~0xff: 256ÉoÉCÉgà»â∫Ç™0
+    constantBufferResourceDesc.Width = (sizeof(worldMatrix) + 0xff) & ~0xff;  // ~0xff: 256„Éê„Ç§„Éà‰ª•‰∏ã„Åå0
     constantBufferResourceDesc.Height = 1;
     constantBufferResourceDesc.DepthOrArraySize = 1;
     constantBufferResourceDesc.MipLevels = 1;

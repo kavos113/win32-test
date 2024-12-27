@@ -40,8 +40,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    OutputDebugString(L"HandleMessage\n");
-    
+
     switch (uMsg)
     {
     case WM_DESTROY:
@@ -50,6 +49,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     case WM_PAINT:
     {
+        OutputDebugString(L"WM_PAINT\n");
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_hwnd, &ps);
         
