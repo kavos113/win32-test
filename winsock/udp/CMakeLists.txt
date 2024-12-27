@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.29)
+project(winsock-udp CXX)
+
+add_executable(winsock-udp-client client.cpp)
+add_executable(winsock-udp-server server.cpp)
+target_link_libraries(winsock-udp-client PUBLIC $ENV{Windows_SDK_Lib}/WS2_32.lib)
+target_link_libraries(winsock-udp-client PUBLIC $ENV{Windows_SDK_Lib}/MsWSock.lib)
+target_link_libraries(winsock-udp-client PUBLIC $ENV{Windows_SDK_Lib}/AdvAPI32.lib)
+target_link_libraries(winsock-udp-server PUBLIC $ENV{Windows_SDK_Lib}/WS2_32.lib)
+target_link_libraries(winsock-udp-server PUBLIC $ENV{Windows_SDK_Lib}/MsWSock.lib)
+target_link_libraries(winsock-udp-server PUBLIC $ENV{Windows_SDK_Lib}/AdvAPI32.lib)
+
+if (EXISTS $ENV{Windows_SDK_Lib}/WS2_32.lib)
+    message(STATUS "there is winsock lib")
+else ()
+    message(STATUS "no winsock")
+endif ()
