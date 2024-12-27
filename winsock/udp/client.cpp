@@ -33,13 +33,7 @@ int main(int argc, char** argv)
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(DEFAULT_PORT);
-    r = inet_pton(AF_INET, argv[1], &serverAddr.sin_addr);
-    if (r == 0)
-    {
-        std::cerr << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
-        WSACleanup();
-        return 1;
-    }
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     r = bind(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
     if (r == SOCKET_ERROR)
@@ -51,7 +45,7 @@ int main(int argc, char** argv)
     }
 
     // blocking code
-    u_long nonblock = 1;
+    u_long nonblock = 0;
     r = ioctlsocket(clientSocket, FIONBIO, &nonblock);
     if (r == SOCKET_ERROR)
     {
