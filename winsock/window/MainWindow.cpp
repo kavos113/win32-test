@@ -1,13 +1,13 @@
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "MainWindow.h"
 
-template <class T> void SafeRelease(T **ppT)
-{
-    if (*ppT)
-    {
-        (*ppT)->Release();
-        *ppT = nullptr;
-    }
-}
+#include <iostream>
+#include <WS2tcpip.h>
+#include <WinSock2.h>
+#include <windows.h>
 
 void MainWindow::SetUp()
 {
@@ -30,6 +30,8 @@ void MainWindow::SetUp()
         myEllipse = D2D1::Ellipse(myPoint, 100, 100);
         otherEllipse = D2D1::Ellipse(otherPoint, 100, 100);
     }
+
+    CreateSocket();
 }
 
 HRESULT MainWindow::CreateGraphicsResources()
@@ -134,6 +136,45 @@ void MainWindow::OnKeyboardDown()
     InvalidateRect(m_hwnd, nullptr, FALSE);
 }
 
+void MainWindow::CreateSocket()
+{
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET)
+    {
+        std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return;
+    }
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+    int r = inet_pton(AF_INET, ipaddr.c_str(), &serverAddr.sin_addr);
+    if (r == 0)
+    {
+        std::cerr << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return;
+    }
+}
+
+HRESULT MainWindow::SendCoordinates()
+{
+    float my_point[] = {myPoint.x, myPoint.y};
+    char buf[sizeof(my_point)];
+    memcpy(buf, my_point, sizeof(my_point));
+
+    int r = sendto(sock, buf, sizeof(buf), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
+    if (r == SOCKET_ERROR)
+    {
+        std::cerr << "sendto failed with error: " << WSAGetLastError() << std::endl;
+        closesocket(sock);
+        WSACleanup();
+        return E_FAIL;
+    }
+
+    return 0;
+}
+
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -164,18 +205,22 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 case VK_LEFT:
                     OnKeyboardLeft();
+                    SendCoordinates();
                     break;
 
                 case VK_RIGHT:
                     OnKeyboardRight();
+                    SendCoordinates();
                     break;
 
                 case VK_UP:
                     OnKeyboardUp();
+                    SendCoordinates();
                     break;
 
                 case VK_DOWN:
                     OnKeyboardDown();
+                    SendCoordinates();
                     break;
             }
     }

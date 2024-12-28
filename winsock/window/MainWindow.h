@@ -3,13 +3,24 @@
 
 #include <windows.h>
 #include <d2d1.h>
+#include <string>
+#include <winsock2.h>
 
 #include "BaseWindow.h"
+
+template <class T> void SafeRelease(T **ppT)
+{
+    if (*ppT)
+    {
+        (*ppT)->Release();
+        *ppT = nullptr;
+    }
+}
 
 class MainWindow : public BaseWindow
 {
 public:
-    explicit MainWindow(bool isServer)
+    explicit MainWindow(bool isServer, const std::string &ipaddr)
         : pFactory(nullptr)
         , pRenderTarget(nullptr)
         , pBrush(nullptr)
@@ -18,8 +29,19 @@ public:
         , myPoint()
         , otherPoint()
         , isServer(isServer)
+        , ipaddr(ipaddr)
+        , sock(INVALID_SOCKET)
+        , serverAddr()
     {
+    }
 
+    ~MainWindow() override
+    {
+        DiscardGraphicsResources();
+        SafeRelease(&pFactory);
+
+        closesocket(sock);
+        WSACleanup();
     }
 
     void SetUp();
@@ -41,6 +63,11 @@ private:
     D2D1_POINT_2F otherPoint;
     bool isServer;
 
+    std::string ipaddr;
+    constexpr unsigned short port = 27015;
+    SOCKET sock;
+    sockaddr_in serverAddr;
+
     HRESULT CreateGraphicsResources();
     void DiscardGraphicsResources();
     void OnPaint();
@@ -49,6 +76,9 @@ private:
     void OnKeyboardRight();
     void OnKeyboardUp();
     void OnKeyboardDown();
+
+    void CreateSocket();
+    HRESULT SendCoordinates();
 };
 
 
