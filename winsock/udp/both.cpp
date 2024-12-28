@@ -13,6 +13,9 @@
 int sendvalue(char* ipaddr);
 int recieve();
 
+auto sock = INVALID_SOCKET;
+sockaddr_in serverAddr;
+
 int main(int argc, char** argv)
 {
     // initialize winsock
@@ -25,31 +28,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::thread t(recieve);
-
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-    std::cout << "Sending value..." << std::endl;
-    sendvalue(argv[1]);
-    std::cout << "Done" << std::endl;
-
-    t.join();
-}
-
-int sendvalue(char* ipaddr)
-{
-    auto serverSocket = INVALID_SOCKET;
-    serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (serverSocket == INVALID_SOCKET)
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET)
     {
         std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return 1;
     }
 
-    sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(DEFAULT_PORT);
-    int r = inet_pton(AF_INET, ipaddr, &serverAddr.sin_addr);
+    r = inet_pton(AF_INET, argv[1], &serverAddr.sin_addr);
     if (r == 0)
     {
         std::cerr << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
@@ -57,71 +46,56 @@ int sendvalue(char* ipaddr)
         return 1;
     }
 
-    r = sendto(serverSocket, "Hello, world!", 13, 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
+    r = bind(sock, (sockaddr*)&serverAddr, sizeof(serverAddr));
     if (r == SOCKET_ERROR)
     {
-        std::cerr << "sendto failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(serverSocket);
+        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
+        closesocket(sock);
         WSACleanup();
         return 1;
     }
 
-    closesocket(serverSocket);
+    std::thread t(recieve);
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::cout << "Sending value..." << std::endl;
+    sendvalue(argv[1]);
+    std::cout << "Done" << std::endl;
+
+    t.join();
+
+    closesocket(sock);
     WSACleanup();
+}
+
+int sendvalue(char* ipaddr)
+{
+    int r = sendto(sock, "Hello, world!", 13, 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
+    if (r == SOCKET_ERROR)
+    {
+        std::cerr << "sendto failed with error: " << WSAGetLastError() << std::endl;
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
 
     return 0;
 }
 
 int recieve()
 {
-    auto clientSocket = INVALID_SOCKET;
-    clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (clientSocket == INVALID_SOCKET)
+    while (true)
     {
-        std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
-        WSACleanup();
-        return 1;
+        char recvbuf[16];
+        int r = recv(sock, recvbuf, 16, 0);
+        if (r == SOCKET_ERROR)
+        {
+            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        }
+
+        std::cout << "Received: " << recvbuf << std::endl;
     }
-
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(DEFAULT_PORT);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-
-    int r = bind(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
-    if (r == SOCKET_ERROR)
-    {
-        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    // blocking code
-    u_long nonblock = 0;
-    r = ioctlsocket(clientSocket, FIONBIO, &nonblock);
-    if (r == SOCKET_ERROR)
-    {
-        std::cerr << "ioctlsocket failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    char recvbuf[512];
-    r = recv(clientSocket, recvbuf, 512, 0);
-    if (r == SOCKET_ERROR)
-    {
-        std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    std::cout << "Received: " << recvbuf << std::endl;
-
-    closesocket(clientSocket);
-    WSACleanup();
-
-    return 0;
 }
