@@ -147,7 +147,8 @@ void MainWindow::CreateSocket()
     }
 
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
+    if (isServer) serverAddr.sin_port = 27017;
+    else serverAddr.sin_port = 27018;
     int r = inet_pton(AF_INET, ipaddr.c_str(), &serverAddr.sin_addr);
     if (r == 0)
     {
@@ -171,6 +172,8 @@ HRESULT MainWindow::SendCoordinates()
         WSACleanup();
         return E_FAIL;
     }
+
+    std::cout << "sendto success" << std::endl;
 
     return 0;
 }

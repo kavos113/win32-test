@@ -64,7 +64,7 @@ private:
     bool isServer;
 
     std::string ipaddr;
-    constexpr unsigned short port = 27015;
+    const unsigned short port = 27015;
     SOCKET sock;
     sockaddr_in serverAddr;
 
