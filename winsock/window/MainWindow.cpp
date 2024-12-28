@@ -24,8 +24,8 @@ void MainWindow::SetUp()
     }
     else
     {
-        myPoint = D2D1::Point2F(rc.right - 100, rc.top + 100);
-        otherPoint = D2D1::Point2F(rc.left + 100, rc.bottom - 100);
+        myPoint = D2D1::Point2F(rc.right - 100, rc.bottom - 100);
+        otherPoint = D2D1::Point2F(rc.left + 100, rc.top + 100);
 
         myEllipse = D2D1::Ellipse(myPoint, 100, 100);
         otherEllipse = D2D1::Ellipse(otherPoint, 100, 100);
@@ -207,7 +207,10 @@ void MainWindow::Listen()
         float val[2];
         memcpy(val, recvbuf, sizeof(float) * 2);
 
-        std::cout << "Received: " << val[0] << ", " << val[1] << std::endl;
+        otherPoint.x = val[0];
+        otherPoint.y = val[1];
+        otherEllipse = D2D1::Ellipse(otherPoint, 100, 100);
+        InvalidateRect(m_hwnd, nullptr, FALSE);
     }
 }
 
