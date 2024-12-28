@@ -95,7 +95,7 @@ int sendvalue()
 
 int recieve()
 {
-    for (int i = 0; i < 30; i++)
+    while (true)
     {
         char recvbuf[16];
         int r = recv(sock, recvbuf, 16, 0);
