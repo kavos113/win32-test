@@ -80,7 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
     }
     window->SetUp();
 
-    std::thread t1(&MainWindow::Listen, window);
+    std::thread t1(&MainWindow::Listen, window.get());
 
     ShowWindow(window->Window(), nCmdShow);
 
