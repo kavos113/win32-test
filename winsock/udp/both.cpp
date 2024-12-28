@@ -2,7 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#define DEFAULT_PORT 27020
+#define DEFAULT_PORT 28020
 
 #include <windows.h>
 #include <WinSock2.h>
@@ -10,7 +10,7 @@
 #include <iostream>
 #include <thread>
 
-int sendvalue(char* ipaddr);
+int sendvalue();
 int recieve();
 
 auto sock = INVALID_SOCKET;
@@ -60,11 +60,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    std::cout << "Listening..." << std::endl;
+
     std::thread t(recieve);
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
     std::cout << "Sending value..." << std::endl;
-    sendvalue(argv[1]);
+    sendvalue();
     std::cout << "Done" << std::endl;
 
     t.join();
@@ -73,7 +75,7 @@ int main(int argc, char** argv)
     WSACleanup();
 }
 
-int sendvalue(char* ipaddr)
+int sendvalue()
 {
     int r = sendto(sock, "Hello, world!", 13, 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
     if (r == SOCKET_ERROR)
@@ -103,4 +105,6 @@ int recieve()
 
         std::cout << "Received: " << recvbuf << std::endl;
     }
+
+    return 0;
 }
