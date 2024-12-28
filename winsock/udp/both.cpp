@@ -2,7 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#define DEFAULT_PORT 27017
+#define DEFAULT_PORT 27020
 
 #include <windows.h>
 #include <WinSock2.h>
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     std::thread t(recieve);
 
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::this_thread::sleep_for(std::chrono::seconds(5));
     std::cout << "Sending value..." << std::endl;
     sendvalue(argv[1]);
     std::cout << "Done" << std::endl;
@@ -89,7 +89,7 @@ int sendvalue(char* ipaddr)
 
 int recieve()
 {
-    while (true)
+    for (int i = 0; i < 1; i++)
     {
         char recvbuf[16];
         int r = recv(sock, recvbuf, 16, 0);
