@@ -46,7 +46,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    r = bind(sock, (sockaddr*)&serverAddr, sizeof(serverAddr));
+    sockaddr_in clientAddr;
+    clientAddr.sin_family = AF_INET;
+    clientAddr.sin_port = htons(DEFAULT_PORT);
+    clientAddr.sin_addr.s_addr = INADDR_ANY;
+
+    r = bind(sock, (sockaddr*)&clientAddr, sizeof(clientAddr));
     if (r == SOCKET_ERROR)
     {
         std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
