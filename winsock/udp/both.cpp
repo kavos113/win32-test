@@ -27,6 +27,11 @@ int main(int argc, char** argv)
 
     std::thread t(recieve);
     t.join();
+
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::cout << "Sending value..." << std::endl;
+    sendvalue(argv[1]);
+    std::cout << "Done" << std::endl;
 }
 
 int sendvalue(char* ipaddr)
