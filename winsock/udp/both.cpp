@@ -10,6 +10,9 @@
 #include <iostream>
 #include <thread>
 
+int sendvalue(char* ipaddr);
+int recieve();
+
 int main(int argc, char** argv)
 {
     // initialize winsock
@@ -22,14 +25,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::thread t1(recv);
-    std::thread t2(send, argv[1]);
-
-    t1.join();
-    t2.join();
+    std::thread t(recieve);
+    t.join();
 }
 
-int send(char* ipaddr)
+int sendvalue(char* ipaddr)
 {
     auto serverSocket = INVALID_SOCKET;
     serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -66,7 +66,7 @@ int send(char* ipaddr)
     return 0;
 }
 
-int recv()
+int recieve()
 {
     auto clientSocket = INVALID_SOCKET;
     clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
