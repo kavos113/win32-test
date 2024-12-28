@@ -64,10 +64,14 @@ int main(int argc, char** argv)
 
     std::thread t(recieve);
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::cout << "Sending value..." << std::endl;
-    sendvalue();
-    std::cout << "Done" << std::endl;
+    for (int i = 0; i < 5; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        std::cout << "Sending value..." << std::endl;
+        sendvalue();
+        std::cout << "Done" << std::endl;
+    }
+
 
     t.join();
 
@@ -91,7 +95,7 @@ int sendvalue()
 
 int recieve()
 {
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 5; i++)
     {
         char recvbuf[16];
         int r = recv(sock, recvbuf, 16, 0);
