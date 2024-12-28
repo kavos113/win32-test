@@ -45,6 +45,7 @@ public:
     }
 
     void SetUp();
+    void Listen();
 
     LPCSTR ClassName() const override
     {
@@ -52,7 +53,6 @@ public:
     }
 
     LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
 private:
     ID2D1Factory *pFactory;
     ID2D1HwndRenderTarget *pRenderTarget;

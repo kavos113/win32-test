@@ -147,12 +147,24 @@ void MainWindow::CreateSocket()
     }
 
     serverAddr.sin_family = AF_INET;
-    if (isServer) serverAddr.sin_port = 27017;
-    else serverAddr.sin_port = 27018;
+    serverAddr.sin_port = htons(port);
     int r = inet_pton(AF_INET, ipaddr.c_str(), &serverAddr.sin_addr);
     if (r == 0)
     {
         std::cerr << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
+        WSACleanup();
+        return;
+    }
+
+    sockaddr_in clientAddr;
+    clientAddr.sin_family = AF_INET;
+    clientAddr.sin_port = htons(port);
+    clientAddr.sin_addr.s_addr = INADDR_ANY;
+    r = bind(sock, (sockaddr*)&clientAddr, sizeof(clientAddr));
+    if (r == SOCKET_ERROR)
+    {
+        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
+        closesocket(sock);
         WSACleanup();
         return;
     }
@@ -173,11 +185,30 @@ HRESULT MainWindow::SendCoordinates()
         return E_FAIL;
     }
 
-    char addr[48];
-    inet_ntop(AF_INET, &serverAddr.sin_addr, addr, sizeof(addr));
-    std::cout << "sendto: " << addr << ":" << serverAddr.sin_port << std::endl;
-
     return 0;
+}
+
+void MainWindow::Listen()
+{
+    std::cout << "Listening..." << std::endl;
+
+    while (true)
+    {
+        char recvbuf[sizeof(float) * 2];
+        int r = recv(sock, recvbuf, sizeof(float) * 2, 0);
+        if (r == SOCKET_ERROR)
+        {
+            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+            closesocket(sock);
+            WSACleanup();
+            return;
+        }
+
+        float val[2];
+        memcpy(val, recvbuf, sizeof(float) * 2);
+
+        std::cout << "Received: " << val[0] << ", " << val[1] << std::endl;
+    }
 }
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)

@@ -14,9 +14,6 @@
 #include "BaseWindow.h"
 #include "MainWindow.h"
 
-int receive();
-int send(const char* ipaddr);
-
 std::string wcharToString(const wchar_t* wstr)
 {
     int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
@@ -83,7 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
     }
     window->SetUp();
 
-    std::thread t1(receive);
+    std::thread t1(&MainWindow::Listen, window);
 
     ShowWindow(window->Window(), nCmdShow);
 
@@ -95,68 +92,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
     }
 
     t1.join();
-
-    return 0;
-}
-
-int receive()
-{
-    auto clientSocket = INVALID_SOCKET;
-    clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (clientSocket == INVALID_SOCKET)
-    {
-        std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
-        WSACleanup();
-        return 1;
-    }
-
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(DEFAULT_PORT);
-    serverAddr.sin_addr.S_un.S_addr = INADDR_ANY;
-
-    int r = bind(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
-    if (r == SOCKET_ERROR)
-    {
-        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    std::cout << "Listening on port " << DEFAULT_PORT << std::endl;
-
-    // blocking code
-    u_long nonblock = 0;
-    r = ioctlsocket(clientSocket, FIONBIO, &nonblock);
-    if (r == SOCKET_ERROR)
-    {
-        std::cerr << "ioctlsocket failed with error: " << WSAGetLastError() << std::endl;
-        closesocket(clientSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    while (true)
-    {
-        char recvbuf[sizeof(float) * 2];
-        r = recv(clientSocket, recvbuf, sizeof(float) * 2, 0);
-        if (r == SOCKET_ERROR)
-        {
-            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
-            closesocket(clientSocket);
-            WSACleanup();
-            return 1;
-        }
-
-        float val[2];
-        memcpy(val, recvbuf, sizeof(float) * 2);
-
-        std::cout << "Received: " << val[0] << ", " << val[1] << std::endl;
-    }
-
-    closesocket(clientSocket);
-    WSACleanup();
 
     return 0;
 }
