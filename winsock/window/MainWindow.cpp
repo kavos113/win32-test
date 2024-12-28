@@ -173,7 +173,9 @@ HRESULT MainWindow::SendCoordinates()
         return E_FAIL;
     }
 
-    std::cout << "sendto success" << std::endl;
+    char addr[48];
+    inet_ntop(AF_INET, &serverAddr.sin_addr, addr, sizeof(addr));
+    std::cout << "sendto: " << addr << ":" << serverAddr.sin_port << std::endl;
 
     return 0;
 }
