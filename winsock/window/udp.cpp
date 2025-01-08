@@ -35,7 +35,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
 
     if (numArgs != 3)
     {
-        std::cerr << "Usage: udp.exe server/client <ipaddr>" << std::endl;
+        std::cout << "Usage: udp.exe server/client <ipaddr>" << std::endl;
         return 0;
     }
 
@@ -45,7 +45,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
     int r = WSAStartup(MAKEWORD(2, 2), &wsaData); // both use winsock version 2
     if (r != 0)
     {
-        std::cerr << "WSAStartup failed with error: " << r << std::endl;
+        std::cout << "WSAStartup failed with error: " << r << std::endl;
         return 1;
     }
 
@@ -60,7 +60,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
     }
     else
     {
-        std::cerr << "Usage: udp.exe server/client" << std::endl;
+        std::cout << "Usage: udp.exe server/client" << std::endl;
         return 0;
     }
 
@@ -75,7 +75,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lCmdLine
         );
     if (FAILED(hr))
     {
-        std::cerr << "Failed to create window" << std::endl;
+        std::cout << "Failed to create window" << std::endl;
         return 1;
     }
     window->SetUp();

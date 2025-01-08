@@ -141,7 +141,7 @@ void MainWindow::CreateSocket()
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == INVALID_SOCKET)
     {
-        std::cerr << "socket failed with error: " << WSAGetLastError() << std::endl;
+        std::cout << "socket failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return;
     }
@@ -151,7 +151,7 @@ void MainWindow::CreateSocket()
     int r = inet_pton(AF_INET, ipaddr.c_str(), &serverAddr.sin_addr);
     if (r == 0)
     {
-        std::cerr << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
+        std::cout << "inet_pton failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return;
     }
@@ -163,7 +163,7 @@ void MainWindow::CreateSocket()
     r = bind(sock, (sockaddr*)&clientAddr, sizeof(clientAddr));
     if (r == SOCKET_ERROR)
     {
-        std::cerr << "bind failed with error: " << WSAGetLastError() << std::endl;
+        std::cout << "bind failed with error: " << WSAGetLastError() << std::endl;
         closesocket(sock);
         WSACleanup();
         return;
@@ -179,7 +179,7 @@ HRESULT MainWindow::SendCoordinates()
     int r = sendto(sock, buf, sizeof(buf), 0, (sockaddr*)&serverAddr, sizeof(serverAddr));
     if (r == SOCKET_ERROR)
     {
-        std::cerr << "sendto failed with error: " << WSAGetLastError() << std::endl;
+        std::cout << "sendto failed with error: " << WSAGetLastError() << std::endl;
         closesocket(sock);
         WSACleanup();
         return E_FAIL;
@@ -198,7 +198,7 @@ void MainWindow::Listen()
         int r = recv(sock, recvbuf, sizeof(float) * 2, 0);
         if (r == SOCKET_ERROR)
         {
-            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+            std::cout << "recv failed with error: " << WSAGetLastError() << std::endl;
             closesocket(sock);
             WSACleanup();
             return;
