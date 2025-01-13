@@ -104,7 +104,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PostMessage(hwnd, WM_CLOSE, 0, 0);
             break;
         case IDM_DIALOG:
-            DialogBox(hInst, TEXT("MYDIALOG"), hwnd, (DLGPROC) DialogProc);
+            DialogBox(GetModuleHandle(NULL), "MYDIALOG", hwnd, DialogProc);
             break;
         case IDM_ABOUT:
             MessageBox(hwnd, TEXT("Hello, Windows!"), TEXT("About"), MB_OK);
