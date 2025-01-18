@@ -234,7 +234,7 @@ HRESULT Audio::Init()
     }
 
     listenerPos = { 0.0f, 0.0f, 0.0f };
-    emitterPos = { 0.0f, 0.0f, 10.0f };
+    emitterPos = { 3.0f, 0.0f, 10.0f };
     listener.Position.x = listenerPos.x;
     listener.Position.y = listenerPos.y;
     listener.Position.z = listenerPos.z;
@@ -246,14 +246,16 @@ HRESULT Audio::Init()
     emitter.Position.z = emitterPos.z;
     emitter.OrientFront = { 0.0f, 0.0f, 1.0f };
     emitter.OrientTop = { 0.0f, 1.0f, 0.0f };
-    emitter.Velocity = { 0.0f, 0.0f, -10.0f };
+    emitter.Velocity = { 0.0f, 0.0f, -4.0f };
     emitter.InnerRadius = 2.0f;
     emitter.InnerRadiusAngle = X3DAUDIO_PI / 4.0f;
-    emitter.CurveDistanceScaler = 14.0f;
+    emitter.CurveDistanceScaler = 4.0f;
     emitter.DopplerScaler = 1.0f;
     emitter.ChannelCount = INPUT_CHANNELS;
     emitter.ChannelRadius = 1.0f;
-    FLOAT32 emitterAzimuths[INPUT_CHANNELS] = { 0.0f, X3DAUDIO_2PI };
+    FLOAT32 *emitterAzimuths= new FLOAT32[INPUT_CHANNELS];
+    emitterAzimuths[0] = 0.0f;
+    emitterAzimuths[1] = X3DAUDIO_2PI;
     emitter.pChannelAzimuths = emitterAzimuths;
 
     dspSettings.SrcChannelCount = INPUT_CHANNELS;
@@ -312,7 +314,7 @@ HRESULT Audio::Update()
 {
     OutputDebugString(std::to_wstring(emitterPos.z).c_str());
     OutputDebugString(L"\n");
-    emitterPos.z -= 0.5f;
+    emitterPos.z -= 0.1f;
     if (emitterPos.z < -10.0f)
     {
         emitterPos.z = 10.0f;
