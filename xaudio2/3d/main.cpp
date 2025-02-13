@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <thread>
 #include <windows.h>
 #include <xaudio2.h>
 #include <x3daudio.h>
@@ -153,11 +154,15 @@ class Audio
 public:
     HRESULT Init();
     HRESULT Play();
+    HRESULT PlayBGM();
 private:
     IXAudio2 *pXAudio = nullptr;
     IXAudio2MasteringVoice *pMasteringVoice = nullptr;
     IXAudio2SourceVoice *pSourceVoice = nullptr;
     WaveData waveData = {};
+
+    IXAudio2SourceVoice *pBGMSrcVoice = nullptr;
+    WaveData bgmWaveData = {};
 
     X3DAUDIO_HANDLE x3dInstance = {};
     DWORD channelMask = 0;
@@ -307,6 +312,51 @@ HRESULT Audio::Init()
         return hr;
     }
 
+    hr = LoadWaveFile(L"mywave2.wav", &bgmWaveData);
+    if (FAILED(hr))
+    {
+        OutputDebugString(L"FATAL: LoadWaveFile failed\n");
+        CleanUp();
+        return hr;
+    }
+
+    WAVEFORMATEX bgmWaveFormat;
+    memcpy(&bgmWaveFormat, &bgmWaveData.waveFormat, sizeof(WAVEFORMATEX));
+    bgmWaveFormat.wBitsPerSample = bgmWaveFormat.nBlockAlign * 8 / bgmWaveFormat.nChannels;
+
+    hr = pXAudio->CreateSourceVoice(
+        &pBGMSrcVoice,
+        &bgmWaveFormat
+        );
+    if (FAILED(hr))
+    {
+        OutputDebugString(L"FATAL: CreateSourceVoice failed\n");
+        CleanUp();
+        return hr;
+    }
+
+    XAUDIO2_BUFFER bgmBuffer = {};
+    bgmBuffer.AudioBytes = bgmWaveData.dataSize;
+    bgmBuffer.pAudioData = reinterpret_cast<BYTE*>(bgmWaveData.data);
+    bgmBuffer.Flags = XAUDIO2_END_OF_STREAM;
+    bgmBuffer.LoopCount = XAUDIO2_LOOP_INFINITE;
+
+    hr = pBGMSrcVoice->SubmitSourceBuffer(&bgmBuffer);
+    if (FAILED(hr))
+    {
+        OutputDebugString(L"FATAL: SubmitSourceBuffer failed\n");
+        CleanUp();
+        return hr;
+    }
+
+    hr = pBGMSrcVoice->Start();
+    if (FAILED(hr))
+    {
+        OutputDebugString(L"FATAL: Start failed\n");
+        CleanUp();
+        return hr;
+    }
+
     return S_OK;
 }
 
@@ -392,6 +442,19 @@ HRESULT Audio::Play()
     return S_OK;
 }
 
+HRESULT Audio::PlayBGM()
+{
+    XAUDIO2_VOICE_STATE state = {};
+    pBGMSrcVoice->GetState(&state);
+    while (state.BuffersQueued > 0)
+    {
+        Sleep(100);
+        pBGMSrcVoice->GetState(&state);
+    }
+
+    return S_OK;
+}
+
 int main()
 {
     Audio audio;
@@ -401,11 +464,15 @@ int main()
         return 1;
     }
 
+    std::thread t(&Audio::PlayBGM, &audio);
+
     hr = audio.Play();
     if (FAILED(hr))
     {
         return 1;
     }
+
+    t.join();
 
     return 0;
 }
