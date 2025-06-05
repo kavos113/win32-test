@@ -267,6 +267,48 @@ void MainWindow::Resize()
         GetClientRect(m_hwnd, &rc);
         
         D2D1_SIZE_U size = D2D1::SizeU(rc.right, rc.bottom);
+
+        pRenderTarget->SetTarget(nullptr);
+        SafeRelease(&pBitmap);
+
+        HRESULT hr = pSwapChain->ResizeBuffers(
+            2, // Double buffering
+            size.width, size.height,
+            DXGI_FORMAT_B8G8R8A8_UNORM,
+            0 // No additional flags
+        );
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to resize swap chain buffers: " << std::hex << hr << std::endl;
+            return;
+        }
+
+        Microsoft::WRL::ComPtr<IDXGISurface> pDXGISurface;
+        hr = pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pDXGISurface));
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to get DXGI surface: " << std::hex << hr << std::endl;
+            return;
+        }
+
+        D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(
+            D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+            D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+            96.0f, // Default DPI
+            96.0f  // Default DPI
+        );
+        hr = pRenderTarget->CreateBitmapFromDxgiSurface(
+            pDXGISurface.Get(),
+            &bitmapProperties,
+            &pBitmap
+        );
+        if (FAILED(hr))
+        {
+            std::cerr << "Failed to create D2D bitmap from DXGI surface: " << std::hex << hr << std::endl;
+            return;
+        }
+
+        pRenderTarget->SetTarget(pBitmap);
         
         CalculateLayout();
         InvalidateRect(m_hwnd, nullptr, FALSE);
@@ -314,6 +356,7 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
     
     case WM_PAINT:
+        std::cout << "WM_PAINT received" << std::endl;
         OnPaint();
         return 0;
     
