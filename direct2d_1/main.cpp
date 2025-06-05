@@ -6,6 +6,8 @@
 #include <d2d1.h>
 #pragma comment(lib, "d2d1")
 
+#include <iostream>
+
 #include "base_window.h"
 
 template <class T> void SafeRelease(T **ppT)
@@ -95,6 +97,7 @@ void MainWindow::DiscardGraphicsResources()
 
 void MainWindow::OnPaint()
 {
+    std::cout << "OnPaint called" << std::endl;
     HRESULT hr = CreateGraphicsResources();
     if (SUCCEEDED(hr))
     {
